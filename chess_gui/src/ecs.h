@@ -74,15 +74,15 @@ class Scene
     struct ComponentManager
     {
         std::unordered_map<std::type_index, ComponentPtr> componentTypes;
-        IComponentArray& CreateComponentArray();
-        void DestroyEntity(IComponentArray& componentArray);
+        IComponentArray* CreateComponentArray();
     };
 public:
-    std::unordered_map<uint32_t, IComponentArray> entities;
+    std::unordered_map<uint32_t, std::unique_ptr<IComponentArray>> entities;
     EntityManager entityManager;
     ComponentManager componentManager;
 public:
     void Push();
+    IComponentArray* GetEntity(uint32_t entity);
     template <typename T>
     void RegisterComponent()
     {
