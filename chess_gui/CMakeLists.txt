@@ -19,7 +19,21 @@ set(CHESS_SRC
 "src/Graphics/opengl/GLRenderer.cpp"
 )
 
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS}/SDL2)
 add_executable(
     chess_gui
     ${CHESS_SRC}
 )
+
+target_include_directories(
+    chess_gui
+    PRIVATE ${CHESS_SRC}
+)
+
+target_link_libraries(
+    chess_gui
+    ${SDL2_LIBRARIES}
+)
+
+
