@@ -22,6 +22,6 @@ public:
     virtual void LoadTexture(Texture* texture) = 0;
     virtual void AddShader(std::string& source);
     virtual void Clear() = 0;
-    virtual void ClearColor(uint8_t r, uint8_t g, uint8_t b);
-    virtual void ClearDepth(float depthLevel);
+    virtual void ClearColor(uint8_t r, uint8_t g, uint8_t b) = 0;
+    virtual void ClearDepth(float depthLevel) = 0;
 };

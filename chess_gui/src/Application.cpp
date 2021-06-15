@@ -1,6 +1,10 @@
 
-#include <SDL2/SDL.h>
+#include "Application.h"
 
-int main()
+Application::Application()
+{
+}
+
+uint32_t Application::run()
 {
 }
