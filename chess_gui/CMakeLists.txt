@@ -7,6 +7,7 @@ set(CHESS_SRC
         "src/Application.cpp"
         "src/ecs.h"
         "src/ecs.cpp"
+        "src/Exception.h"
         "src/RendererSystem.h"
         "src/RendererSystem.cpp"
         "src/math/mat.h"

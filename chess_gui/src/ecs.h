@@ -106,6 +106,6 @@ public:
 
 struct System
 {
-    virtual void LoadScene() = 0;
+    virtual void LoadScene(Scene* scene) = 0;
     virtual void update(float deltaTime) = 0;
 };

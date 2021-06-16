@@ -12,10 +12,9 @@ public:
     const char* GetFile() const noexcept;
 
     virtual std::string GetType() const noexcept;
-    virtual std::string OriginalString() const noexcept;
+    virtual std::string GetOriginalString() const noexcept;
 private:
     uint32_t line;
     const char* file; 
-    std::string Type;
 };
 
