@@ -1,5 +1,20 @@
 #include "GLRenderer.h"
 #include <SDL2/SDL.h>
+#include <stack>
+#include <Exception.h>
+namespace GLError
+{
+    static std::stack<GLenum> erroCodes;
+    static void GetErrorCode();
+};
+
+#ifndef NDEBUG
+#ifndef NGLDEBUG
+#define GLDEBUGCALL(x)
+#endif
+#endif
+
+
 
 void GLIndexBinder::Bind() const noexcept
 {
@@ -24,7 +39,46 @@ void GLVertexBinder::UnBind() const noexcept
 
 GLRenderer::GLRenderer()
 {
+    shaderProgram.id = glCreateProgram();
+    shaderProgram.Linked = false;
 } 
+
+void GLRenderer::FinalizeVertexSpecification()
+{
+    uint32_t totalSize = 0;
+    for(auto i: specification) totalSize += i.second;
+    uint32_t offset = 0;
+    totalSize *= sizeof(float);
+    for(uint32_t i = 0; i < specification.size(); i++)
+    {
+        glBindAttribLocation(shaderProgram.id, i, specification[i].first.c_str());
+        glVertexAttribPointer(i, specification[i].second, GL_FLOAT, GL_FALSE, 
+                totalSize, (const void*)offset);
+        offset+= specification[i].second * sizeof(float);
+        glEnableVertexAttribArray(i);
+    }
+}
+
+void GLRenderer::UseCurrentShaderProgram()
+{
+    if(!shaderProgram.Linked)
+    {
+        glLinkProgram(shaderProgram.id);
+        int32_t programLinked;
+        glGetProgramiv(shaderProgram.id, GL_LINK_STATUS, &programLinked);
+        if(programLinked != GL_TRUE)
+        {
+            char message[1024];
+            int32_t logLength;
+            glGetProgramInfoLog(programLinked, 1024, &logLength, message);
+            throw CException(__LINE__, __FILE__, "Program Linking Error", message);
+        }
+        shaderProgram.Linked = true;
+        for(uint32_t i = 0; i < shaders.size();i++)
+            glDeleteShader(shaders[i]);
+    }
+    glUseProgram(shaderProgram.id);
+}
 
 
 void GLRenderer::LoadBuffer(GBuffer* gBuffer)
@@ -94,8 +148,75 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
     };
     
     gBuffer->Bind();
-    glBufferData(bufferType, gBuffer->count, gBuffer->data.get(), flags);
+    glBufferData(bufferType, gBuffer->sizet, gBuffer->data.get(), flags);
 }
+
+void GLRenderer::LoadTexture(Texture* texture)
+{
+    uint32_t rendererID;
+    glGenTextures(1, &rendererID);
+    GLenum type;
+    switch(texture->type)
+    {
+        case Texture::Type::T1D:
+            type = GL_TEXTURE_1D;
+            glBindTexture(type, rendererID);
+            glTexImage1D(type, 0, GL_RGBA, texture->width, 
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data.get());
+            break;
+        case Texture::Type::T2D:
+            type = GL_TEXTURE_2D;
+            glBindTexture(type, rendererID);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height,
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data.get());
+            break;
+        case Texture::Type::T3D:
+            type = GL_TEXTURE_3D;
+            glBindTexture(type, rendererID);
+            glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, texture->width, texture->height, texture->depth,
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data.get());
+            break;
+    };
+}
+
+void GLRenderer::AddShader(ShaderType type, std::string& source)
+{
+    GLenum shaderType;
+    switch(type)
+    {
+        case ShaderType::VERTEX:
+            shaderType = GL_VERTEX_SHADER;
+            break;
+        case ShaderType::FRAGMENT:
+            shaderType = GL_FRAGMENT_SHADER;
+            break;
+    };
+    uint32_t shader = glCreateShader(shaderType);
+    const char* shaderSource =source.c_str();
+    glShaderSource(shader, 1, &shaderSource, nullptr);
+    glCompileShader(shader);
+    int32_t shaderCompiled;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &shaderCompiled);
+    if(shaderCompiled != GL_TRUE)
+    {
+        char message[1024];
+        int32_t logLength;
+        glGetShaderInfoLog(shaderCompiled, 1024, &logLength, message);
+        throw CException(__LINE__, __FILE__, "Shader Compile Error", message);
+    }
+    shaders.push_back(shader);
+    glAttachShader(shaderProgram.id, shader);
+}
+void GLRenderer::Draw(GBuffer* gBuffer)
+{
+    glDrawElements(GL_TRIANGLES, gBuffer->count, GL_UNSIGNED_INT, (const void*) 0);
+}
+
+void GLRenderer::Clear()
+{
+    glClear(GL_COLOR | GL_DEPTH);
+}
+
 
 void GLRenderer::LoadGladGL()
 {

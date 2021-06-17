@@ -44,14 +44,22 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer();
-    void Draw(uint32_t count) override;
+    void Draw(GBuffer* gBuffer) override;
     void LoadBuffer(GBuffer* gBuffer) override;
     void LoadTexture(Texture* texture) override;
-    void AddShader(std::string& source) override;
+    void AddShader(ShaderType type, std::string& source) override;
     void Clear() override;
     void ClearColor(uint8_t r, uint8_t g, uint8_t b) override;
     void ClearDepth(float depthLevel) override;
 private:
     void LoadGladGL();
     void FinalizeVertexSpecification();
+    void UseCurrentShaderProgram();
+private:
+    struct ShaderProgram
+    {
+        bool Linked;
+        uint32_t id;
+    } shaderProgram;
+    std::vector<uint32_t> shaders;
 };

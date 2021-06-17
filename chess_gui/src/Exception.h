@@ -6,6 +6,8 @@
 class CException : public std::exception
 {
 public:
+    CException(uint32_t line, const char* file);
+    CException(uint32_t line, const char* file, std::string type, std::string originalString);
     const char* what() const noexcept override;
 
     uint32_t GetLine() const noexcept;
@@ -16,5 +18,6 @@ public:
 private:
     uint32_t line;
     const char* file; 
+    std::string type, originalString;
 };
 

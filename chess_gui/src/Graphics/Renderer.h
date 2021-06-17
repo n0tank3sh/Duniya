@@ -4,11 +4,17 @@
 #include <memory>
 #include <vector>
 
-using VertexSpecification = std::vector<std::string, uint32_t>;
+using VertexSpecification = std::vector<std::pair<std::string, uint32_t>>;
 
 struct Texture
 {
-    uint32_t width, height, sizet;
+    uint32_t width, height, depth,  sizet;
+    enum class Type
+    {
+        T1D,
+        T2D,
+        T3D,
+    } type;
     std::unique_ptr<uint8_t> data;
 };
 
@@ -36,6 +42,7 @@ struct GBuffer
         } type;
     } bufferStyle;
     uint32_t count;
+    uint32_t sizet;
     std::unique_ptr<void> data;
     std::unique_ptr<GBinder> gBinder;
     void Bind() const noexcept
@@ -48,17 +55,24 @@ struct GBuffer
     }
 };
 
+enum class ShaderType
+{
+    VERTEX, FRAGMENT
+};
+
 
 
 class Renderer
 {
 public:
-    virtual void Draw(uint32_t count) = 0;
+    virtual void Draw(GBuffer* gBuffer) = 0;
     virtual void LoadBuffer(GBuffer* gBuffer) = 0;
-    virtual void SetLayout(VertexSpecification& specification) = 0;
+    void SetLayout(VertexSpecification& specification);
     virtual void LoadTexture(Texture* texture) = 0;
-    virtual void AddShader(std::string& source);
+    virtual void AddShader(ShaderType type, std::string& source) = 0;
     virtual void Clear() = 0;
     virtual void ClearColor(uint8_t r, uint8_t g, uint8_t b) = 0;
     virtual void ClearDepth(float depthLevel) = 0;
+protected:
+    VertexSpecification specification;
 };
