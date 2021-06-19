@@ -15,7 +15,8 @@ public:
     };
 public:
 
-    Vect2();    
+    Vect2(float x = .0f, float y  = .0f);
+    Vect2(const Vect2& other);
     Vect2 operator+(const float& other) const;
     Vect2 operator-(const float& other) const;
     Vect2 operator*(const float& other) const;
@@ -42,6 +43,7 @@ public:
     bool operator>(const Vect2& other) const;
     bool operator<=(const Vect2& other) const;
     bool operator>=(const Vect2& other) const;
+    bool operator!=(const Vect2& other) const;
     bool operator==(const Vect2& other) const;
 
     float dot(const Vect2& other) const;
@@ -164,4 +166,47 @@ inline Vect2 Vect2::operator/=(const Vect2& other)
 
 inline bool Vect2::operator<(const Vect2& other) const
 {
+    if(x == other.x)
+    {
+        return y < other.y;
+    }
+    return x < other.y;
+}
+
+inline bool Vect2::operator>(const Vect2& other) const
+{
+    if(x == other.x)
+    {
+        return y < other.y;
+    }
+    return x > other.y;
+}
+
+inline bool Vect2::operator>=(const Vect2& other) const
+{
+    if(x == other.x)
+    {
+        return y <= other.y;
+    } 
+    return x > other.y;
+}
+
+inline bool Vect2::operator<=(const Vect2& other) const
+{
+    if(x == other.x)
+    {
+        return y <= other.y;
+    }
+    return x < other.x;
+}
+
+
+inline bool Vect2::operator!=(const Vect2& other) const
+{
+    return x != other.x || y != other.y;
+}
+
+inline bool Vect2::operator==(const Vect2& other) const
+{
+    return !(*this == other);
 }

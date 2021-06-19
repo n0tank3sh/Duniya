@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <string>
+#include <memory>
 
 class ComponentPtr
 {
@@ -13,6 +14,7 @@ public:
     struct BaseImpl
     {
         virtual void Create();
+        virtual void* GetPointer();
     };
     template<typename T>
     class Impl : public BaseImpl
@@ -25,6 +27,10 @@ public:
         virtual void Create() override
         {
             data = new T;
+        }
+        virtual void* GetPointer() override
+        {
+            return data;
         }
         ~Impl()
         {
@@ -65,9 +71,9 @@ class Scene
         IComponentArray();
         IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes);
         template<typename T>
-        T& get()
+        T* get()
         {
-            return components[std::type_index(typeid(T))]; 
+            return static_cast<T>(components[std::type_index(typeid(T))].base->GetPointer()); 
         }
     };    
 
@@ -102,7 +108,6 @@ public:
     void LoadScene(std::string filePath);
     std::string SaveScene(std::string filePath);
 };
-
 
 struct System
 {

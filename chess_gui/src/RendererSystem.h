@@ -14,5 +14,6 @@ public:
     void update(float deltaTime) override;
 private:
     std::unique_ptr<Renderer> renderer;
+    Scene* scene;
     static RendererSystem* singleton;
 };

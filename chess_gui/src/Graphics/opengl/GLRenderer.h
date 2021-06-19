@@ -6,20 +6,19 @@
 class GLException : public CException 
 {
 public:
-    GLException(int line, const char* file, uint32_t errorCode, std::string functionName);
-    virtual std::string GetOriginalString() const noexcept override;
-    virtual std::string GetType() const noexcept override;
-};
-
-struct GLBuffer : public GBuffer
-{
-    uint32_t rendererID;
-    uint32_t target;
+    GLException(int line, const char* file, GLenum errorCode, std::string functionName);
+    std::string GetOriginalString() const noexcept override;
+    std::string GetType() const noexcept override;
+private:
+    uint32_t errorCode;
+    std::string functionName;
 };
 
 // All the classes for buffer handling
 struct GLVertexBinder : public GBinder
 {
+    GLVertexBinder() = default;
+    GLVertexBinder(uint32_t rendererID);
     virtual void Bind() const noexcept override;
     virtual void UnBind() const noexcept override;
     uint32_t rendererID;
@@ -27,6 +26,8 @@ struct GLVertexBinder : public GBinder
 
 struct GLIndexBinder : public GBinder
 {
+    GLIndexBinder() = default;
+    GLIndexBinder(uint32_t rendererID);
     virtual void Bind() const noexcept override;
     virtual void UnBind() const noexcept override;
     uint32_t rendererID;
@@ -34,6 +35,9 @@ struct GLIndexBinder : public GBinder
 
 struct GLTextureBinder : public GBinder
 {
+    GLTextureBinder() = default;
+    GLTextureBinder(uint32_t rendererID);
+    GLTextureBinder(uint32_t rendererID, GLenum target);
     virtual void Bind() const noexcept override;
     virtual void UnBind() const noexcept override;
     uint32_t rendererID;
@@ -51,6 +55,11 @@ public:
     void Clear() override;
     void ClearColor(uint8_t r, uint8_t g, uint8_t b) override;
     void ClearDepth(float depthLevel) override;
+    void Uniform1f(const float& data, std::string name) override;
+    void Uniform2f(const Vect2& data, std::string name) override;
+    void Uniform3f(const Vect3& data, std::string name) override;
+    void Uniform4f(const Vect4& data, std::string name) override;
+    void UniformMat(const Mat& mat, std::string name) override;
 private:
     void LoadGladGL();
     void FinalizeVertexSpecification();

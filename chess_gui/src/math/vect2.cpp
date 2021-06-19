@@ -1,5 +1,11 @@
 #include "vect2.h"
 
+
+Vect2::Vect2(float x, float y)
+    :
+        x(x), y(y)
+{}
+
 float Vect2::dot(const Vect2& other) const
 {
     return this->x * other.x + this->y * other.y;

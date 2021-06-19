@@ -3,8 +3,16 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <math/mat.h>
 
 using VertexSpecification = std::vector<std::pair<std::string, uint32_t>>;
+
+
+struct GBinder
+{
+    virtual void Bind() const noexcept = 0;
+    virtual void UnBind() const noexcept = 0;
+};
 
 struct Texture
 {
@@ -16,12 +24,15 @@ struct Texture
         T3D,
     } type;
     std::unique_ptr<uint8_t> data;
-};
-
-struct GBinder
-{
-    virtual void Bind() const noexcept = 0;
-    virtual void UnBind() const noexcept = 0;
+    GBinder* binder;
+    void Bind() 
+    {
+        binder->Bind();
+    }
+    void UnBind()
+    {
+        binder->UnBind();
+    }
 };
 
 struct GBuffer
@@ -70,6 +81,11 @@ public:
     void SetLayout(VertexSpecification& specification);
     virtual void LoadTexture(Texture* texture) = 0;
     virtual void AddShader(ShaderType type, std::string& source) = 0;
+    virtual void Uniform1f(const float& data, std::string name) = 0;
+    virtual void Uniform2f(const Vect2& data, std::string name) = 0;
+    virtual void Uniform3f(const Vect3& data, std::string name) = 0;
+    virtual void Uniform4f(const Vect4& data, std::string name) = 0;
+    virtual void UniformMat(const Mat& mat, std::string name) = 0;
     virtual void Clear() = 0;
     virtual void ClearColor(uint8_t r, uint8_t g, uint8_t b) = 0;
     virtual void ClearDepth(float depthLevel) = 0;
