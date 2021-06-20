@@ -1,4 +1,4 @@
-
+#pragma once
 #include <math/vect2.h>
 #include <math/vect3.h>
 #include <math/vect4.h>
@@ -15,9 +15,9 @@ struct Mesh
 {
     std::vector<Vertex> verticies;
     std::vector<uint32_t> indicies;
-    std::unique_ptr<GBuffer> vertexBuffer;
-    std::unique_ptr<GBuffer> indexbuffer;
-    std::unique_ptr<Texture> texture;
+    GBuffer* vertexBuffer;
+    GBuffer* indexbuffer;
+    Texture* texture;
 };
 
 

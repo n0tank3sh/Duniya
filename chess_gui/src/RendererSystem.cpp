@@ -27,22 +27,23 @@ void RendererSystem::LoadScene(Scene* scene)
     for(auto& i: scene->entities)
     {
         mesh = i.second->get<Mesh>();
-        renderer->LoadBuffer(mesh->vertexBuffer.get());
-        renderer->LoadBuffer(mesh->indexbuffer.get());
-        renderer->LoadTexture(mesh->texture.get());
+        renderer->LoadBuffer(mesh->vertexBuffer);
+        renderer->LoadBuffer(mesh->indexbuffer);
+        renderer->LoadTexture(mesh->texture);
     }
 }
 
 void RendererSystem::update(float deltaTime)
 {
     Mesh* mesh;
-    Transform* transform;
     for(auto& i: scene->entities)
     {
         mesh = i.second->get<Mesh>();
         mesh->vertexBuffer->Bind();
         mesh->indexbuffer->Bind();
         mesh->texture->Bind();
-        renderer->Draw(mesh->indexbuffer.get());
+        Mat* mat = ConvertTranforToMatrix(*(i.second->get<Transform>()));
+        renderer->UniformMat(*mat, "MVP");
+        renderer->Draw(mesh->indexbuffer);
     }
 }

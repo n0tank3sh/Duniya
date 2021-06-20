@@ -7,7 +7,7 @@ class GLException : public CException
 {
 public:
     GLException(int line, const char* file, GLenum errorCode, std::string functionName);
-    std::string GetOriginalString() const noexcept override;
+    std::string GetOriginalString() noexcept override;
     std::string GetType() const noexcept override;
 private:
     uint32_t errorCode;
@@ -19,8 +19,8 @@ struct GLVertexBinder : public GBinder
 {
     GLVertexBinder() = default;
     GLVertexBinder(uint32_t rendererID);
-    virtual void Bind() const noexcept override;
-    virtual void UnBind() const noexcept override;
+    void Bind() const noexcept override;
+    void UnBind() const noexcept override;
     uint32_t rendererID;
 };
 
@@ -28,8 +28,8 @@ struct GLIndexBinder : public GBinder
 {
     GLIndexBinder() = default;
     GLIndexBinder(uint32_t rendererID);
-    virtual void Bind() const noexcept override;
-    virtual void UnBind() const noexcept override;
+    void Bind() const noexcept override;
+    void UnBind() const noexcept override;
     uint32_t rendererID;
 };
 
@@ -38,8 +38,8 @@ struct GLTextureBinder : public GBinder
     GLTextureBinder() = default;
     GLTextureBinder(uint32_t rendererID);
     GLTextureBinder(uint32_t rendererID, GLenum target);
-    virtual void Bind() const noexcept override;
-    virtual void UnBind() const noexcept override;
+    void Bind() const noexcept override;
+    void UnBind() const noexcept override;
     uint32_t rendererID;
     GLenum target;
 };

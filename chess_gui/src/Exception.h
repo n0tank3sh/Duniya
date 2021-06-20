@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 #include <string>
+#include <sstream>
 #include <cstdint>
 
 class CException : public std::exception
@@ -14,10 +15,11 @@ public:
     const char* GetFile() const noexcept;
 
     virtual std::string GetType() const noexcept;
-    virtual std::string GetOriginalString() const noexcept;
+    virtual std::string GetOriginalString() noexcept;
 private:
     uint32_t line;
     const char* file; 
+    std::string whatBuffer;
     std::string type, originalString;
 };
 

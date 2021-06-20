@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <SDL2/SDL.h>
+#include "ecs.h"
 
 enum class Graphics_API
 {
@@ -20,5 +21,6 @@ private:
     uint32_t width;
     std::string title;
     Graphics_API graphicsAPI;
+    Scene* scene;
     void* deviceContext;
 };

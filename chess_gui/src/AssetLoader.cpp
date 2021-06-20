@@ -18,7 +18,7 @@ AssetLoader* AssetLoader::GetSingleton()
     return singleton;
 }
 
-void AssetLoader::LoadObj(std::string& filePath, Mesh& mesh)
+void AssetLoader::LoadObj(std::string filePath, Mesh& mesh)
 {
     std::ifstream fin(filePath);
     std::string line;
@@ -79,7 +79,7 @@ void AssetLoader::LoadObj(std::string& filePath, Mesh& mesh)
     }
 }
 
-void AssetLoader::LoadTextureFile(std::string& hPath, Texture& texture)
+void AssetLoader::LoadTextureFile(std::string hPath, Texture& texture)
 {
     if(!sdl_initialised)
     {
@@ -93,10 +93,10 @@ void AssetLoader::LoadTextureFile(std::string& hPath, Texture& texture)
     texture.height = loadedImage->h;
     texture.sizet = texture.width * texture.height;
     uint8_t* pixels  = (uint8_t*)loadedImage->pixels;
-    std::copy(pixels, pixels + texture.sizet, texture.data.get());
+    std::copy(pixels, pixels + texture.sizet, texture.data);
 }
 
-void AssetLoader::LoadTextFile(std::string& filePath, std::string& source)
+void AssetLoader::LoadTextFile(std::string filePath, std::string& source)
 {
     std::ifstream fin(filePath);
     std::istream_iterator<char> fileIterator(fin), eos;

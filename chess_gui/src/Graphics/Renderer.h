@@ -23,7 +23,9 @@ struct Texture
         T2D,
         T3D,
     } type;
-    std::unique_ptr<uint8_t> data;
+    uint8_t* data;
+    Texture() = default;
+    ~Texture() = default;
     GBinder* binder;
     void Bind() 
     {

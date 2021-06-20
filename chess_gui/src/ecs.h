@@ -17,7 +17,7 @@ public:
         virtual void* GetPointer();
     };
     template<typename T>
-    class Impl : public BaseImpl
+    struct Impl : public BaseImpl
     {
         T* data;
         Impl()
@@ -55,6 +55,7 @@ public:
 
 class Scene
 {
+public:
     class EntityManager
     {
         Scene* owner;
@@ -73,7 +74,7 @@ class Scene
         template<typename T>
         T* get()
         {
-            return static_cast<T>(components[std::type_index(typeid(T))].base->GetPointer()); 
+            return static_cast<T*>(components[std::type_index(typeid(T))].base->GetPointer()); 
         }
     };    
 
@@ -84,24 +85,25 @@ class Scene
     };
 public:
     std::unordered_map<uint32_t, std::unique_ptr<IComponentArray>> entities;
-    EntityManager entityManager;
-    ComponentManager componentManager;
+    EntityManager* entityManager;
+    ComponentManager* componentManager;
 public:
-    void Push();
+    Scene();
+    uint32_t Push();
     IComponentArray* GetEntity(uint32_t entity);
     template <typename T>
     void RegisterComponent()
     {
-        componentManager.componentTypes.insert(std::make_pair
+        componentManager->componentTypes.insert(std::make_pair
                 (std::type_index(typeid(T)), 
-                 ComponentPtr(static_cast<ComponentPtr::BaseImpl>(new ComponentPtr::Impl<T>))
+                 ComponentPtr(static_cast<ComponentPtr::BaseImpl*>(new ComponentPtr::Impl<T>))
                  )
                 );
     }
     template <typename T>
     void UnRegisterComponent()
     {
-        componentManager.componentTypes.erase(std::type_index(typeid(T)));
+        componentManager->componentTypes.erase(std::type_index(typeid(T)));
     }
 
     // (TODO): Scene loading and unloading

@@ -33,7 +33,7 @@ GLException::GLException(int line, const char* fileName, GLenum errorCode, std::
     this->functionName = functionName;
 }
 
-std::string GLException::GetOriginalString() const noexcept 
+std::string GLException::GetOriginalString()  noexcept 
 {
     std::stringstream original;
     std::string errorName;
@@ -110,6 +110,7 @@ void GLTextureBinder::UnBind() const noexcept
 
 GLRenderer::GLRenderer()
 {
+    glActiveTexture(GL_TEXTURE0);
     shaderProgram.id = glCreateProgram();
     shaderProgram.Linked = false;
 } 
@@ -302,22 +303,24 @@ void GLRenderer::LoadTexture(Texture* texture)
             type = GL_TEXTURE_1D;
             glBindTexture(type, rendererID);
             glTexImage1D(type, 0, GL_RGBA, texture->width, 
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data.get());
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
             break;
         case Texture::Type::T2D:
             type = GL_TEXTURE_2D;
             glBindTexture(type, rendererID);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height,
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data.get());
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
             break;
         case Texture::Type::T3D:
             type = GL_TEXTURE_3D;
             glBindTexture(type, rendererID);
             glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, texture->width, texture->height, texture->depth,
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data.get());
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
             break;
     };
     texture->binder = new GLTextureBinder(rendererID, type);
+    texture->Bind();
+    glGenerateMipmap(type);
 }
 
 void GLRenderer::AddShader(ShaderType type, std::string& source)

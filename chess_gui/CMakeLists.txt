@@ -5,10 +5,11 @@ set(CHESS_SRC
         "src/main.cpp"
         "src/Application.h"
         "src/Application.cpp"
-        "src/Application.h"
-        "src/Application.cpp"
+        "src/AssetLoader.h"
+        "src/AssetLoader.cpp"
         "src/ecs.h"
         "src/ecs.cpp"
+        "src/Exception.cpp"
         "src/Exception.h"
         "src/RendererSystem.h"
         "src/RendererSystem.cpp"
@@ -41,12 +42,15 @@ target_include_directories(
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resource/)
+
 
 target_link_libraries(
     chess_gui
     ${SDL2_LIBRARIES}
     glad
     OpenGL::GL
+    ${CMAKE_DL_LIBS}
 )
 
 

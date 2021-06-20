@@ -7,6 +7,12 @@ Scene::EntityManager::EntityManager(Scene* scene)
     owner = scene;
 }
 
+Scene::Scene()
+{
+    entityManager = new EntityManager(this);
+    componentManager = new ComponentManager();
+}
+
 uint32_t Scene::EntityManager::CreateEntity() const
 {
     std::random_device rd;
@@ -41,13 +47,16 @@ Scene::IComponentArray* Scene::ComponentManager::CreateComponentArray()
 }
 
 
-void Scene::Push()
+uint32_t Scene::Push()
 {
-    entities[entityManager.CreateEntity()] = std::unique_ptr<IComponentArray>(componentManager.CreateComponentArray());
+    uint32_t entity = entityManager->CreateEntity();
+    entities[entity] = std::unique_ptr<IComponentArray>(componentManager->CreateComponentArray());
+    return entity;
 }
 
 Scene::IComponentArray* Scene::GetEntity(uint32_t entity)
 {
     if(entities.find(entity) != entities.end())
         return entities[entity].get();
+    else return nullptr;
 }

@@ -1,8 +1,10 @@
 
 #include "Application.h"
 #include <Graphics/Renderer.h>
-#include <Graphics/opengl/GLRenderer.h>
+#include <commoncomponent.h>
+#include <Graphics/GraphicsComponent.h>
 #include <RendererSystem.h>
+#include "AssetLoader.h"
 
 Application::Application()
 {
@@ -18,6 +20,14 @@ Application::Application()
     };
     RendererSystem::init(gpi);
     window = SDL_CreateWindow(title.c_str(), 0, 0, width, height, windowFlag);
+    scene = new Scene();
+    scene->RegisterComponent<Transform>();
+    scene->RegisterComponent<Mesh>();
+    Scene::IComponentArray* ica = scene->GetEntity(scene->Push());
+    AssetLoader::init();
+    Mesh* mesh = ica->get<Mesh>();
+    AssetLoader::GetSingleton()->LoadObj("Resource/Test/Goat.obj", *mesh);
+    AssetLoader::GetSingleton()->LoadTextureFile("Resource/Test/Red.bmp", *(mesh->texture));
 }
 
 uint32_t Application::run()
