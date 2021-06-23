@@ -16,7 +16,6 @@ public:
 public:
 
     Vect2(float x = .0f, float y  = .0f);
-    Vect2(const Vect2& other);
     Vect2 operator+(const float& other) const;
     Vect2 operator-(const float& other) const;
     Vect2 operator*(const float& other) const;

@@ -12,8 +12,8 @@ private:
 public:
     static AssetLoader* init();
     static AssetLoader* GetSingleton();
-    void LoadObj(std::string filePath, Mesh& mesh);
-    void LoadTextureFile(std::string filePath, Texture& texture);
+    void LoadObj(std::string filePath, Mesh* mesh);
+    void LoadTextureFile(std::string filePath, Texture* texture);
     void LoadTextFile(std::string filePath, std::string& fileSource);
 public:
     static AssetLoader* singleton;

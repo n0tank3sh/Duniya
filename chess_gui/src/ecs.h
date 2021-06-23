@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Exception.h"
 #include <queue>
 #include <memory>
+#include <iostream>
 #include <unordered_map>
 #include <typeinfo>
 #include <typeindex>
@@ -13,8 +15,11 @@ class ComponentPtr
 public:
     struct BaseImpl
     {
-        virtual void Create();
-        virtual void* GetPointer();
+        virtual void Create() { }
+        virtual void* GetPointer() { std::cout << "Creating a base pointer " << std::endl; return nullptr;}
+        virtual void CheckingToSeeBase(){}
+        virtual BaseImpl* Clone() { return new BaseImpl(*this);} 
+        virtual ~BaseImpl() {} 
     };
     template<typename T>
     struct Impl : public BaseImpl
@@ -24,11 +29,20 @@ public:
         {
             data = nullptr;
         }
-        virtual void Create() override
+        Impl(const Impl& imp)
         {
-            data = new T;
+            data = imp.data;
         }
-        virtual void* GetPointer() override
+        void CheckingToSeeBase() override {std::cout << "If derived \n";}
+        BaseImpl* Clone() override
+        {
+            return static_cast<BaseImpl*>(new Impl<T>(*this));
+        }
+        void Create() override
+        {
+            data = new T();
+        }
+        void* GetPointer() override
         {
             return data;
         }
@@ -43,14 +57,20 @@ public:
     {
         base = nullptr;
     }
+
     ComponentPtr(BaseImpl* baseImpl) 
     {
-        base = baseImpl;
+        base = baseImpl->Clone();
     }
-    ~ComponentPtr()
+    ComponentPtr(const ComponentPtr& comptr)
+    {
+        base = comptr.base->Clone();
+    }
+    ~ComponentPtr() 
     {
         delete base;
     }
+
 };
 
 class Scene
@@ -74,6 +94,8 @@ public:
         template<typename T>
         T* get()
         {
+            auto i = components.find(std::type_index(typeid(T)));
+            if(i == components.end()) throw CException(__LINE__, __FILE__, "IComponentArray", "Couldn't find the Component");
             return static_cast<T*>(components[std::type_index(typeid(T))].base->GetPointer()); 
         }
     };    
@@ -96,8 +118,8 @@ public:
     {
         componentManager->componentTypes.insert(std::make_pair
                 (std::type_index(typeid(T)), 
-                 ComponentPtr(static_cast<ComponentPtr::BaseImpl*>(new ComponentPtr::Impl<T>))
-                 )
+                 ComponentPtr(new ComponentPtr::Impl<T>())
+                )
                 );
     }
     template <typename T>

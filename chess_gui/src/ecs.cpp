@@ -37,7 +37,7 @@ Scene::IComponentArray::IComponentArray(std::unordered_map<std::type_index, Comp
 {
     for(auto i: componentTypes)
     {
-        components[i.first] = i.second;
+        components.insert(std::make_pair(i.first, ComponentPtr(i.second.base)));
         components[i.first].base->Create();
     }
 }

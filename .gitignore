@@ -1,5 +1,7 @@
 .cache/
 out/
+glad/
+CMakeFiles/
 compile_commands.json
 CMakeCache.txt
 

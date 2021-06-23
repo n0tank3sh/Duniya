@@ -1,12 +1,13 @@
 #include "GLRenderer.h"
 #include <SDL2/SDL.h>
+#include <iostream>
 #include <stack>
 #include <Exception.h>
 #include <sstream>
 
 
 #if !defined(NDEBUG) || !defined(NGLDEBUG)
-#define GLDEBUGCALL(X) X
+#define GLDEBUGCALL(X) GLError::GetErrorCode();GLError::errorCode.clear(); X; GLError::GetErrorCode(); if(!GLError::errorCode.empty()) throw GLException(__LINE__ , __FILE__, GLError::errorCode.top(), #X);
 #else
 #define GLDEBUGCALL(X) X
 #endif
@@ -53,6 +54,11 @@ std::string GLException::GetOriginalString()  noexcept
         << "[ERROR STRING]: " << errorName  << std::endl
         << "[FUNCTION NAME]: " << functionName << std::endl;
     return original.str().c_str();
+}
+
+std::string GLException::GetType() const noexcept
+{
+    return "GLException";
 }
 
 
@@ -110,6 +116,9 @@ void GLTextureBinder::UnBind() const noexcept
 
 GLRenderer::GLRenderer()
 {
+    LoadGladGL();
+    glGenVertexArrays(1, &pvao);
+    glBindVertexArray(pvao);
     glActiveTexture(GL_TEXTURE0);
     shaderProgram.id = glCreateProgram();
     shaderProgram.Linked = false;
@@ -186,8 +195,19 @@ void GLRenderer::UniformMat(const Mat& mat, std::string name)
     }
 }
 
+void GLRenderer::ClearColor(uint8_t r, uint8_t g, uint8_t b)
+{
+    glClearColor(r, g, b, 1.0f);
+}
+
+void GLRenderer::ClearDepth(float depthLevel)
+{
+    glClearDepth(depthLevel);
+}
+
 void GLRenderer::FinalizeVertexSpecification()
 {
+    glBindVertexArray(pvao);
     uint32_t totalSize = 0;
     for(auto i: specification) totalSize += i.second;
     uint32_t offset = 0;
@@ -228,7 +248,6 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
 {
     GLenum flags;
     GLenum bufferType;
-    GBinder* gBinder;
     uint32_t rendererID;
     switch(gBuffer->bufferStyle.cpuFlags)
     {
@@ -275,26 +294,31 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
             };
             break;
     }
-    glGenBuffers(gBuffer->count, &rendererID);
+    glGenBuffers(1, &rendererID);
     switch(gBuffer->bufferStyle.type)
     {
         case GBuffer::GBufferStyle::BufferType::VERTEX:
             bufferType = GL_ARRAY_BUFFER;
-            gBinder = new GLVertexBinder(rendererID);
+            gBuffer->gBinder.reset( new GLVertexBinder(rendererID));
+            FinalizeVertexSpecification();
             break;        
         case GBuffer::GBufferStyle::BufferType::INDEX:
             bufferType = GL_ELEMENT_ARRAY_BUFFER;
-            gBinder = new GLIndexBinder(rendererID);
+            gBuffer->gBinder.reset(new GLIndexBinder(rendererID));
             break;
     };
+
     
     gBuffer->Bind();
-    glBufferData(bufferType, gBuffer->sizet, gBuffer->data.get(), flags);
+
+    if(gBuffer->data == nullptr) std::cout << "GBuffer is nullptr " << std::endl;
+    glBufferData(bufferType, gBuffer->sizet, gBuffer->data, flags);
 }
 
 void GLRenderer::LoadTexture(Texture* texture)
 {
     uint32_t rendererID;
+    if(texture == nullptr) std::cout << "Texture is nullptr " << std::endl;
     glGenTextures(1, &rendererID);
     GLenum type;
     switch(texture->type)
@@ -364,10 +388,11 @@ void GLRenderer::Clear()
 
 void GLRenderer::LoadGladGL()
 {
-    if(!gladLoadGLLoader(SDL_GL_GetProcAddress))
+    if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
     {
         if(!gladLoadGL())
         {
+            throw CException(__LINE__, __FILE__, "glad Load error", "Can't load glad");
         }
     }
 }

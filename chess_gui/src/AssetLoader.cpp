@@ -6,6 +6,7 @@
 #include <iterator>
 
 AssetLoader* AssetLoader::singleton = nullptr;
+bool AssetLoader::sdl_initialised = false;
 
 AssetLoader* AssetLoader::init()
 {
@@ -18,8 +19,10 @@ AssetLoader* AssetLoader::GetSingleton()
     return singleton;
 }
 
-void AssetLoader::LoadObj(std::string filePath, Mesh& mesh)
+void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 {
+    uint32_t indexOfIndex = 0;
+    if(mesh == nullptr) mesh = new Mesh();
     std::ifstream fin(filePath);
     std::string line;
     std::vector<Vect4> aPos;
@@ -74,26 +77,49 @@ void AssetLoader::LoadObj(std::string filePath, Mesh& mesh)
                     v >> index;
                     temp.texCord = texCord[index -1];
                 }
+                mesh->verticies.push_back(temp);
+                mesh->indicies.push_back(indexOfIndex);
+                indexOfIndex++;
+
             } while(lineStream.eof());
         }
     }
 }
 
-void AssetLoader::LoadTextureFile(std::string hPath, Texture& texture)
+void AssetLoader::LoadTextureFile(std::string hPath, Texture* texture)
 {
     if(!sdl_initialised)
     {
-        IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG );
+        uint32_t flags = IMG_INIT_PNG | IMG_INIT_JPG;
+        uint32_t tempFlag = IMG_Init(flags);
+        if(tempFlag != flags)
+        {
+            std::cout << "Can't initalize on sdl image " << std::endl;
+            std::cout << "Reason given: " << IMG_GetError() << std::endl;
+        }
     }
     uint32_t pixelFormat = SDL_PIXELFORMAT_RGBA8888;
     SDL_Surface* loadedImage = IMG_Load(hPath.c_str());
-    loadedImage = SDL_ConvertSurfaceFormat(loadedImage, pixelFormat, 0);
-    texture.type = Texture::Type::T2D;
-    texture.width = loadedImage->w;
-    texture.height = loadedImage->h;
-    texture.sizet = texture.width * texture.height;
-    uint8_t* pixels  = (uint8_t*)loadedImage->pixels;
-    std::copy(pixels, pixels + texture.sizet, texture.data);
+    if(loadedImage == nullptr) 
+    {
+        std::cout << "Can't load the image \n " 
+         << "Reason Given: " << IMG_GetError() << std::endl;
+    }
+    SDL_Surface* formattedImage;
+    formattedImage  = SDL_ConvertSurfaceFormat(loadedImage, pixelFormat, 0);
+    if(formattedImage == NULL)
+        std::cout << "Can't convert to different format \n"
+            << "Reason Given: " << IMG_GetError() << std::endl;
+    SDL_LockSurface(formattedImage);
+    texture->type = Texture::Type::T2D;
+    texture->width = formattedImage->w;
+    texture->height = formattedImage->h;
+    texture->sizet = formattedImage->h * formattedImage->pitch;
+
+    texture->data = new uint8_t[texture->sizet];
+    uint8_t* pixels  = (uint8_t*)formattedImage->pixels;
+    std::copy(pixels, pixels + texture->sizet, texture->data);
+    if(texture == nullptr) std::cout << "Texture is nullptr in the function " << std::endl;
 }
 
 void AssetLoader::LoadTextFile(std::string filePath, std::string& source)

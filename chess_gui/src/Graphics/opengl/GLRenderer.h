@@ -70,5 +70,6 @@ private:
         bool Linked;
         uint32_t id;
     } shaderProgram;
+    uint32_t pvao;
     std::vector<uint32_t> shaders;
 };

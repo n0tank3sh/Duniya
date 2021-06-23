@@ -28,7 +28,7 @@ void RendererSystem::LoadScene(Scene* scene)
     {
         mesh = i.second->get<Mesh>();
         renderer->LoadBuffer(mesh->vertexBuffer);
-        renderer->LoadBuffer(mesh->indexbuffer);
+        renderer->LoadBuffer(mesh->indexBuffer);
         renderer->LoadTexture(mesh->texture);
     }
 }
@@ -40,10 +40,10 @@ void RendererSystem::update(float deltaTime)
     {
         mesh = i.second->get<Mesh>();
         mesh->vertexBuffer->Bind();
-        mesh->indexbuffer->Bind();
+        mesh->indexBuffer->Bind();
         mesh->texture->Bind();
         Mat* mat = ConvertTranforToMatrix(*(i.second->get<Transform>()));
         renderer->UniformMat(*mat, "MVP");
-        renderer->Draw(mesh->indexbuffer);
+        renderer->Draw(mesh->indexBuffer);
     }
 }

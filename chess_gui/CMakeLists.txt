@@ -30,6 +30,7 @@ set(CHESS_SRC
 )
 
 find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
 find_package(OpenGL REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 add_executable(
@@ -44,10 +45,15 @@ target_include_directories(
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resource/)
 
+add_custom_target( resources
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Resource ${CMAKE_CURRENT_BINARY_DIR}/Resource
+)
+add_dependencies(chess_gui resources)
 
 target_link_libraries(
     chess_gui
     ${SDL2_LIBRARIES}
+    ${SDL2_IMAGE_LIBRARIES}
     glad
     OpenGL::GL
     ${CMAKE_DL_LIBS}

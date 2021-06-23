@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <vector>
 #include <math/mat.h>
@@ -24,8 +25,15 @@ struct Texture
         T3D,
     } type;
     uint8_t* data;
-    Texture() = default;
-    ~Texture() = default;
+    Texture()
+        :
+            width(0), height(0), depth(0), sizet(0), type(Type::T2D), data(nullptr), binder(nullptr)
+    {}
+    ~Texture()
+    {
+        if(data != nullptr)
+            delete data;
+    }
     GBinder* binder;
     void Bind() 
     {
@@ -56,10 +64,11 @@ struct GBuffer
     } bufferStyle;
     uint32_t count;
     uint32_t sizet;
-    std::unique_ptr<void> data;
+    void* data;
     std::unique_ptr<GBinder> gBinder;
     void Bind() const noexcept
     {
+        if(gBinder.get() == nullptr) std::cout << "Gbinder is null " << std::endl;
         gBinder->Bind();
     }
     void UnBind() const noexcept
