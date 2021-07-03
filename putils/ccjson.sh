@@ -1,2 +1,2 @@
 #!/bin/bash 
-cp /home/fimd/Project/out/compile_commands.json /home/fimd/Project/compile_commands.json
+cp ~/Projects/Chess_gui/out/compile_commands.json ~/Projects/Chess_gui/compile_commands.json

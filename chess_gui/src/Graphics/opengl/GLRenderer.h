@@ -7,8 +7,8 @@ class GLException : public CException
 {
 public:
     GLException(int line, const char* file, GLenum errorCode, std::string functionName);
-    std::string GetOriginalString() noexcept override;
-    std::string GetType() const noexcept override;
+    std::string CheckError() const  noexcept;
+	const char* what() const noexcept override;
 private:
     uint32_t errorCode;
     std::string functionName;
@@ -17,7 +17,7 @@ private:
 // All the classes for buffer handling
 struct GLVertexBinder : public GBinder
 {
-    GLVertexBinder() = default;
+	GLVertexBinder()  = default;
     GLVertexBinder(uint32_t rendererID);
     void Bind() const noexcept override;
     void UnBind() const noexcept override;
@@ -26,7 +26,7 @@ struct GLVertexBinder : public GBinder
 
 struct GLIndexBinder : public GBinder
 {
-    GLIndexBinder() = default;
+	GLIndexBinder() = default;
     GLIndexBinder(uint32_t rendererID);
     void Bind() const noexcept override;
     void UnBind() const noexcept override;
@@ -35,7 +35,7 @@ struct GLIndexBinder : public GBinder
 
 struct GLTextureBinder : public GBinder
 {
-    GLTextureBinder() = default;
+	GLTextureBinder() = default;
     GLTextureBinder(uint32_t rendererID);
     GLTextureBinder(uint32_t rendererID, GLenum target);
     void Bind() const noexcept override;
@@ -53,7 +53,7 @@ public:
     void LoadTexture(Texture* texture) override;
     void AddShader(ShaderType type, std::string& source) override;
     void Clear() override;
-    void ClearColor(uint8_t r, uint8_t g, uint8_t b) override;
+    void ClearColor(float r, float g, float b) override;
     void ClearDepth(float depthLevel) override;
     void Uniform1f(const float& data, std::string name) override;
     void Uniform2f(const Vect2& data, std::string name) override;

@@ -1,5 +1,4 @@
-
-#version 1.4
+#version 330
 
 in vec4 pos;
 in vec3 aNormal;
@@ -14,5 +13,6 @@ void main()
 {
     gl_Position = MVP * pos;
     oNormal = aNormal;
-    otexCoord = otexCoord;
+    otexCoord = texCoord;
 }
+

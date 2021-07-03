@@ -11,12 +11,14 @@ using VertexSpecification = std::vector<std::pair<std::string, uint32_t>>;
 
 struct GBinder
 {
-    virtual void Bind() const noexcept = 0;
-    virtual void UnBind() const noexcept = 0;
+    virtual void Bind() const noexcept  = 0;
+    virtual void UnBind() const noexcept  = 0;
 };
 
 struct Texture
 {
+	Texture() = default;
+	~Texture() = default;
     uint32_t width, height, depth,  sizet;
     enum class Type
     {
@@ -25,24 +27,9 @@ struct Texture
         T3D,
     } type;
     uint8_t* data;
-    Texture()
-        :
-            width(0), height(0), depth(0), sizet(0), type(Type::T2D), data(nullptr), binder(nullptr)
-    {}
-    ~Texture()
-    {
-        if(data != nullptr)
-            delete data;
-    }
     GBinder* binder;
-    void Bind() 
-    {
-        binder->Bind();
-    }
-    void UnBind()
-    {
-        binder->UnBind();
-    }
+    void Bind() const noexcept;
+    void UnBind() const noexcept;
 };
 
 struct GBuffer
@@ -66,15 +53,10 @@ struct GBuffer
     uint32_t sizet;
     void* data;
     std::unique_ptr<GBinder> gBinder;
-    void Bind() const noexcept
-    {
-        if(gBinder.get() == nullptr) std::cout << "Gbinder is null " << std::endl;
-        gBinder->Bind();
-    }
-    void UnBind() const noexcept
-    {
-        gBinder->UnBind();
-    }
+
+    void Bind() const noexcept;
+    void UnBind() const noexcept;
+
 };
 
 enum class ShaderType
@@ -87,9 +69,9 @@ enum class ShaderType
 class Renderer
 {
 public:
+	//Override function
     virtual void Draw(GBuffer* gBuffer) = 0;
     virtual void LoadBuffer(GBuffer* gBuffer) = 0;
-    void SetLayout(VertexSpecification& specification);
     virtual void LoadTexture(Texture* texture) = 0;
     virtual void AddShader(ShaderType type, std::string& source) = 0;
     virtual void Uniform1f(const float& data, std::string name) = 0;
@@ -98,8 +80,10 @@ public:
     virtual void Uniform4f(const Vect4& data, std::string name) = 0;
     virtual void UniformMat(const Mat& mat, std::string name) = 0;
     virtual void Clear() = 0;
-    virtual void ClearColor(uint8_t r, uint8_t g, uint8_t b) = 0;
+    virtual void ClearColor(float r, float g, float b) = 0;
     virtual void ClearDepth(float depthLevel) = 0;
+public:
+    void SetLayout(VertexSpecification& specification);
 protected:
     VertexSpecification specification;
 };

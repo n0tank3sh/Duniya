@@ -3,29 +3,17 @@
 
 CException::CException(uint32_t line, const char* file)
     :
-        line(line), file(file)
-{
-    std::ostringstream whatStream(whatBuffer);
-    whatStream << GetType() << '\n'
-        << "[LINE]: " << line << '\n'
-        << "[FILE]: " << GetFile() << '\n'
-        << GetOriginalString();
-    whatBuffer= whatStream.str();
-}
+        line(line), file(file), type("CException")
+{}
 
 CException::CException(uint32_t line, const char* file, std::string type, std::string originalString)
-{
-    std::ostringstream whatStream(whatBuffer);
-    whatStream << type << '\n'
-        << "[LINE]: " << line << '\n'
-        << "[FILE]: " << GetFile() << '\n'
-        << originalString;
-    whatBuffer= whatStream.str();
-
-}
+	:
+		line(line), file(file), type(type), originalString(originalString) 
+{}
 
 const char* CException::what() const noexcept 
 {
+	GetOriginalString();
     return whatBuffer.c_str();
 }
 
@@ -41,10 +29,16 @@ const char* CException::GetFile() const noexcept
 
 std::string CException::GetType() const noexcept
 {
-    return "CException";
+    return type;
 }
 
-std::string CException::GetOriginalString()  noexcept
-{
-    return "";
+std::string CException::GetOriginalString() const  noexcept
+{	
+	std::ostringstream oss;
+	oss << GetType() << "\n"
+		<< "[LINE] :" << GetLine() << "\n"
+		<< "[FILE] :" << GetFile()  << "\n"
+		<< originalString << std::endl;
+	whatBuffer = oss.str();
+    return whatBuffer;
 }

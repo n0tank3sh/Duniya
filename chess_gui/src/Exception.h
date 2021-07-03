@@ -15,11 +15,12 @@ public:
     const char* GetFile() const noexcept;
 
     virtual std::string GetType() const noexcept;
-    virtual std::string GetOriginalString() noexcept;
+    virtual std::string GetOriginalString() const noexcept;
 private:
     uint32_t line;
     const char* file; 
-    std::string whatBuffer;
+protected:
     std::string type, originalString;
+    mutable std::string whatBuffer;
 };
 

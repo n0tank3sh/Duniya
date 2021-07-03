@@ -10,6 +10,14 @@
 #include <string>
 #include <memory>
 
+// Potential optimisation using int types instead of type_index.
+// The hashing of int types is twice faster than type_index.
+enum class ComponentType : uint32_t
+{
+	MESH,
+	TRANSFORM
+};
+
 class ComponentPtr
 {
 public:
@@ -75,6 +83,7 @@ public:
 
 class Scene
 {
+	std::unordered_map<std::type_index, ComponentType> componentTypeMap;
 public:
     class EntityManager
     {
@@ -85,23 +94,26 @@ public:
         void DestroyEntity(uint32_t& entity);
     };
 
-    class IComponentArray
+    struct IComponentArray
     {
-        std::unordered_map<std::type_index, ComponentPtr> components;
-    public:
+		std::unordered_map<ComponentType, ComponentPtr> components;
+        //std::unordered_map<std::type_index, ComponentPtr> components;
+		std::vector<ComponentType> componentTypes;
         IComponentArray();
-        IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes);
-        template<typename T>
-        T* get()
+        IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, std::unordered_map<std::type_index, ComponentType>& componentTypeMap);
+        template<ComponentType T>
+        void* get()
         {
-            auto i = components.find(std::type_index(typeid(T)));
+            auto i = components.find(T);
             if(i == components.end()) throw CException(__LINE__, __FILE__, "IComponentArray", "Couldn't find the Component");
-            return static_cast<T*>(components[std::type_index(typeid(T))].base->GetPointer()); 
+            return i->second.base->GetPointer(); 
         }
     };    
 
     struct ComponentManager
     {
+		Scene* scene;
+		ComponentManager(Scene* scene);
         std::unordered_map<std::type_index, ComponentPtr> componentTypes;
         IComponentArray* CreateComponentArray();
     };
@@ -130,7 +142,7 @@ public:
 
     // (TODO): Scene loading and unloading
     void LoadScene(std::string filePath);
-    std::string SaveScene(std::string filePath);
+    void SaveScene(std::string filePath);
 };
 
 struct System

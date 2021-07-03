@@ -1,7 +1,6 @@
 
 
 set(CHESS_SRC
-
         "src/main.cpp"
         "src/Application.h"
         "src/Application.cpp"
@@ -12,6 +11,7 @@ set(CHESS_SRC
         "src/Exception.cpp"
         "src/Exception.h"
         "src/RendererSystem.h"
+		"src/commoncomponent.h"
         "src/RendererSystem.cpp"
         "src/math/mat.h"
         "src/math/mat.cpp"
@@ -23,6 +23,7 @@ set(CHESS_SRC
         "src/math/vect4.cpp"
         "src/math/mathutils.h"
         "src/Graphics/Renderer.h"
+		"src/Graphics/Renderer.cpp"
         "src/Graphics/GraphicsComponent.h"
         "src/Graphics/opengl/GLUtils.h"
         "src/Graphics/opengl/GLRenderer.h"
@@ -55,7 +56,7 @@ target_link_libraries(
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
     glad
-    OpenGL::GL
+	${OPENGL_LIBRARIES}
     ${CMAKE_DL_LIBS}
 )
 

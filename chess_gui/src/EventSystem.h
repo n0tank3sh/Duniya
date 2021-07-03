@@ -27,4 +27,4 @@ struct MouseEvent : public Event
     {
         LMOUSEBUTTON, RMOUSEBUTTON, MIDMOUSEBUTTON
     };
-}
+};

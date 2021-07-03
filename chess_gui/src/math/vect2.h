@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mathutils.h"
+#include <iostream>
 
 class Vect2
 {
@@ -49,7 +50,18 @@ public:
     float angle() const;
     float distance() const;
     void normalize();
+	friend std::istream& operator>>(std::istream &input, Vect2& a)
+	{
+		input >> a.x >> a.y;
+		return input;
+	}
+	friend std::ostream& operator<<(std::ostream &output, const Vect2& a)
+	{
+		output << a.x << " " << a.y;
+		return output;
+	}
 };
+
 
 inline Vect2 Vect2::operator+(const float& other) const
 {

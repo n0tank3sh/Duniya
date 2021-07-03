@@ -1,4 +1,4 @@
-#version 1.4
+#version 330
 
 in vec3 otexCoord;
 in vec3 oNormal;
@@ -8,5 +8,5 @@ uniform sampler2D image;
 
 void main()
 {
-    FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
+	FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
 }

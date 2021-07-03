@@ -43,11 +43,11 @@ Mat Mat::operator*(const Mat& other)
     if(dimension.row != other.dimension.column)
     {
     }
-    for(uint32_t i = 0; i < dimension.row; i++)
+    for(uint32_t i = 0; i < dimension.column; i++)
     {
-        for(uint32_t j = 0; j < dimension.column; j++)
+        for(uint32_t j = 0; j < dimension.row; j++)
         {
-            float& temp = mat.buffer.get()[i * dimension.row + j];
+            float& temp = mat.buffer.get()[i * dimension.column + j];
             temp = 0;
             for(uint32_t a = 0; a < dimension.row; a++)
             {

@@ -1,6 +1,7 @@
 #include "AssetLoader.h"
 #include <sstream>
 #include <SDL2/SDL_image.h>
+#include <Exception.h>
 #include <string>
 #include <fstream>
 #include <iterator>
@@ -49,6 +50,8 @@ void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
         {
             Vect4 vertPos;
             lineStream >> vertPos.x >> vertPos.y >> vertPos.z >> vertPos.w;
+			if(vertPos.w == .0f)
+			vertPos.w = 1.0f;
             aPos.push_back(vertPos);
         }
         else if(firstTok == "f")
@@ -77,8 +80,8 @@ void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
                     v >> index;
                     temp.texCord = texCord[index -1];
                 }
-                mesh->verticies.push_back(temp);
-                mesh->indicies.push_back(indexOfIndex);
+                mesh->verticies->push_back(temp);
+                mesh->indicies->push_back(indexOfIndex);
                 indexOfIndex++;
 
             } while(lineStream.eof());
@@ -124,8 +127,11 @@ void AssetLoader::LoadTextureFile(std::string hPath, Texture* texture)
 
 void AssetLoader::LoadTextFile(std::string filePath, std::string& source)
 {
-    std::ifstream fin(filePath);
-    std::istream_iterator<char> fileIterator(fin), eos;
-    std::copy(fileIterator, eos, std::back_inserter(source));
+	std::ifstream fin;
+	fin.open(filePath.c_str(), std::ios::in);
+	if(!fin) throw CException(__LINE__, __FILE__, "Text file Loader", std::string("Couldn't open the file path: ") + filePath);
+	std::stringstream ss;
+	ss << fin.rdbuf();
+	source = ss.str();
 }
 

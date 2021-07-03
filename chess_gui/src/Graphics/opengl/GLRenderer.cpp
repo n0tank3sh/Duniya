@@ -1,13 +1,13 @@
 #include "GLRenderer.h"
 #include <SDL2/SDL.h>
 #include <iostream>
-#include <stack>
+#include <vector>
 #include <Exception.h>
 #include <sstream>
 
 
 #if !defined(NDEBUG) || !defined(NGLDEBUG)
-#define GLDEBUGCALL(X) GLError::GetErrorCode();GLError::errorCode.clear(); X; GLError::GetErrorCode(); if(!GLError::errorCode.empty()) throw GLException(__LINE__ , __FILE__, GLError::errorCode.top(), #X);
+#define GLDEBUGCALL(X) GLError::GetErrorCode();GLError::errorCodes.clear(); X; GLError::GetErrorCode(); if(!GLError::errorCodes.empty()) throw GLException(__LINE__ , __FILE__, GLError::errorCodes.back(), #X);
 #else
 #define GLDEBUGCALL(X) X
 #endif
@@ -17,12 +17,12 @@
 
 namespace GLError
 {
-    std::stack<GLenum> errorCodes;
+    std::vector<GLenum> errorCodes;
     inline void GetErrorCode()
     {
         GLenum errorCode;
-        while((errorCode != glGetError()) != GL_NO_ERROR)
-            errorCodes.push(errorCode);
+        while((errorCode = glGetError()) != GL_NO_ERROR)
+            errorCodes.push_back(errorCode);
     }
 };
 
@@ -32,9 +32,21 @@ GLException::GLException(int line, const char* fileName, GLenum errorCode, std::
 {
     this->errorCode =errorCode;
     this->functionName = functionName;
+	type = "GLException";
 }
 
-std::string GLException::GetOriginalString()  noexcept 
+const char* GLException::what() const noexcept
+{
+	GetOriginalString();
+	std::ostringstream oss(whatBuffer);
+	oss << "[FUNCTION] :" << functionName << "\n"
+		<< "[ERROR CODE] :" << errorCode << "\n"
+		<< "[ERROR] :" << CheckError() << std::endl;
+	whatBuffer = oss.str();
+	return whatBuffer.c_str();
+}
+
+std::string GLException::CheckError() const noexcept 
 {
     std::stringstream original;
     std::string errorName;
@@ -49,17 +61,15 @@ std::string GLException::GetOriginalString()  noexcept
         case GL_INVALID_VALUE:
             errorName = "Invalid value";
             break;
+		default:
+			errorName = "Unknown Error";
     };
     original << "[ERROR CODE]: " << errorCode << std::endl
         << "[ERROR STRING]: " << errorName  << std::endl
         << "[FUNCTION NAME]: " << functionName << std::endl;
-    return original.str().c_str();
+    return original.str();
 }
 
-std::string GLException::GetType() const noexcept
-{
-    return "GLException";
-}
 
 
 
@@ -68,27 +78,27 @@ GLIndexBinder::GLIndexBinder(uint32_t rendererID)
     this->rendererID = rendererID;
 }
 
-void GLIndexBinder::Bind() const noexcept
+void GLIndexBinder::Bind() const 
 {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID);
+    GLDEBUGCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID));
 }
 
-void GLIndexBinder::UnBind() const noexcept
+void GLIndexBinder::UnBind() const 
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 GLVertexBinder::GLVertexBinder(uint32_t rendererID)
 {
-    rendererID = rendererID;
+    this->rendererID = rendererID;
 }
 
-void GLVertexBinder::Bind() const noexcept
+void GLVertexBinder::Bind() const 
 {
-    glBindBuffer(GL_ARRAY_BUFFER, rendererID);
+    GLDEBUGCALL(glBindBuffer(GL_ARRAY_BUFFER, rendererID));
 }
 
-void GLVertexBinder::UnBind() const noexcept
+void GLVertexBinder::UnBind() const 
 {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -104,12 +114,12 @@ GLTextureBinder::GLTextureBinder(uint32_t rendererID, GLenum target)
     this->target = target;
 }
 
-void GLTextureBinder::Bind() const noexcept
+void GLTextureBinder::Bind() const 
 {
-    glBindTexture(target, rendererID);
+    GLDEBUGCALL(glBindTexture(target, rendererID));
 }
 
-void GLTextureBinder::UnBind() const noexcept
+void GLTextureBinder::UnBind() const 
 {
     glBindTexture(target, 0);
 }
@@ -117,10 +127,10 @@ void GLTextureBinder::UnBind() const noexcept
 GLRenderer::GLRenderer()
 {
     LoadGladGL();
-    glGenVertexArrays(1, &pvao);
+    GLDEBUGCALL(glGenVertexArrays(1, &pvao));
     glBindVertexArray(pvao);
-    glActiveTexture(GL_TEXTURE0);
-    shaderProgram.id = glCreateProgram();
+    GLDEBUGCALL(glActiveTexture(GL_TEXTURE0));
+    GLDEBUGCALL(shaderProgram.id = glCreateProgram());
     shaderProgram.Linked = false;
 } 
 
@@ -141,25 +151,27 @@ void GLRenderer::Uniform3f(const Vect3& data, std::string name)
 
 void GLRenderer::Uniform4f(const Vect4& data, std::string name)
 {
-    glUniform4f(glGetUniformLocation(shaderProgram.id, name.c_str()), data.x, data.y, data.z, data.w);
+    GLDEBUGCALL(glUniform4f(glGetUniformLocation(shaderProgram.id, name.c_str()), data.x, data.y, data.z, data.w));
 }
 
 void GLRenderer::UniformMat(const Mat& mat, std::string name)
 {
-    uint32_t uLocation = glGetUniformLocation(shaderProgram.id, name.c_str());
+	UseCurrentShaderProgram();
+    GLDEBUGCALL(uint32_t uLocation = glGetUniformLocation(shaderProgram.id, name.c_str()));
+	if(uLocation == -1) std::cout << "Couldn't get the location and name of the variable: " << name << std::endl;
     switch(mat.dimension.column)
     {
         case 2:
             switch(mat.dimension.row)
             {
                 case 2:
-                    glUniformMatrix2fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    glUniformMatrix2fv(uLocation, 1, GL_FALSE, mat.buffer.get());
                     break;
                 case 3:
-                    glUniformMatrix2x3fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    glUniformMatrix2x3fv(uLocation, 1, GL_FALSE, mat.buffer.get());
                     break;
                 case 4:
-                    glUniformMatrix2x4fv(uLocation, mat.sizet,  GL_FALSE, mat.buffer.get());
+                    glUniformMatrix2x4fv(uLocation, 1,  GL_FALSE, mat.buffer.get());
                     break;
             }
             break;
@@ -167,13 +179,13 @@ void GLRenderer::UniformMat(const Mat& mat, std::string name)
             switch(mat.dimension.row)
             {
                 case 2:
-                    glUniformMatrix3x2fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    glUniformMatrix3x2fv(uLocation, 1, GL_FALSE, mat.buffer.get());
                     break;
                 case 3:
-                    glUniformMatrix3fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    glUniformMatrix3fv(uLocation, 1, GL_FALSE, mat.buffer.get());
                     break;
                 case 4:
-                    glUniformMatrix3x4fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    glUniformMatrix3x4fv(uLocation, 1, GL_FALSE, mat.buffer.get());
                     break;
             }
             break;
@@ -181,13 +193,13 @@ void GLRenderer::UniformMat(const Mat& mat, std::string name)
             switch(mat.dimension.row)
             {
                 case 2:
-                    glUniformMatrix4x2fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    glUniformMatrix4x2fv(uLocation, 1, GL_FALSE, mat.buffer.get());
                     break;
                 case 3:
-                    glUniformMatrix4x3fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    glUniformMatrix4x3fv(uLocation, 1, GL_FALSE, mat.buffer.get());
                     break;
                 case 4:
-                    glUniformMatrix4fv(uLocation, mat.sizet, GL_FALSE, mat.buffer.get());
+                    GLDEBUGCALL(glUniformMatrix4fv(uLocation, 1, GL_FALSE, mat.buffer.get()));
                     break;
             }
             break;
@@ -195,7 +207,7 @@ void GLRenderer::UniformMat(const Mat& mat, std::string name)
     }
 }
 
-void GLRenderer::ClearColor(uint8_t r, uint8_t g, uint8_t b)
+void GLRenderer::ClearColor(float r, float g, float b)
 {
     glClearColor(r, g, b, 1.0f);
 }
@@ -207,18 +219,20 @@ void GLRenderer::ClearDepth(float depthLevel)
 
 void GLRenderer::FinalizeVertexSpecification()
 {
-    glBindVertexArray(pvao);
+	glBindVertexArray(pvao);
+	UseCurrentShaderProgram();
     uint32_t totalSize = 0;
-    for(auto i: specification) totalSize += i.second;
+    for(auto& i: specification) totalSize += i.second;
     uint32_t offset = 0;
     totalSize *= sizeof(float);
     for(uint32_t i = 0; i < specification.size(); i++)
     {
-        glBindAttribLocation(shaderProgram.id, i, specification[i].first.c_str());
-        glVertexAttribPointer(i, specification[i].second, GL_FLOAT, GL_FALSE, 
-                totalSize, (const void*)offset);
+        GLDEBUGCALL(glBindAttribLocation(shaderProgram.id, i, specification[i].first.c_str()));
+		std::cout << "Offset size is: " << offset  << std::endl;
+        GLDEBUGCALL(glVertexAttribPointer(i, specification[i].second, GL_FLOAT, GL_FALSE, 
+                totalSize, (const void*)offset));
+        GLDEBUGCALL(glEnableVertexAttribArray(i));
         offset+= specification[i].second * sizeof(float);
-        glEnableVertexAttribArray(i);
     }
 }
 
@@ -226,9 +240,9 @@ void GLRenderer::UseCurrentShaderProgram()
 {
     if(!shaderProgram.Linked)
     {
-        glLinkProgram(shaderProgram.id);
+        GLDEBUGCALL(glLinkProgram(shaderProgram.id));
         int32_t programLinked;
-        glGetProgramiv(shaderProgram.id, GL_LINK_STATUS, &programLinked);
+        GLDEBUGCALL(glGetProgramiv(shaderProgram.id, GL_LINK_STATUS, &programLinked));
         if(programLinked != GL_TRUE)
         {
             char message[1024];
@@ -236,16 +250,18 @@ void GLRenderer::UseCurrentShaderProgram()
             glGetProgramInfoLog(programLinked, 1024, &logLength, message);
             throw CException(__LINE__, __FILE__, "Program Linking Error", message);
         }
-        shaderProgram.Linked = true;
         for(uint32_t i = 0; i < shaders.size();i++)
             glDeleteShader(shaders[i]);
+		std::cout << "The number of the shaders attach are: " <<  shaders.size() << std::endl;
+		shaderProgram.Linked = true;
     }
-    glUseProgram(shaderProgram.id);
+    GLDEBUGCALL(glUseProgram(shaderProgram.id));
 }
 
 
 void GLRenderer::LoadBuffer(GBuffer* gBuffer)
 {
+	glBindVertexArray(pvao);
     GLenum flags;
     GLenum bufferType;
     uint32_t rendererID;
@@ -298,29 +314,33 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
     switch(gBuffer->bufferStyle.type)
     {
         case GBuffer::GBufferStyle::BufferType::VERTEX:
+			std::cout << "A vertex Buffer is being created " << std::endl;
             bufferType = GL_ARRAY_BUFFER;
-            gBuffer->gBinder.reset( new GLVertexBinder(rendererID));
+            gBuffer->gBinder.reset(new GLVertexBinder(rendererID));
+			gBuffer->Bind();
             FinalizeVertexSpecification();
+			std::cout <<"Just checking the right data in Vertex buffer is being loaded: " <<  *((Vect4*)gBuffer->data) << std::endl;
             break;        
         case GBuffer::GBufferStyle::BufferType::INDEX:
             bufferType = GL_ELEMENT_ARRAY_BUFFER;
+			std::cout <<"Just checking the right data in index buffer is being loaded: " << *((uint32_t*)gBuffer->data) << std::endl;
             gBuffer->gBinder.reset(new GLIndexBinder(rendererID));
             break;
     };
 
+	std::cout << gBuffer->sizet << " is the size of the buffer " << std::endl;
     
-    gBuffer->Bind();
-
-    if(gBuffer->data == nullptr) std::cout << "GBuffer is nullptr " << std::endl;
-    glBufferData(bufferType, gBuffer->sizet, gBuffer->data, flags);
+    GLDEBUGCALL(gBuffer->Bind());
+    GLDEBUGCALL(glBufferData(bufferType, gBuffer->sizet, gBuffer->data, flags));
 }
 
 void GLRenderer::LoadTexture(Texture* texture)
 {
     uint32_t rendererID;
     if(texture == nullptr) std::cout << "Texture is nullptr " << std::endl;
-    glGenTextures(1, &rendererID);
+    GLDEBUGCALL(glGenTextures(1, &rendererID));
     GLenum type;
+	std::cout << +*texture->data  << " " << +*(texture->data + 1) << " " << +*(texture->data + 2) << " " <<  +*(texture->data + 3) << " " << +*(texture->data + 4) << std::endl;
     switch(texture->type)
     {
         case Texture::Type::T1D:
@@ -332,8 +352,8 @@ void GLRenderer::LoadTexture(Texture* texture)
         case Texture::Type::T2D:
             type = GL_TEXTURE_2D;
             glBindTexture(type, rendererID);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height,
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
+            GLDEBUGCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height,
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data));
             break;
         case Texture::Type::T3D:
             type = GL_TEXTURE_3D;
@@ -344,7 +364,7 @@ void GLRenderer::LoadTexture(Texture* texture)
     };
     texture->binder = new GLTextureBinder(rendererID, type);
     texture->Bind();
-    glGenerateMipmap(type);
+    GLDEBUGCALL(glGenerateMipmap(type));
 }
 
 void GLRenderer::AddShader(ShaderType type, std::string& source)
@@ -359,36 +379,39 @@ void GLRenderer::AddShader(ShaderType type, std::string& source)
             shaderType = GL_FRAGMENT_SHADER;
             break;
     };
-    uint32_t shader = glCreateShader(shaderType);
+	std::cout << "The length of the source: " << source.size() << std::endl;
+    GLDEBUGCALL(uint32_t shader = glCreateShader(shaderType));
     const char* shaderSource =source.c_str();
-    glShaderSource(shader, 1, &shaderSource, nullptr);
-    glCompileShader(shader);
+    GLDEBUGCALL(glShaderSource(shader, 1, &shaderSource, nullptr));
+    GLDEBUGCALL(glCompileShader(shader));
     int32_t shaderCompiled;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &shaderCompiled);
+    GLDEBUGCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &shaderCompiled));
     if(shaderCompiled != GL_TRUE)
     {
         char message[1024];
-        int32_t logLength;
-        glGetShaderInfoLog(shaderCompiled, 1024, &logLength, message);
-        throw CException(__LINE__, __FILE__, "Shader Compile Error", message);
+		int32_t logLength;
+        GLDEBUGCALL(glGetShaderInfoLog(shader, 1024, &logLength, message));
+		std::cout << "The length of the message is :" << logLength <<std::endl;
+        throw CException(__LINE__, __FILE__, "Shader Compile Error", std::string(message) + (shaderType == GL_VERTEX_SHADER?"Vertex Shader":"Fragment Shader"));
     }
     shaders.push_back(shader);
-    glAttachShader(shaderProgram.id, shader);
+    GLDEBUGCALL(glAttachShader(shaderProgram.id, shader));
 }
 void GLRenderer::Draw(GBuffer* gBuffer)
 {
-    glDrawElements(GL_TRIANGLES, gBuffer->count, GL_UNSIGNED_INT, (const void*) 0);
+	//gBuffer->Bind();
+    GLDEBUGCALL(glDrawElements(GL_TRIANGLES, gBuffer->count, GL_UNSIGNED_INT, (const void*) 0));
 }
 
 void GLRenderer::Clear()
 {
-    glClear(GL_COLOR | GL_DEPTH);
+    GLDEBUGCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
 
 void GLRenderer::LoadGladGL()
 {
-    if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+    if(!gladLoadGLLoader(SDL_GL_GetProcAddress))
     {
         if(!gladLoadGL())
         {

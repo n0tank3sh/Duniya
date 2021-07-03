@@ -42,6 +42,26 @@ struct Mat
     std::unique_ptr<float> buffer;
     Dimension dimension;
     uint32_t sizet;
+	friend std::istream& operator>>(std::istream& input, Mat& mat)
+	{
+		for(uint32_t i = 0; i < mat.sizet; i++)
+		{
+			input >> mat.buffer.get()[i];
+		}
+		return input;
+	}
+	friend std::ostream& operator<<(std::ostream& output, const Mat& mat)
+	{
+		for(uint32_t a = 0; a < mat.dimension.column; a++)
+		{
+			for(uint32_t b = 0; b < mat.dimension.row; b++)
+			{
+				output << mat.buffer.get()[a * mat.dimension.row + b] << " ";
+			}
+			output << std::endl;
+		}
+		return output;
+	}
 private:
     void GausianElimination();
 };

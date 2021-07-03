@@ -51,6 +51,16 @@ public:
     float cross(const Vect3& other) const;
     
     void normalize();
+	friend std::istream& operator>>(std::istream &input, Vect3& a)
+	{
+		input >> a.x >> a.y >> a.z;
+		return input;
+	}
+	friend std::ostream& operator<<(std::ostream &output, const Vect3& a)
+	{
+		output << a.x << " " << a.y << " " << a.z;
+		return output;
+	}
 };
 
 inline Vect3 Vect3::operator+(const float& other) const
