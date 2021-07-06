@@ -42,8 +42,8 @@ Application::Application()
 	Scene::IComponentArray* ica = scene->GetEntity(scene->Push());
 	
 	AssetLoader::init();
-	Mesh* mesh = ica->get<Mesh>();
-	Transform* transform = ica->get<Transform>();
+	Mesh* mesh = (Mesh*)ica->get<ComponentType::MESH>();
+	Transform* transform = (Transform*)ica->get<ComponentType::TRANSFORM>();
 	if(mesh == nullptr) std::cout << "Error found in Mesh" << std::endl;
 	AssetLoader::GetSingleton()->LoadObj("Resource/Test/Goat.obj", mesh);
 	mesh->texture = new Texture();
@@ -54,7 +54,8 @@ Application::Application()
 	transform->rotation = Vect3();
 	transform->scale = Vect3(.25f, .25f, .25f);
 	std::cout  << scene->entities.size() << std::endl;
-	scene->SaveScene("justChecking.gg");
+	scene->SaveScene("justChecking.dick");
+//	scene->LoadScene("justChecking.dick");
 
 	RendererSystem::GetSingleton()->LoadScene(scene);
 }

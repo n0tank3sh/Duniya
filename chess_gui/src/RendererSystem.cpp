@@ -58,9 +58,10 @@ void RendererSystem::LoadScene(Scene* scene)
 //	renderer->ClearColor(.0f, 1.f, 0.5f);
     this->scene = scene;
     Mesh* mesh;
+	std::cout << scene->entities.size() << std::endl;
     for(auto& i: scene->entities)
     {
-        mesh = i.second->get<Mesh>();
+        mesh = (Mesh*)i.second->get<ComponentType::MESH>();
 		if(mesh->vertexBuffer == nullptr && mesh->indexBuffer == nullptr)
 			this->CreateGBufferMesh(mesh);
         renderer->LoadBuffer(mesh->vertexBuffer);
@@ -80,11 +81,11 @@ void RendererSystem::update(float deltaTime)
     Mesh* mesh;
     for(auto& i: scene->entities)
     {
-        mesh = i.second->get<Mesh>();
+        mesh = (Mesh*)i.second->get<ComponentType::MESH>();
         mesh->vertexBuffer->Bind();
         mesh->indexBuffer->Bind();
         mesh->texture->Bind();
-        Mat* mat = ConvertTranforToMatrix(*(i.second->get<Transform>()));
+        Mat* mat = ConvertTranforToMatrix(*((Transform*)i.second->get<ComponentType::TRANSFORM>()));
         renderer->UniformMat(*mat, "MVP");
         renderer->Draw(mesh->indexBuffer);
     }

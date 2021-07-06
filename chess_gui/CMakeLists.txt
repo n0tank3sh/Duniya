@@ -6,12 +6,12 @@ set(CHESS_SRC
         "src/Application.cpp"
         "src/AssetLoader.h"
         "src/AssetLoader.cpp"
-        "src/ecs.h"
-        "src/ecs.cpp"
+        "src/ecs/ecs.h"
+        "src/ecs/ecs.cpp"
         "src/Exception.cpp"
         "src/Exception.h"
         "src/RendererSystem.h"
-		"src/commoncomponent.h"
+		"src/ecs/commoncomponent.h"
         "src/RendererSystem.cpp"
         "src/math/mat.h"
         "src/math/mat.cpp"
@@ -24,24 +24,40 @@ set(CHESS_SRC
         "src/math/mathutils.h"
         "src/Graphics/Renderer.h"
 		"src/Graphics/Renderer.cpp"
-        "src/Graphics/GraphicsComponent.h"
+        "src/ecs/GraphicsComponent.h"
         "src/Graphics/opengl/GLUtils.h"
         "src/Graphics/opengl/GLRenderer.h"
         "src/Graphics/opengl/GLRenderer.cpp"
 )
 
+set(EDITOR_SRC
+	"src/editor/Editor.h"
+	"src/editor/Editor.cpp"
+	"src/ecs/ecs.h"
+	"src/ecs/ecs.cpp"
+	)
+
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(ASSIMP REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 add_executable(
     chess_gui
     ${CHESS_SRC}
 )
+add_executable(
+	editor
+	${EDITOR_SRC}
+)
 
 target_include_directories(
     chess_gui
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_include_directories(
+	editor
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resource/)

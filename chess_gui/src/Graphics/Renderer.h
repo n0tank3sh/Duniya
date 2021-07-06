@@ -20,7 +20,7 @@ struct Texture
 	Texture() = default;
 	~Texture() = default;
     uint32_t width, height, depth,  sizet;
-    enum class Type
+    enum class Type : uint32_t
     {
         T1D,
         T2D,

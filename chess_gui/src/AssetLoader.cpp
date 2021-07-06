@@ -22,6 +22,8 @@ AssetLoader* AssetLoader::GetSingleton()
 
 void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 {
+	if(mesh->indicies == nullptr) mesh->indicies = new std::vector<uint32_t>();
+	if(mesh->verticies == nullptr) mesh->verticies = new std::vector<Vertex>();
     uint32_t indexOfIndex = 0;
     if(mesh == nullptr) mesh = new Mesh();
     std::ifstream fin(filePath);
@@ -37,19 +39,19 @@ void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
         if(firstTok == "vt")
         {
             Vect3 texCoord;
-            lineStream >> texCoord.x >> texCoord.y >> texCoord.z;
+            lineStream >> texCoord;
             texCord.push_back(texCoord);
         }
         else if(firstTok == "vn")
         {
             Vect3 vertNormal;
-            lineStream >> vertNormal.x >> vertNormal.y >> vertNormal.z;
+            lineStream >> vertNormal;
             vNormal.push_back(vertNormal);
         }
         else if(firstTok == "v")
         {
             Vect4 vertPos;
-            lineStream >> vertPos.x >> vertPos.y >> vertPos.z >> vertPos.w;
+            lineStream >> vertPos;
 			if(vertPos.w == .0f)
 			vertPos.w = 1.0f;
             aPos.push_back(vertPos);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Exception.h"
+#include <Exception.h>
 #include <queue>
 #include <memory>
 #include <iostream>
@@ -25,7 +25,7 @@ public:
     {
         virtual void Create() { }
         virtual void* GetPointer() { std::cout << "Creating a base pointer " << std::endl; return nullptr;}
-        virtual void CheckingToSeeBase(){}
+        virtual void CheckingToSeeBase(){std::cout << "If base \n";}
         virtual BaseImpl* Clone() { return new BaseImpl(*this);} 
         virtual ~BaseImpl() {} 
     };
@@ -52,6 +52,7 @@ public:
         }
         void* GetPointer() override
         {
+			if(data == nullptr) std::cout << "Data is NULL " << std::endl;
             return data;
         }
         ~Impl()
@@ -83,7 +84,6 @@ public:
 
 class Scene
 {
-	std::unordered_map<std::type_index, ComponentType> componentTypeMap;
 public:
     class EntityManager
     {
@@ -99,14 +99,17 @@ public:
 		std::unordered_map<ComponentType, ComponentPtr> components;
         //std::unordered_map<std::type_index, ComponentPtr> components;
 		std::vector<ComponentType> componentTypes;
-        IComponentArray();
+        IComponentArray() = default;
         IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, std::unordered_map<std::type_index, ComponentType>& componentTypeMap);
         template<ComponentType T>
         void* get()
         {
             auto i = components.find(T);
             if(i == components.end()) throw CException(__LINE__, __FILE__, "IComponentArray", "Couldn't find the Component");
-            return i->second.base->GetPointer(); 
+			if(i->second.base == nullptr) std::cout << "Base is nullptr " << std::endl;
+			void* basePointer = i->second.base->GetPointer();
+			if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
+			return basePointer;
         }
     };    
 
@@ -118,6 +121,7 @@ public:
         IComponentArray* CreateComponentArray();
     };
 public:
+	std::unordered_map<std::type_index, ComponentType> componentTypeMap;
     std::unordered_map<uint32_t, std::unique_ptr<IComponentArray>> entities;
     EntityManager* entityManager;
     ComponentManager* componentManager;

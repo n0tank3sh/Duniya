@@ -78,12 +78,12 @@ GLIndexBinder::GLIndexBinder(uint32_t rendererID)
     this->rendererID = rendererID;
 }
 
-void GLIndexBinder::Bind() const 
+void GLIndexBinder::Bind() const noexcept 
 {
-    GLDEBUGCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID);
 }
 
-void GLIndexBinder::UnBind() const 
+void GLIndexBinder::UnBind() const noexcept
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
@@ -93,12 +93,12 @@ GLVertexBinder::GLVertexBinder(uint32_t rendererID)
     this->rendererID = rendererID;
 }
 
-void GLVertexBinder::Bind() const 
+void GLVertexBinder::Bind() const noexcept
 {
-    GLDEBUGCALL(glBindBuffer(GL_ARRAY_BUFFER, rendererID));
+    glBindBuffer(GL_ARRAY_BUFFER, rendererID);
 }
 
-void GLVertexBinder::UnBind() const 
+void GLVertexBinder::UnBind() const noexcept
 {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -114,12 +114,12 @@ GLTextureBinder::GLTextureBinder(uint32_t rendererID, GLenum target)
     this->target = target;
 }
 
-void GLTextureBinder::Bind() const 
+void GLTextureBinder::Bind() const noexcept
 {
-    GLDEBUGCALL(glBindTexture(target, rendererID));
+    glBindTexture(target, rendererID);
 }
 
-void GLTextureBinder::UnBind() const 
+void GLTextureBinder::UnBind() const noexcept
 {
     glBindTexture(target, 0);
 }
