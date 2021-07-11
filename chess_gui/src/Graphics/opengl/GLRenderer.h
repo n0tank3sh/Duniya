@@ -50,7 +50,7 @@ public:
     GLRenderer();
     void Draw(GBuffer* gBuffer) override;
     void LoadBuffer(GBuffer* gBuffer) override;
-    void LoadTexture(Texture* texture) override;
+    void LoadTexture(Texture* texture, GBuffer* gbuffer) override;
     void AddShader(ShaderType type, std::string& source) override;
     void Clear() override;
     void ClearColor(float r, float g, float b) override;

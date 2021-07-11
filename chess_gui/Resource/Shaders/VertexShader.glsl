@@ -8,6 +8,7 @@ out vec3 oNormal;
 out vec3 otexCoord;
 
 uniform mat4 MVP;
+uniform vec3 roughness;
 
 void main()
 {

@@ -334,9 +334,10 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
     GLDEBUGCALL(glBufferData(bufferType, gBuffer->sizet, gBuffer->data, flags));
 }
 
-void GLRenderer::LoadTexture(Texture* texture)
+void GLRenderer::LoadTexture(Texture* texture, GBuffer* gBuffer)
 {
     uint32_t rendererID;
+	gBuffer = new GBuffer;
     if(texture == nullptr) std::cout << "Texture is nullptr " << std::endl;
     GLDEBUGCALL(glGenTextures(1, &rendererID));
     GLenum type;
@@ -362,8 +363,8 @@ void GLRenderer::LoadTexture(Texture* texture)
                     0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
             break;
     };
-    texture->binder = new GLTextureBinder(rendererID, type);
-    texture->Bind();
+    gBuffer->gBinder = std::unique_ptr<GBinder>(new GLTextureBinder(rendererID, type));
+    gBuffer->Bind();
     GLDEBUGCALL(glGenerateMipmap(type));
 }
 

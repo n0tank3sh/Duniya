@@ -15,8 +15,14 @@
 enum class ComponentType : uint32_t
 {
 	MESH,
-	TRANSFORM
+	TRANSFORM,
+	CHILDREN,
+	MATERIAL,
+	TEXTURE,
+	RENDERERSTUFF
 };
+
+using ComponentTypeMap = std::unordered_map<std::type_index, ComponentType>;
 
 class ComponentPtr
 {
@@ -121,7 +127,7 @@ public:
         IComponentArray* CreateComponentArray();
     };
 public:
-	std::unordered_map<std::type_index, ComponentType> componentTypeMap;
+	ComponentTypeMap componentTypeMap;
     std::unordered_map<uint32_t, std::unique_ptr<IComponentArray>> entities;
     EntityManager* entityManager;
     ComponentManager* componentManager;
@@ -147,6 +153,11 @@ public:
     // (TODO): Scene loading and unloading
     void LoadScene(std::string filePath);
     void SaveScene(std::string filePath);
+};
+
+struct Children
+{
+	std::unordered_map<uint32_t, Scene::IComponentArray>* components;
 };
 
 struct System

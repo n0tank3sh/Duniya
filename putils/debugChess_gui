@@ -1,0 +1,5 @@
+#!/bin/bash
+cd ~/Projects/Chess_gui/out/chess_gui
+make
+gdb chess_gui 
+

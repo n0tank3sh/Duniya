@@ -1,7 +1,13 @@
-#include <ecs/GraphicsComponent.h>
 #include <ecs/ecs.h>
-#include "Graphics/Renderer.h"
-#include "Application.h"
+#include <Graphics/Renderer.h>
+#include <Application.h>
+
+struct RendererStuff
+{
+	GBuffer* iBuffer;
+	GBuffer* vBuffer;
+	GBuffer* texture;
+};
 
 class RendererSystem : public System
 {
@@ -10,7 +16,7 @@ private:
 public:
     static RendererSystem* init(Graphics_API graphicsAPI);
     static RendererSystem* GetSingleton();
-	void CreateGBufferMesh(Mesh* mesh);
+	void CreateGBufferMesh(Mesh* mesh, GBuffer* iBuffer, GBuffer* vBuffer);
     ~RendererSystem();
     void LoadScene(Scene* scene) override;
     void update(float deltaTime) override;

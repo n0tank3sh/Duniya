@@ -1,4 +1,16 @@
 
+set(MATH_UTILS
+	"src/math/mat.h"
+    "src/math/mat.cpp"
+    "src/math/vect2.h"
+    "src/math/vect2.cpp"
+    "src/math/vect3.h"
+    "src/math/vect3.cpp"
+    "src/math/vect4.h"
+    "src/math/vect4.cpp"
+    "src/math/mathutils.h"
+)
+
 
 set(CHESS_SRC
         "src/main.cpp"
@@ -13,42 +25,34 @@ set(CHESS_SRC
         "src/RendererSystem.h"
 		"src/ecs/commoncomponent.h"
         "src/RendererSystem.cpp"
-        "src/math/mat.h"
-        "src/math/mat.cpp"
-        "src/math/vect2.h"
-        "src/math/vect2.cpp"
-        "src/math/vect3.h"
-        "src/math/vect3.cpp"
-        "src/math/vect4.h"
-        "src/math/vect4.cpp"
-        "src/math/mathutils.h"
         "src/Graphics/Renderer.h"
 		"src/Graphics/Renderer.cpp"
         "src/ecs/GraphicsComponent.h"
         "src/Graphics/opengl/GLUtils.h"
         "src/Graphics/opengl/GLRenderer.h"
         "src/Graphics/opengl/GLRenderer.cpp"
+		"src/Renderer2DSystem.h"
+		"src/Renderer2DSystem.cpp"
+		${MATH_UTILS}
 )
 
-set(EDITOR_SRC
-	"src/editor/Editor.h"
-	"src/editor/Editor.cpp"
+set(SCENECONVERTER_SRC
+	"src/SceneConverter/SceneConverter.h"
+	"src/SceneConverter/SceneConverter.cpp"
 	"src/ecs/ecs.h"
 	"src/ecs/ecs.cpp"
+	${MATH_UTILS}
 	)
 
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(ASSIMP REQUIRED)
+
 include_directories(${SDL2_INCLUDE_DIRS})
 add_executable(
     chess_gui
     ${CHESS_SRC}
 )
 add_executable(
-	editor
-	${EDITOR_SRC}
+	sceneconverter
+	${SCENECONVERTER_SRC}
 )
 
 target_include_directories(
@@ -56,7 +60,7 @@ target_include_directories(
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 target_include_directories(
-	editor
+	sceneconverter
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
@@ -76,4 +80,9 @@ target_link_libraries(
     ${CMAKE_DL_LIBS}
 )
 
+
+target_link_libraries(
+	sceneconverter
+	${ASSIMP_LIBRARIES}
+)
 

@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <math/mat.h>
+#include <ecs/GraphicsComponent.h>
 
 using VertexSpecification = std::vector<std::pair<std::string, uint32_t>>;
 
@@ -15,22 +16,6 @@ struct GBinder
     virtual void UnBind() const noexcept  = 0;
 };
 
-struct Texture
-{
-	Texture() = default;
-	~Texture() = default;
-    uint32_t width, height, depth,  sizet;
-    enum class Type : uint32_t
-    {
-        T1D,
-        T2D,
-        T3D,
-    } type;
-    uint8_t* data;
-    GBinder* binder;
-    void Bind() const noexcept;
-    void UnBind() const noexcept;
-};
 
 struct GBuffer
 {
@@ -72,7 +57,7 @@ public:
 	//Override function
     virtual void Draw(GBuffer* gBuffer) = 0;
     virtual void LoadBuffer(GBuffer* gBuffer) = 0;
-    virtual void LoadTexture(Texture* texture) = 0;
+    virtual void LoadTexture(Texture* texture, GBuffer* gBuffer) = 0;
     virtual void AddShader(ShaderType type, std::string& source) = 0;
     virtual void Uniform1f(const float& data, std::string name) = 0;
     virtual void Uniform2f(const Vect2& data, std::string name) = 0;
