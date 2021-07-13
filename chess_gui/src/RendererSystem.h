@@ -25,4 +25,5 @@ private:
     Scene* scene;
     static RendererSystem* singleton;
 	float animated;
+	Mat transformDefault;
 };

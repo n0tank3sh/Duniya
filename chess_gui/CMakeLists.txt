@@ -11,29 +11,35 @@ set(MATH_UTILS
     "src/math/mathutils.h"
 )
 
+set(ECS_SRC
+    "src/ecs/ecs.h"
+    "src/ecs/ecs.cpp"
+	"src/ecs/commoncomponent.h"
+    "src/ecs/GraphicsComponent.h"
+	"src/ecs/SerializerSystem.h"
+	"src/ecs/SerializerSystem.cpp"
+	)
+
+set(EXCEPTION_SRC
+	"src/Exception.cpp"
+    "src/Exception.h"
+	)
 
 set(CHESS_SRC
-        "src/main.cpp"
-        "src/Application.h"
-        "src/Application.cpp"
-        "src/AssetLoader.h"
-        "src/AssetLoader.cpp"
-        "src/ecs/ecs.h"
-        "src/ecs/ecs.cpp"
-        "src/Exception.cpp"
-        "src/Exception.h"
-        "src/RendererSystem.h"
-		"src/ecs/commoncomponent.h"
-        "src/RendererSystem.cpp"
-        "src/Graphics/Renderer.h"
-		"src/Graphics/Renderer.cpp"
-        "src/ecs/GraphicsComponent.h"
-        "src/Graphics/opengl/GLUtils.h"
-        "src/Graphics/opengl/GLRenderer.h"
-        "src/Graphics/opengl/GLRenderer.cpp"
-		"src/Renderer2DSystem.h"
-		"src/Renderer2DSystem.cpp"
-		${MATH_UTILS}
+    "src/main.cpp"
+    "src/Application.h"
+    "src/Application.cpp"
+    "src/AssetLoader.h"
+    "src/AssetLoader.cpp"
+	"src/RendererSystem.h"
+    "src/RendererSystem.cpp"
+    "src/Graphics/Renderer.h"
+	"src/Graphics/Renderer.cpp"
+    "src/Graphics/opengl/GLUtils.h"
+    "src/Graphics/opengl/GLRenderer.h"
+    "src/Graphics/opengl/GLRenderer.cpp"
+	"src/Renderer2DSystem.h"
+	"src/Renderer2DSystem.cpp"
 )
 
 set(SCENECONVERTER_SRC
@@ -41,7 +47,6 @@ set(SCENECONVERTER_SRC
 	"src/SceneConverter/SceneConverter.cpp"
 	"src/ecs/ecs.h"
 	"src/ecs/ecs.cpp"
-	${MATH_UTILS}
 	)
 
 
@@ -49,10 +54,16 @@ include_directories(${SDL2_INCLUDE_DIRS})
 add_executable(
     chess_gui
     ${CHESS_SRC}
+	${MATH_UTILS}
+	${ECS_SRC}
+	${EXCEPTION_SRC}
 )
 add_executable(
 	sceneconverter
 	${SCENECONVERTER_SRC}
+	${MATH_UTILS}
+	${ECS_SRC}
+	${EXCEPTION_SRC}
 )
 
 target_include_directories(

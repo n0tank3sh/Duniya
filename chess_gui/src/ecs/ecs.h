@@ -24,6 +24,14 @@ enum class ComponentType : uint32_t
 
 using ComponentTypeMap = std::unordered_map<std::type_index, ComponentType>;
 
+struct TypeNotFoundException : public CException
+{
+	TypeNotFoundException(uint32_t line, const char* file)
+		:
+			CException(line, file, "Type Not Found", "Cannot find the type you are refercing")
+	{}
+};
+
 class ComponentPtr
 {
 public:
@@ -45,7 +53,7 @@ public:
         }
         Impl(const Impl& imp)
         {
-            data = imp.data;
+			data = nullptr;
         }
         void CheckingToSeeBase() override {std::cout << "If derived \n";}
         BaseImpl* Clone() override
@@ -79,10 +87,13 @@ public:
     }
     ComponentPtr(const ComponentPtr& comptr)
     {
+		if(comptr.base != nullptr)
         base = comptr.base->Clone();
+		else base = nullptr;
     }
     ~ComponentPtr() 
     {
+		if(base != nullptr)
         delete base;
     }
 
@@ -111,8 +122,7 @@ public:
         void* get()
         {
             auto i = components.find(T);
-            if(i == components.end()) throw CException(__LINE__, __FILE__, "IComponentArray", "Couldn't find the Component");
-			if(i->second.base == nullptr) std::cout << "Base is nullptr " << std::endl;
+            if(i == components.end()) throw TypeNotFoundException(__LINE__, __FILE__);
 			void* basePointer = i->second.base->GetPointer();
 			if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
 			return basePointer;
@@ -126,9 +136,10 @@ public:
         std::unordered_map<std::type_index, ComponentPtr> componentTypes;
         IComponentArray* CreateComponentArray();
     };
+	using Entities  = std::unordered_map<uint32_t,  std::unique_ptr<IComponentArray>>;
 public:
 	ComponentTypeMap componentTypeMap;
-    std::unordered_map<uint32_t, std::unique_ptr<IComponentArray>> entities;
+    Entities entities;
     EntityManager* entityManager;
     ComponentManager* componentManager;
 public:
@@ -139,9 +150,9 @@ public:
     void RegisterComponent()
     {
         componentManager->componentTypes.insert(std::make_pair
-                (std::type_index(typeid(T)), 
-                 ComponentPtr(new ComponentPtr::Impl<T>())
-                )
+                	(std::type_index(typeid(T)), 
+                	 ComponentPtr(new ComponentPtr::Impl<T>())
+                	)
                 );
     }
     template <typename T>
@@ -150,14 +161,13 @@ public:
         componentManager->componentTypes.erase(std::type_index(typeid(T)));
     }
 
-    // (TODO): Scene loading and unloading
     void LoadScene(std::string filePath);
     void SaveScene(std::string filePath);
 };
 
 struct Children
 {
-	std::unordered_map<uint32_t, Scene::IComponentArray>* components;
+	std::unordered_map<uint32_t, Scene::IComponentArray>* children;
 };
 
 struct System

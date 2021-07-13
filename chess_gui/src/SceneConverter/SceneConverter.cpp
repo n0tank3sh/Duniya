@@ -32,7 +32,26 @@ void SceneConverter::Import(std::string filePath, std::string resultedPath)
 	{
 		resultedScene->componentTypeMap.insert(std::make_pair(std::type_index(typeid(Texture)), ComponentType::TEXTURE));
 	}
+	for(auto& i: resultedScene->componentTypeMap)
+	{
+		std::cout << i.first.name() << " " << static_cast<uint32_t>(i.second) << std::endl;
+	}
 	ProcessNodes(scene->mRootNode, resultedScene, scene);
+	for(auto& i: resultedScene->entities)
+	{
+		for(auto& j: i.second.get()->components)
+		{
+			if(j.first == ComponentType::MESH)
+			{
+				Mesh* mesh = reinterpret_cast<Mesh*>(j.second.base->GetPointer());
+				for(auto k: *(mesh->indicies))
+				{
+					std::cout << k << " ";
+				}
+				std::cout << std::endl;
+			}
+		}
+	}
 	resultedScene->SaveScene(resultedPath);
 	importer.FreeScene();
 }
@@ -40,17 +59,13 @@ void SceneConverter::Import(std::string filePath, std::string resultedPath)
 void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* queryScene)
 {
 	uint32_t entity = scene->entityManager->CreateEntity();
-	scene->entities.insert(std::make_pair(entity, std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray)));
+	scene->entities.insert(std::move(std::make_pair(entity, std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray))));
 	ComponentPtr& componentPtr = scene->entities[entity]->components[ComponentType::MESH];
 	componentPtr.base = new ComponentPtr::Impl<Mesh>();
 	componentPtr.base->Create();
 	Mesh* resultedMesh = (Mesh*)componentPtr.base->GetPointer();
 	resultedMesh->indicies =new std::vector<uint32_t>();
 	resultedMesh->verticies = new std::vector<Vertex>();
-	if(mesh->mNumVertices != mesh->mNumUVComponents[0]) std::cout << "The larger size will be: " << (mesh->mNumVertices == std::max(mesh->mNumVertices, mesh->mNumUVComponents[0])? "vertices size ": "uv size") << std::endl;
-	if(mesh->HasTextureCoords(0)) std::cout << " Mesh have the uv channel " << std::endl;
-	if(sizeof(Vect3) != sizeof(aiColor3D)) std::cout << "Size fo Vect3 is not equals to sizeo of aiColor3D" << std::endl;
-	if(!mesh->HasNormals()) std::cout << "Doesn't has the normals " << std::endl;
 	for(uint32_t i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
@@ -67,10 +82,13 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 		std::cout  << "Total number of the faces: " << mesh->mNumFaces << std::endl;
 		for(uint32_t i = 0; i < mesh->mNumFaces; i++)
 		{
-			const aiFace* face = &mesh->mFaces[i];
-			if(mesh->mFaces == nullptr) std::cout << "Faces is null" << std::endl;
-			for(uint32_t j = 0; j < face->mNumIndices; j++)
+			std::cout << ((mesh->mFaces + sizeof(aiFace) * i)->mIndices == nullptr?" indicies is nullptr " : " indicies is not nullptr ") << std::endl;
+			std::cout << "the face number: " << i << std::endl;
+			aiFace* face = &mesh->mFaces[i];
+		//	if(&mesh->mFaces[i] == nullptr) std::cout << "Faces is null" << std::endl;
+			for(uint32_t j = 0; j < 3; j++)
 			{
+				std::cout << "Index of indicies: " << j << std::endl;
 				resultedMesh->indicies->push_back(face->mIndices[j]);
 			}
 		}
@@ -79,7 +97,6 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 
 void SceneConverter::ProcessTexture(aiTexture* texture, Scene* scene, const aiScene* queryScene)
 {
-	
 }
 
 void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const aiScene* queryScene)
@@ -87,12 +104,12 @@ void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const a
 
 	if(true)
 	{
-//		ComponentPtr& componentPtr = scene->components[ComponentType::MATERIAL];
-//		componentPtr.base->Create();
-//		Material* resultedMaterial = reinterpret_cast<Material*>(componentPtr.base->GetPointer());
-//		material->Get(AI_MATKEY_COLOR_SPECULAR, *(aiColor3D*)&resultedMaterial->spectacular);
-//		material->Get(AI_MATKEY_COLOR_DIFFUSE, resultedMaterial->diffuse.coordinates);
-//		material->Get(AI_MATKEY_COLOR_AMBIENT, resultedMaterial->ambient.coordinates);
+	//	ComponentPtr& componentPtr = scene->components[ComponentType::MATERIAL];
+	//	componentPtr.base->Create();
+	//	Material* resultedMaterial = reinterpret_cast<Material*>(componentPtr.base->GetPointer());
+	//	material->Get(AI_MATKEY_COLOR_SPECULAR, *(aiColor3D*)&resultedMaterial->spectacular);
+	//	material->Get(AI_MATKEY_COLOR_DIFFUSE, resultedMaterial->diffuse.coordinates);
+	//	material->Get(AI_MATKEY_COLOR_AMBIENT, resultedMaterial->ambient.coordinates);
 	//	material->Get(AI_MATKEY_SHININESS, &resultedMaterial->shininess);
 	//	aiGetMaterialFloat(AI_MATKEY_SHININESS, &resultedMaterial->shininess);
 	}
@@ -100,14 +117,14 @@ void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const a
 
 void SceneConverter::ProcessNodes(aiNode* node, Scene* scene, const aiScene* queryScene)
 {
-	std::cout << "Reach here " << std::endl;
-	std::cout << "the size of the root nodes " << node->mNumMeshes << std::endl;
-	std::cout << "the total number of children " << node->mNumChildren << std::endl;
-	std::cout << "the size fo the child nodes " << node->mChildren[0]->mNumMeshes << std::endl;
 	for(uint32_t i = 0; i < node->mNumMeshes; i++)
 	{
 		std::cout << "Going through the loop" << std::endl;
 		ProcessMeshes(queryScene->mMeshes[node->mMeshes[i]], scene, queryScene);
+	}
+	for(uint32_t i = 0; i < node->mNumChildren; i++)
+	{
+		ProcessNodes(node->mChildren[i], scene, queryScene);
 	}
 }
 

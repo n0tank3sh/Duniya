@@ -6,8 +6,14 @@
 RendererSystem* RendererSystem::singleton = nullptr;
 
 RendererSystem::RendererSystem()
+	:
+		transformDefault({4, 4})
 {
 	animated = .0f;
+	for(uint32_t i = 0; i < 4; i++)
+	{
+		transformDefault.buffer.get()[i * 4 + i] = 1.f;
+	}
 }
 
 RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
@@ -89,8 +95,17 @@ void RendererSystem::update(float deltaTime)
         	rendererStuff->vBuffer->Bind();
         	rendererStuff->iBuffer->Bind();
         	rendererStuff->texture->Bind();
-        	Mat* mat = ConvertTranforToMatrix(*((Transform*)i.second->get<ComponentType::TRANSFORM>()));
+			Mat* mat = nullptr;
+			try
+			{
+				mat = ConvertTranforToMatrix(*((Transform*)i.second->get<ComponentType::TRANSFORM>()));
+			}
+			catch(TypeNotFoundException& e)
+			{
+				mat = &transformDefault;
+			}
         	renderer->UniformMat(*mat, "MVP");
+			
         	renderer->Draw(rendererStuff->iBuffer);
 		}
     }
