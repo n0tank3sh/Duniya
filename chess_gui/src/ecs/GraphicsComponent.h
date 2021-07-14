@@ -21,8 +21,10 @@ struct Material
 };
 struct Mesh
 {
-    std::vector<Vertex>* verticies;
-    std::vector<uint32_t>* indicies;
+	uint32_t vertexCount;
+	uint32_t indexCount;
+    Vertex* verticies;
+    uint32_t* indicies;
 };
 
 

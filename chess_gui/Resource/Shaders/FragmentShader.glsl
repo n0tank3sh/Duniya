@@ -13,6 +13,6 @@ uniform vec3 ambient;
 
 void main()
 {
-	FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
-	FragColor += vec3(1, 1, 1);
+//	FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
+	FragColor = vec4(1, .5, 1, 1);
 }

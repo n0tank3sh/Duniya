@@ -48,30 +48,26 @@ void SerializerSystem::Serialize<Mesh>(const Mesh& var)
 	CHECKOS;
 	assert(var.verticies != nullptr);
 	assert(var.indicies  != nullptr);
-	uint32_t meshSizes[2] = { (uint32_t)var.verticies->size(), (uint32_t)var.indicies->size()};	
+	uint32_t meshSizes[2] = { (uint32_t)var.vertexCount, (uint32_t)var.indexCount};	
 	os->write((char*)meshSizes, sizeof(uint32_t) * 2);
-	os->write((char*)var.verticies->data(), sizeof(Vertex) * var.verticies->size());
-	os->write((char*)var.indicies->data(), sizeof(uint32_t) * var.indicies->size());
+	os->write((char*)var.verticies, sizeof(Vertex) * var.vertexCount);
+	os->write((char*)var.indicies, sizeof(uint32_t) * var.indexCount);
 }
 
 template<>
 void SerializerSystem::Deserialize<Mesh>(Mesh& var)
 {
 	CHECKIS;
-	if(var.verticies == nullptr) var.verticies = new std::vector<Vertex>();
-	if(var.indicies == nullptr) var.indicies = new std::vector<uint32_t>();
+
 	uint32_t meshSizes[2];
 	is->read((char*)meshSizes, sizeof(uint32_t) * 2);
-	for(uint32_t i = 0; i < meshSizes[0]; i ++)
-	{
-		Vertex vertex;
-		is->read((char*)&vertex, sizeof(Vertex));
-	}
-	for(uint32_t i = 0; i < meshSizes[1]; i++)
-	{
-		uint32_t temp;
-		is->read((char*)&temp, sizeof(uint32_t));
-	}
+	std::cout << " Vertex Buffer: " << std::endl;
+	var.vertexCount = meshSizes[0];
+	var.indexCount = meshSizes[1];
+	var.verticies = new Vertex[var.vertexCount];
+	var.indicies = new uint32_t[var.indexCount];
+	is->read((char*)var.verticies, sizeof(Vertex) * var.vertexCount);
+	is->read((char*)var.indicies, sizeof(uint32_t) * var.indexCount);
 }
 
 

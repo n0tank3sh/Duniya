@@ -319,11 +319,18 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
             gBuffer->gBinder.reset(new GLVertexBinder(rendererID));
 			gBuffer->Bind();
             FinalizeVertexSpecification();
-			std::cout <<"Just checking the right data in Vertex buffer is being loaded: " <<  *((Vect4*)gBuffer->data) << std::endl;
+			std::cout << "Just Checking Vertex Buffer " << std::endl;
+			for(uint32_t i = 0; i < gBuffer->count; i++)
+			{
+				std::cout <<  *((Vect4*)gBuffer->data + i * sizeof(Vertex)) << ' ' << *((Vect3*)gBuffer->
+						data + sizeof(Vect4) + (i * sizeof(Vertex))) << ' ' << *((Vect3*)gBuffer->data + sizeof(Vect4) + sizeof(Vect3) +( i * sizeof(Vertex)))<< std::endl;
+			}
             break;        
         case GBuffer::GBufferStyle::BufferType::INDEX:
             bufferType = GL_ELEMENT_ARRAY_BUFFER;
-			std::cout <<"Just checking the right data in index buffer is being loaded: " << *((uint32_t*)gBuffer->data) << std::endl;
+			std::cout << "Just checking the right data in index buffer is being loaded: " << std::endl;
+			for(uint32_t i = 0; i < gBuffer->sizet; i++)
+			std::cout << *((uint32_t*)gBuffer->data  + (i * sizeof(uint32_t))) << std::endl;
             gBuffer->gBinder.reset(new GLIndexBinder(rendererID));
             break;
     };

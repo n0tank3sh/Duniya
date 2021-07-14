@@ -21,6 +21,8 @@ RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
     singleton = new RendererSystem();
     singleton->renderer.reset(new GLRenderer());
 	std::string vertexShaderSrc, fragShaderSrc;
+	if(AssetLoader::GetSingleton() == nullptr)
+	AssetLoader::init();
 	AssetLoader* assLoader = AssetLoader::GetSingleton();
 	assLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertexShaderSrc);
 	assLoader->LoadTextFile("Resource/Shaders/FragmentShader.glsl", fragShaderSrc);
@@ -35,54 +37,51 @@ RendererSystem* RendererSystem::GetSingleton()
 {
     return singleton;
 }
-void RendererSystem::CreateGBufferMesh(Mesh* mesh, GBuffer* iBuffer, GBuffer* vBuffer)
+void RendererSystem::CreateGBufferMesh(Mesh* mesh, GBuffer* indexBuffer, GBuffer* vertexBuffer)
 {
-    GBuffer* vertexBuffer =  new GBuffer;
-    GBuffer* indexBuffer = new GBuffer;
-
-    vertexBuffer->bufferStyle.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC; 
+	vertexBuffer->bufferStyle.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC; 
     vertexBuffer->bufferStyle.type = GBuffer::GBufferStyle::BufferType::VERTEX;
     vertexBuffer->bufferStyle.usage = GBuffer::GBufferStyle::Usage::DRAW;
-    vertexBuffer->data = mesh->verticies->data();
-    vertexBuffer->count = mesh->verticies->size();
-    vertexBuffer->sizet = mesh->verticies->size() * sizeof(Vertex);
-    std::cout << vertexBuffer->sizet << " is the total Size" << std::endl;
+    vertexBuffer->data = mesh->verticies;
+    vertexBuffer->count = mesh->vertexCount;
+    vertexBuffer->sizet = mesh->vertexCount * sizeof(Vertex);
 
     indexBuffer->bufferStyle.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC;
     indexBuffer->bufferStyle.type = GBuffer::GBufferStyle::BufferType::INDEX;
     indexBuffer->bufferStyle.usage = GBuffer::GBufferStyle::Usage::DRAW;
-    indexBuffer->data = mesh->indicies->data();
-    indexBuffer->count = mesh->indicies->size();
-    indexBuffer->sizet = mesh->indicies->size() * sizeof(uint32_t);
-    std::cout << indexBuffer->sizet << " is the total size " << std::endl;
-
-    iBuffer = indexBuffer;
-    vBuffer = vertexBuffer;
+    indexBuffer->data = mesh->indicies;
+    indexBuffer->count = mesh->indexCount;
+    indexBuffer->sizet = mesh->indexCount * sizeof(uint32_t);
 }
 void RendererSystem::LoadScene(Scene* scene)
 {
 //	renderer->ClearColor(.0f, 1.f, 0.5f);
     this->scene = scene;
     Mesh* mesh;
-	RendererStuff* rendererStuff;
 	Texture* texture;
-	std::cout << scene->entities.size() << std::endl;
+	std::cout << "Entities size: " << scene->entities.size() << std::endl;
     for(auto& i: scene->entities)
     {
 		Scene::IComponentArray* componentArray;
 		componentArray = i.second.get();
-		auto meshItr = componentArray->components.find(ComponentType::MESH);
-		if(meshItr != componentArray->components.end())
-		{
-		}
+		Mesh* mesh = (Mesh*)componentArray->components.find(ComponentType::MESH)->second.base->GetPointer();
+		componentArray->components.insert(std::make_pair(ComponentType::RENDERERSTUFF, ComponentPtr(new ComponentPtr::Impl<RendererStuff>())));
+		componentArray->components[ComponentType::RENDERERSTUFF].base->Create();
+		RendererStuff* rendererStuff = (RendererStuff*)componentArray->components[ComponentType::RENDERERSTUFF].base->GetPointer();
+		rendererStuff->iBuffer = new GBuffer;
+		rendererStuff->vBuffer = new GBuffer;
+		CreateGBufferMesh(mesh, rendererStuff->iBuffer, rendererStuff->vBuffer);
+		renderer->LoadBuffer(rendererStuff->iBuffer);
+		renderer->LoadBuffer(rendererStuff->vBuffer);
+		//if(meshItr != componentArray->components.end())
+		//{
+		//}
     }
 }
 
 void RendererSystem::update(float deltaTime)
 {
 //	renderer->ClearColor(.0f, 1.f, 0.5f);
-
-
 	renderer->ClearColor(std::abs(std::cos(animated)/100 * deltaTime) , std::abs(std::sin(animated)/10 * deltaTime)  , .5f);
 	renderer->Clear();
     RendererStuff* rendererStuff;
@@ -94,7 +93,7 @@ void RendererSystem::update(float deltaTime)
         	rendererStuff = (RendererStuff*)rendererStuffitr->second.base->GetPointer();
         	rendererStuff->vBuffer->Bind();
         	rendererStuff->iBuffer->Bind();
-        	rendererStuff->texture->Bind();
+        	//rendererStuff->texture->Bind();
 			Mat* mat = nullptr;
 			try
 			{
@@ -102,9 +101,15 @@ void RendererSystem::update(float deltaTime)
 			}
 			catch(TypeNotFoundException& e)
 			{
+//				std::cout << "Are we using this " << std::endl;
 				mat = &transformDefault;
+//				for(uint32_t i = 0; i < mat->sizet; i++)
+//				{
+//					std::cout << mat->buffer.get()[i] << " ";
+//					if((i % mat->dimension.row) == 0) std::cout << std::endl;
+//				}
 			}
-        	renderer->UniformMat(*mat, "MVP");
+        	//renderer->UniformMat(*mat, "MVP");
 			
         	renderer->Draw(rendererStuff->iBuffer);
 		}

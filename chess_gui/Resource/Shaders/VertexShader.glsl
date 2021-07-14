@@ -12,7 +12,8 @@ uniform vec3 roughness;
 
 void main()
 {
-    gl_Position = MVP * pos;
+//    gl_Position = MVP * pos;
+	gl_Position = pos;
     oNormal = aNormal;
     otexCoord = texCoord;
 }
