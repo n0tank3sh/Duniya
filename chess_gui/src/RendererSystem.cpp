@@ -12,8 +12,9 @@ RendererSystem::RendererSystem()
 	animated = .0f;
 	for(uint32_t i = 0; i < 4; i++)
 	{
-		transformDefault.buffer.get()[i * 4 + i] = 1.f;
+		transformDefault.buffer.get()[i * 4 + i] = .5f;
 	}
+	transformDefault.buffer.get()[4 * 4 - 1] = 1.f;
 }
 
 RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
@@ -76,12 +77,24 @@ void RendererSystem::LoadScene(Scene* scene)
 		//if(meshItr != componentArray->components.end())
 		//{
 		//}
+		Vertex* vertex = static_cast<Vertex*>(rendererStuff->vBuffer->data);
+		std::cout << "Vertex Buffer: " << std::endl;
+		for(uint32_t i = 0; i < rendererStuff->vBuffer->count; i++)
+		{
+			std::cout << vertex[i].aPos << " " << vertex[i].aNormal << " " << vertex[i].texCord << std::endl;
+		}
+		std::cout << "Index Buffer: " << std::endl;
+		for(uint32_t i = 0; i < rendererStuff->iBuffer->count; i++)
+			std::cout << static_cast<uint32_t*>(rendererStuff->iBuffer->data)[i] << " ";
+		std::cout << std::endl;
+
     }
 }
 
 void RendererSystem::update(float deltaTime)
 {
 //	renderer->ClearColor(.0f, 1.f, 0.5f);
+	std::cout << "Entering the renderering " << std::endl;
 	renderer->ClearColor(std::abs(std::cos(animated)/100 * deltaTime) , std::abs(std::sin(animated)/10 * deltaTime)  , .5f);
 	renderer->Clear();
     RendererStuff* rendererStuff;
@@ -95,21 +108,17 @@ void RendererSystem::update(float deltaTime)
         	rendererStuff->iBuffer->Bind();
         	//rendererStuff->texture->Bind();
 			Mat* mat = nullptr;
-			try
+			Transform* transform = static_cast<Transform*>(i.second->get<ComponentType::TRANSFORM>());
+			if(transform != nullptr)
+			mat = ConvertTranforToMatrix(*transform);
+			else
 			{
-				mat = ConvertTranforToMatrix(*((Transform*)i.second->get<ComponentType::TRANSFORM>()));
-			}
-			catch(TypeNotFoundException& e)
-			{
-//				std::cout << "Are we using this " << std::endl;
 				mat = &transformDefault;
-//				for(uint32_t i = 0; i < mat->sizet; i++)
-//				{
-//					std::cout << mat->buffer.get()[i] << " ";
-//					if((i % mat->dimension.row) == 0) std::cout << std::endl;
-//				}
+				std::cout << "Loading the default mvp" << std::endl;
+				std::cout << "Size of the default transform " << mat->sizet << std::endl;
 			}
-        	//renderer->UniformMat(*mat, "MVP");
+			std::cout << *mat << std::endl;
+        	renderer->UniformMat(*mat, "MVP");
 			
         	renderer->Draw(rendererStuff->iBuffer);
 		}

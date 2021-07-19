@@ -44,11 +44,6 @@ void SceneConverter::Import(std::string filePath, std::string resultedPath)
 			if(j.first == ComponentType::MESH)
 			{
 				Mesh* mesh = reinterpret_cast<Mesh*>(j.second.base->GetPointer());
-				for(auto k: *(mesh->indicies))
-				{
-					std::cout << k << " ";
-				}
-				std::cout << std::endl;
 			}
 		}
 	}
@@ -64,8 +59,8 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 	componentPtr.base = new ComponentPtr::Impl<Mesh>();
 	componentPtr.base->Create();
 	Mesh* resultedMesh = (Mesh*)componentPtr.base->GetPointer();
-	resultedMesh->indicies =new std::vector<uint32_t>();
-	resultedMesh->verticies = new std::vector<Vertex>();
+	resultedMesh->verticies = new Vertex[mesh->mNumVertices];
+	resultedMesh->vertexCount = mesh->mNumVertices;
 	for(uint32_t i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
@@ -75,11 +70,14 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 		vertex.aPos.w = 1.f;
 		vertex.aNormal = *((Vect3*)&mesh->mNormals[i]);
 		vertex.texCord = *((Vect3*)&mesh->mTextureCoords[0][i]);
-		resultedMesh->verticies->push_back(vertex);
+		resultedMesh->verticies[i] = vertex;
 	}
 	if(mesh->HasFaces())
 	{
 		std::cout  << "Total number of the faces: " << mesh->mNumFaces << std::endl;
+		resultedMesh->indexCount = mesh->mNumFaces * 3;
+		resultedMesh->indicies = new uint32_t[resultedMesh->indexCount];
+		
 		for(uint32_t i = 0; i < mesh->mNumFaces; i++)
 		{
 			std::cout << ((mesh->mFaces + sizeof(aiFace) * i)->mIndices == nullptr?" indicies is nullptr " : " indicies is not nullptr ") << std::endl;
@@ -88,8 +86,7 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 		//	if(&mesh->mFaces[i] == nullptr) std::cout << "Faces is null" << std::endl;
 			for(uint32_t j = 0; j < 3; j++)
 			{
-				std::cout << "Index of indicies: " << j << std::endl;
-				resultedMesh->indicies->push_back(face->mIndices[j]);
+				resultedMesh->indicies[i] = face->mIndices[j];
 			}
 		}
 	}
@@ -99,19 +96,17 @@ void SceneConverter::ProcessTexture(aiTexture* texture, Scene* scene, const aiSc
 {
 }
 
-void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const aiScene* queryScene)
+void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const aiScene* queryScene, uint32_t entity)
 {
-
-	if(true)
+	aiShadingMode shadingMode;
+	if(shadingMode == aiShadingMode_Gouraud)
 	{
-	//	ComponentPtr& componentPtr = scene->components[ComponentType::MATERIAL];
-	//	componentPtr.base->Create();
-	//	Material* resultedMaterial = reinterpret_cast<Material*>(componentPtr.base->GetPointer());
-	//	material->Get(AI_MATKEY_COLOR_SPECULAR, *(aiColor3D*)&resultedMaterial->spectacular);
-	//	material->Get(AI_MATKEY_COLOR_DIFFUSE, resultedMaterial->diffuse.coordinates);
-	//	material->Get(AI_MATKEY_COLOR_AMBIENT, resultedMaterial->ambient.coordinates);
-	//	material->Get(AI_MATKEY_SHININESS, &resultedMaterial->shininess);
-	//	aiGetMaterialFloat(AI_MATKEY_SHININESS, &resultedMaterial->shininess);
+		ComponentPtr& componentPtr = scene->entities[entity]->components[ComponentType::MATERIAL];
+		componentPtr.base->Create();
+		Material* resultedMaterial = reinterpret_cast<Material*>(componentPtr.base->GetPointer());
+		material->Get(AI_MATKEY_COLOR_SPECULAR, *(aiColor3D*)&resultedMaterial->spectacular);
+		material->Get(AI_MATKEY_COLOR_DIFFUSE, resultedMaterial->diffuse.coordinates);
+		material->Get(AI_MATKEY_COLOR_AMBIENT, resultedMaterial->ambient.coordinates);
 	}
 }
 

@@ -18,7 +18,7 @@ public:
 	void Export(std::string filePath);
 private:
 	void ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* queryScene);
-	void ProcessMaterial(aiMaterial* material, Scene* scene, const aiScene* queryScene);
+	void ProcessMaterial(aiMaterial* material, Scene* scene, const aiScene* queryScene, uint32_t entity);
 	void ProcessTexture(aiTexture* texture, Scene* scene, const aiScene* queryScene);
 	void ProcessNodes(aiNode* node, Scene* scene, const aiScene* queryScene);
 public:

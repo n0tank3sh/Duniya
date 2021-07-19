@@ -1,5 +1,9 @@
-#!/bin/bash
-cd ~/Projects/Chess_gui/out/chess_gui
+#!/bin/sh
+
+set -e
+echo $PWD
+HOME_DIR=$PWD
+cd $HOME_DIR/out
 make
 gdb chess_gui 
 

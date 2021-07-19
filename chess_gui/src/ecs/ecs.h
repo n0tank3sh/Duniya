@@ -122,7 +122,7 @@ public:
         void* get()
         {
             auto i = components.find(T);
-            if(i == components.end()) throw TypeNotFoundException(__LINE__, __FILE__);
+            if(i == components.end()) return nullptr;
 			void* basePointer = i->second.base->GetPointer();
 			if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
 			return basePointer;

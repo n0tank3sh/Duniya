@@ -1,9 +1,12 @@
 
 #include "mat.h"
+#include <string.h>
 
 Mat::Mat(Dimension dimension)
 {
-    buffer.reset(new float[dimension.column * dimension.row]);
+	sizet = dimension.row * dimension.column;
+    buffer.reset(new float[sizet]);
+	memset(buffer.get(), 0, sizeof(float) * sizet);
     this->dimension = dimension;
 }
 

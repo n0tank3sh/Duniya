@@ -22,73 +22,73 @@ AssetLoader* AssetLoader::GetSingleton()
 
 void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 {
-	if(mesh->indicies == nullptr) mesh->indicies = new std::vector<uint32_t>();
-	if(mesh->verticies == nullptr) mesh->verticies = new std::vector<Vertex>();
-    uint32_t indexOfIndex = 0;
-    if(mesh == nullptr) mesh = new Mesh();
-    std::ifstream fin(filePath);
-    std::string line;
-    std::vector<Vect4> aPos;
-    std::vector<Vect3> vNormal;
-    std::vector<Vect3> texCord;
-    while(std::getline(fin, line))
-    {
-        std::stringstream lineStream(line);
-        std::string firstTok;
-        lineStream >> firstTok;
-        if(firstTok == "vt")
-        {
-            Vect3 texCoord;
-            lineStream >> texCoord;
-            texCord.push_back(texCoord);
-        }
-        else if(firstTok == "vn")
-        {
-            Vect3 vertNormal;
-            lineStream >> vertNormal;
-            vNormal.push_back(vertNormal);
-        }
-        else if(firstTok == "v")
-        {
-            Vect4 vertPos;
-            lineStream >> vertPos;
-			if(vertPos.w == .0f)
-			vertPos.w = 1.0f;
-            aPos.push_back(vertPos);
-        }
-        else if(firstTok == "f")
-        {
-            std::string vS;
-            Vertex temp;
-            bool normFlag = 0;
-            do
-            {
-                vS.clear();
-                lineStream >> vS;
-                std::istringstream v(vS);
-                uint32_t index;
-                v >> index;
-                temp.aPos = aPos[index - 1];
-                v.ignore();
-                if(v.peek() == '/')
-                    normFlag = true;
-                v >> index;
-                temp.aNormal = vNormal[index - 1]; 
-                v.ignore();
-                if(v.eof())
-                    temp.texCord = Vect3();
-                else
-                {
-                    v >> index;
-                    temp.texCord = texCord[index -1];
-                }
-                mesh->verticies->push_back(temp);
-                mesh->indicies->push_back(indexOfIndex);
-                indexOfIndex++;
-
-            } while(lineStream.eof());
-        }
-    }
+//	if(mesh->indicies == nullptr) mesh->indicies = new Vertex[];
+//	if(mesh->verticies == nullptr) mesh->verticies = new ;
+//    uint32_t indexOfIndex = 0;
+//    if(mesh == nullptr) mesh = new Mesh();
+//    std::ifstream fin(filePath);
+//    std::string line;
+//    std::vector<Vect4> aPos;
+//    std::vector<Vect3> vNormal;
+//    std::vector<Vect3> texCord;
+//    while(std::getline(fin, line))
+//    {
+//        std::stringstream lineStream(line);
+//        std::string firstTok;
+//        lineStream >> firstTok;
+//        if(firstTok == "vt")
+//        {
+//            Vect3 texCoord;
+//            lineStream >> texCoord;
+//            texCord.push_back(texCoord);
+//        }
+//        else if(firstTok == "vn")
+//        {
+//            Vect3 vertNormal;
+//            lineStream >> vertNormal;
+//            vNormal.push_back(vertNormal);
+//        }
+//        else if(firstTok == "v")
+//        {
+//            Vect4 vertPos;
+//            lineStream >> vertPos;
+//			if(vertPos.w == .0f)
+//			vertPos.w = 1.0f;
+//            aPos.push_back(vertPos);
+//        }
+//        else if(firstTok == "f")
+//        {
+//            std::string vS;
+//            Vertex temp;
+//            bool normFlag = 0;
+//            do
+//            {
+//                vS.clear();
+//                lineStream >> vS;
+//                std::istringstream v(vS);
+//                uint32_t index;
+//                v >> index;
+//                temp.aPos = aPos[index - 1];
+//                v.ignore();
+//                if(v.peek() == '/')
+//                    normFlag = true;
+//                v >> index;
+//                temp.aNormal = vNormal[index - 1]; 
+//                v.ignore();
+//                if(v.eof())
+//                    temp.texCord = Vect3();
+//                else
+//                {
+//                    v >> index;
+//                    temp.texCord = texCord[index -1];
+//                }
+//                mesh->verticies->push_back(temp);
+//                mesh->indicies->push_back(indexOfIndex);
+//                indexOfIndex++;
+//
+//            } while(lineStream.eof());
+//        }
+//    }
 }
 
 void AssetLoader::LoadTextureFile(std::string hPath, Texture* texture)

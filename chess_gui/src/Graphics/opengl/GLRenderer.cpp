@@ -127,6 +127,8 @@ void GLTextureBinder::UnBind() const noexcept
 GLRenderer::GLRenderer()
 {
     LoadGladGL();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
     GLDEBUGCALL(glGenVertexArrays(1, &pvao));
     glBindVertexArray(pvao);
     GLDEBUGCALL(glActiveTexture(GL_TEXTURE0));
@@ -322,15 +324,15 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
 			std::cout << "Just Checking Vertex Buffer " << std::endl;
 			for(uint32_t i = 0; i < gBuffer->count; i++)
 			{
-				std::cout <<  *((Vect4*)gBuffer->data + i * sizeof(Vertex)) << ' ' << *((Vect3*)gBuffer->
-						data + sizeof(Vect4) + (i * sizeof(Vertex))) << ' ' << *((Vect3*)gBuffer->data + sizeof(Vect4) + sizeof(Vect3) +( i * sizeof(Vertex)))<< std::endl;
+				Vertex& vertex = static_cast<Vertex*>(gBuffer->data)[i];
+				std::cout << vertex.aPos << " " << vertex.aNormal << " " << vertex.texCord << std::endl;			
 			}
             break;        
         case GBuffer::GBufferStyle::BufferType::INDEX:
             bufferType = GL_ELEMENT_ARRAY_BUFFER;
 			std::cout << "Just checking the right data in index buffer is being loaded: " << std::endl;
 			for(uint32_t i = 0; i < gBuffer->sizet; i++)
-			std::cout << *((uint32_t*)gBuffer->data  + (i * sizeof(uint32_t))) << std::endl;
+			std::cout << static_cast<uint32_t*>(gBuffer->data)[i] << std::endl;
             gBuffer->gBinder.reset(new GLIndexBinder(rendererID));
             break;
     };
@@ -407,7 +409,7 @@ void GLRenderer::AddShader(ShaderType type, std::string& source)
 }
 void GLRenderer::Draw(GBuffer* gBuffer)
 {
-	//gBuffer->Bind();
+	gBuffer->Bind();
     GLDEBUGCALL(glDrawElements(GL_TRIANGLES, gBuffer->count, GL_UNSIGNED_INT, (const void*) 0));
 }
 

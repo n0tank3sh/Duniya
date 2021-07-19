@@ -14,5 +14,6 @@ uniform vec3 ambient;
 void main()
 {
 //	FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
+	vec3 ambientLight = shininess * ambient;
 	FragColor = vec4(1, .5, 1, 1);
 }

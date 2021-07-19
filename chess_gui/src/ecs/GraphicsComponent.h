@@ -28,6 +28,11 @@ struct Mesh
 };
 
 
+struct LightPoint
+{
+	Vect4 colorIntensity;
+	Vect3 location;
+};
 
 struct Texture
 {
