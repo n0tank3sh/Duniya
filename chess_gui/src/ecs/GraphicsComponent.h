@@ -27,13 +27,6 @@ struct Mesh
     uint32_t* indicies;
 };
 
-
-struct LightPoint
-{
-	Vect4 colorIntensity;
-	Vect3 location;
-};
-
 struct Texture
 {
 	Texture() = default;

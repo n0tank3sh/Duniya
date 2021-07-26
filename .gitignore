@@ -2,7 +2,6 @@
 out/
 glad/
 CMakeFiles/
-extern/
 compile_commands.json
 CMakeCache.txt
 

@@ -10,6 +10,7 @@
 #include <string>
 #include <memory>
 
+// (TODO): Adding something shared pointers.
 // Potential optimisation using int types instead of type_index.
 // The hashing of int types is twice faster than type_index.
 enum class ComponentType : uint32_t

@@ -11,6 +11,11 @@ struct Transform
     Vect3 rotation;
 };
 
+struct PointLight
+{
+	Vect3 color;
+};
+
 inline Mat* ConvertTranforToMatrix(Transform& transform)
 {
     float trans[] = 

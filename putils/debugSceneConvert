@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 HOME_DIR=$PWD
-cd $HOME_DIR 
+cd $HOME_DIR/out/chess_gui
 make
 #SCENE_CONVERTER_SRC=~/Projects/Chess_gui/out/chess_gui
 #gdb --args $SCENE_CONVERTER_SRC/sceneconverter $SCENE_CONVERTER_SRC/Resource/Test/Goat.obj $SCENE_CONVERTER_SRC/justChecking.dick

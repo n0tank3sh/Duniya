@@ -81,6 +81,7 @@ Scene::IComponentArray* Scene::GetEntity(uint32_t entity)
 void Scene::LoadScene(std::string filePath)
 {
 	std::ifstream fin(filePath, std::ifstream::binary);
+	if(!fin.is_open()) throw CException(__LINE__, __FILE__, "File Exception", filePath + " not found");
 	SerializerSystem::init();
 	SerializerSystem::singleton->SetIStream(fin);
 	SerializerSystem::singleton->Deserialize<ComponentTypeMap>(componentTypeMap);

@@ -94,7 +94,7 @@ void RendererSystem::LoadScene(Scene* scene)
 void RendererSystem::update(float deltaTime)
 {
 //	renderer->ClearColor(.0f, 1.f, 0.5f);
-	std::cout << "Entering the renderering " << std::endl;
+	//std::cout << "Entering the renderering " << std::endl;
 	renderer->ClearColor(std::abs(std::cos(animated)/100 * deltaTime) , std::abs(std::sin(animated)/10 * deltaTime)  , .5f);
 	renderer->Clear();
     RendererStuff* rendererStuff;
@@ -114,10 +114,10 @@ void RendererSystem::update(float deltaTime)
 			else
 			{
 				mat = &transformDefault;
-				std::cout << "Loading the default mvp" << std::endl;
-				std::cout << "Size of the default transform " << mat->sizet << std::endl;
+		//		std::cout << "Loading the default mvp" << std::endl;
+		//		std::cout << "Size of the default transform " << mat->sizet << std::endl;
 			}
-			std::cout << *mat << std::endl;
+		//	std::cout << *mat << std::endl;
         	renderer->UniformMat(*mat, "MVP");
 			
         	renderer->Draw(rendererStuff->iBuffer);

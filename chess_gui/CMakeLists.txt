@@ -75,12 +75,19 @@ target_include_directories(
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+set(RESOURCE_TEST_FILE "Resource/Test/Goat.obj")
+set(TEST_FILE "justChecking.dick")
+
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resource/)
 
 add_custom_target( resources
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Resource ${CMAKE_CURRENT_BINARY_DIR}/Resource
 )
-add_dependencies(chess_gui resources)
+add_custom_target( checking_chess_gui
+	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/sceneconverter ${RESOURCE_TEST_FILE} ${TEST_FILE}
+)
+add_dependencies(chess_gui resources checking_chess_gui)
+add_dependencies(checking_chess_gui resources sceneconverter)
 
 target_link_libraries(
     chess_gui

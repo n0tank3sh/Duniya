@@ -2,6 +2,7 @@
 #include <ecs/ecs.h>
 #include <ecs/commoncomponent.h>
 #include <ecs/GraphicsComponent.h>
+#include <SDL.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>

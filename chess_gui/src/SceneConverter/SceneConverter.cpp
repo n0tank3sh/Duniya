@@ -86,9 +86,14 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 		//	if(&mesh->mFaces[i] == nullptr) std::cout << "Faces is null" << std::endl;
 			for(uint32_t j = 0; j < 3; j++)
 			{
-				resultedMesh->indicies[i] = face->mIndices[j];
+				resultedMesh->indicies[i * 3 + j] = face->mIndices[j];
+				std::cout << resultedMesh->indicies[i * 3 + j] << " ";
 			}
+			std::cout << std::endl;
 		}
+	}
+	if(mesh->mMaterialIndex)
+	{
 	}
 }
 

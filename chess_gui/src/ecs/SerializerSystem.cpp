@@ -61,13 +61,16 @@ void SerializerSystem::Deserialize<Mesh>(Mesh& var)
 
 	uint32_t meshSizes[2];
 	is->read((char*)meshSizes, sizeof(uint32_t) * 2);
-	std::cout << " Vertex Buffer: " << std::endl;
 	var.vertexCount = meshSizes[0];
 	var.indexCount = meshSizes[1];
 	var.verticies = new Vertex[var.vertexCount];
 	var.indicies = new uint32_t[var.indexCount];
 	is->read((char*)var.verticies, sizeof(Vertex) * var.vertexCount);
 	is->read((char*)var.indicies, sizeof(uint32_t) * var.indexCount);
+	for(uint32_t i = 0; i < var.indexCount; i++)
+	{
+		std::cout << var.indicies[i] << " ";
+	}
 }
 
 
@@ -218,9 +221,6 @@ void SerializerSystem::Deserialize<ComponentTypeMap>(ComponentTypeMap& var)
 			typeIndex = new std::type_index(typeid(Texture));
 		else if(typeName == "Material")
 			typeIndex = new std::type_index(typeid(Material));
-		
-		if(typeIndex == nullptr) std::cout << "TypeIndex is nullptr" << std::endl; 
-		if(*typeIndex == std::type_index(typeid(Mesh))) std::cout << "yes it is the Mesh we are the talking about " << std::endl;
 		if(var.find(*typeIndex) == var.end())
 		var.insert(std::make_pair(*typeIndex, static_cast<ComponentType>(componentTypeUI)));
 		delete[] typeNameChar;
@@ -245,9 +245,9 @@ void SerializerSystem::Deserialize<Scene::Entities>(Scene::Entities& var)
 {
 	uint32_t entitySize;
 	singleton->Deserialize<uint32_t>(entitySize);
-	uint32_t entity;
 	while(entitySize--)
 	{
+		uint32_t entity;
 		singleton->Deserialize<uint32_t>(entity);
 		var.insert(std::make_pair(entity, std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray)));
 		singleton->Deserialize<Scene::IComponentArray>(*(var[entity].get()));
