@@ -60,6 +60,19 @@ public:
 		output << a.x << " " << a.y;
 		return output;
 	}
+	// Static Functions
+public:
+	static Vect2 normalize(const Vect2& temp)
+	{
+		auto game = temp;
+		game.normalize();
+		return game;
+	}
+	static float dot(const Vect2& first, const Vect2& other)
+	{
+		auto temp = first;
+		return temp.dot(other);
+	}
 };
 
 

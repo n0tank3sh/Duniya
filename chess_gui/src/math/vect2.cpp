@@ -20,7 +20,7 @@ float Vect2::distance() const
 {
     float tempX = this->x * this->x;
     float tempY = this->y * this->y;
-    return std::sqrt(tempX + tempY);
+    return sqrtf(tempX + tempY);
 }
 
 void Vect2::normalize()

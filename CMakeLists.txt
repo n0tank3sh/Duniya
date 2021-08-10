@@ -9,7 +9,7 @@ INCLUDE(FindPkgConfig)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(ASSIMP REQUIRED)
+find_package(assimp REQUIRED)
 
 add_subdirectory(chess_gui)
 add_subdirectory(glad)

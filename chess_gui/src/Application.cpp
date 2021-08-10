@@ -1,4 +1,3 @@
-
 #include "Application.h"
 #include <Graphics/Renderer.h>
 #include "Exception.h"
@@ -6,12 +5,13 @@
 #include <ecs/GraphicsComponent.h>
 #include <RendererSystem.h>
 #include "AssetLoader.h"
+#include "TestGame.h"
 
 
 Application::Application()
 {
-    height = 600;
-    width = 1000;
+    height = 900;
+    width = 1400;
     title = "Hello Darkness my old friend";
 
     Graphics_API gpi = Graphics_API::OPENGL;
@@ -58,29 +58,38 @@ Application::Application()
 //	scene->SaveScene("justChecking.dick");
 	scene->LoadScene("justChecking.dick");
 
-	RendererSystem::GetSingleton()->LoadScene(scene);
+	manager = new SystemManager;
+	manager->Add(RendererSystem::GetSingleton());
+	manager->Add(new TestGame());
+	manager->LoadScene(scene);
 }
 
 uint32_t Application::run()
 {
-    SDL_Event event;
-    bool quit = false;
+	SDL_Event event;
+	bool quit = false;
 	float lastTime = 0, currentTime;
-    while(!quit)
-    {
+	while(!quit)
+	{
 		currentTime = SDL_GetTicks();
-        RendererSystem::GetSingleton()->update(currentTime - lastTime);
-        SDL_GL_SwapWindow(window);
-        while(SDL_PollEvent(&event))
-        {
-            if(event.type == SDL_QUIT)
-            {
-                quit = true;
-            }
-        }
+		while(SDL_PollEvent(&event))
+		{
+			if(event.type == SDL_QUIT)
+			{
+			    quit = true;
+			}
+			else if(event.type == SDL_KEYDOWN)
+			{
+				auto keyboardEvent = new KeyboardEvent;
+				keyboardEvent->event = event.key;
+				(*manager->queryMessages)[EVENTS::KEYBOARD_EVENTS].push(std::unique_ptr<Message>(static_cast<Message*>(keyboardEvent)));
+			}
+		}
+		manager->update(1/(currentTime - lastTime));
+		SDL_GL_SwapWindow(window);
 		lastTime = currentTime;
-    }
+	}
 	SDL_GL_DeleteContext(deviceContext);
 	SDL_DestroyWindow(window);
-    return 0;
+	return 0;
 }

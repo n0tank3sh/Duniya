@@ -4,6 +4,7 @@
 #include "vect2.h"
 #include "vect3.h"
 #include "vect4.h"
+#include <initializer_list>
 #include <memory>
 
 struct Dimension
@@ -20,10 +21,12 @@ struct MatIndex
 struct Mat
 {
     Mat(Dimension dimension = {1, 1});
+	Mat(Dimension dimension, const std::initializer_list<float> l);
     Mat(Dimension dimension, float* otherBuffer);
 
     Mat(const Mat& other);
     Mat& operator=(const Mat& other);
+	Mat& operator=(const std::initializer_list<float> l);
 
     float& operator[](MatIndex a);
 
@@ -35,11 +38,14 @@ struct Mat
     Mat operator-(const Mat& other);
     Mat dot(const Mat& other);
     
+	Mat operator*=(const Mat& other);
+	Mat operator+=(const Mat& other);
+	Mat operator-=(const Mat& other);
     // return the determinants of the Matrix
     float Deter();
     // Invering Matrix
     Mat& inverse();
-    std::unique_ptr<float> buffer;
+    std::unique_ptr<float[]> buffer;
     Dimension dimension;
     uint32_t sizet;
 	friend std::istream& operator>>(std::istream& input, Mat& mat)
@@ -64,4 +70,12 @@ struct Mat
 	}
 private:
     void GausianElimination();
+};
+
+namespace DefaultMatrix
+{
+	Mat generateIdentityMatrix(Dimension s);
+	Mat generatePitchMatrix(Dimension s, float y);
+	Mat generateYawMatrix(Dimension s, float z);
+	Mat generateRollMatrix(Dimension s, float x);
 };

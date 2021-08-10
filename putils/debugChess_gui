@@ -4,6 +4,6 @@ set -e
 echo $PWD
 HOME_DIR=$PWD
 cd $HOME_DIR/out/chess_gui
-make
+make -j6
 gdb chess_gui 
 

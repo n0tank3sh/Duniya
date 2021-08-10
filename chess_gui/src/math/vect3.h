@@ -48,7 +48,8 @@ public:
     bool operator==(const Vect3& other) const;
 
     float dot(const Vect3& other) const;
-    float cross(const Vect3& other) const;
+    Vect3 cross(const Vect3& other) const;
+	float distance() const;
     
     void normalize();
 	friend std::istream& operator>>(std::istream &input, Vect3& a)
@@ -60,6 +61,23 @@ public:
 	{
 		output << a.x << " " << a.y << " " << a.z;
 		return output;
+	}
+	// Static functions
+public:
+	inline static Vect3 normalize(const Vect3& temp)
+	{
+		auto temp1 = temp;
+		return temp;
+	}
+	inline static float dot(const Vect3& first, const Vect3& other)
+	{
+		auto temp = first;
+		return temp.dot(other);
+	}
+	inline static Vect3 cross(const Vect3& first, const Vect3& other)
+	{
+		auto temp = first;
+		return temp.cross(other);
 	}
 };
 

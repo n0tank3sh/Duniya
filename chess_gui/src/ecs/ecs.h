@@ -10,18 +10,30 @@
 #include <string>
 #include <memory>
 
-// (TODO): Adding something shared pointers.
-// Potential optimisation using int types instead of type_index.
-// The hashing of int types is twice faster than type_index.
-enum class ComponentType : uint32_t
+
+
+using ComponentType = uint32_t;
+namespace ComponentTypes
 {
-	MESH,
-	TRANSFORM,
-	CHILDREN,
-	MATERIAL,
-	TEXTURE,
-	RENDERERSTUFF
+	constexpr uint32_t MESH = 0;
+	constexpr uint32_t TRANSFORM = 1;
+	constexpr uint32_t CHILDREN = 2;
+	constexpr uint32_t MATERIAL = 3;
+	constexpr uint32_t TEXTURE = 4;
+	constexpr uint32_t RENDERERSTUFF = 5;
+	constexpr uint32_t CAMERA = 6;
+
 };
+
+
+namespace EVENTS
+{
+	constexpr uint32_t MAIN_EVENTS = 2;
+	constexpr uint32_t KEYBOARD_EVENTS = 3;
+	constexpr uint32_t MOUSE_EVENTS = 4;
+};
+
+
 
 using ComponentTypeMap = std::unordered_map<std::type_index, ComponentType>;
 
@@ -38,7 +50,7 @@ class ComponentPtr
 public:
     struct BaseImpl
     {
-        virtual void Create() { }
+        virtual void* Create() { return nullptr;}
         virtual void* GetPointer() { std::cout << "Creating a base pointer " << std::endl; return nullptr;}
         virtual void CheckingToSeeBase(){std::cout << "If base \n";}
         virtual BaseImpl* Clone() { return new BaseImpl(*this);} 
@@ -61,9 +73,10 @@ public:
         {
             return static_cast<BaseImpl*>(new Impl<T>(*this));
         }
-        void Create() override
+        void* Create() override
         {
             data = new T();
+			return data;
         }
         void* GetPointer() override
         {
@@ -77,15 +90,19 @@ public:
     };
     BaseImpl* base;
 public:
+	uint32_t entity;
     ComponentPtr()
     {
         base = nullptr;
+		entity = 0;
     }
 
     ComponentPtr(BaseImpl* baseImpl) 
     {
         base = baseImpl->Clone();
+		entity = 0;
     }
+	void* emplace(BaseImpl* baseImpl);
     ComponentPtr(const ComponentPtr& comptr)
     {
 		if(comptr.base != nullptr)
@@ -118,7 +135,7 @@ public:
         //std::unordered_map<std::type_index, ComponentPtr> components;
 		std::vector<ComponentType> componentTypes;
         IComponentArray() = default;
-        IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, std::unordered_map<std::type_index, ComponentType>& componentTypeMap);
+        IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, std::unordered_map<std::type_index, ComponentType>& componentTypeMap, uint32_t entity);
         template<ComponentType T>
         void* get()
         {
@@ -135,7 +152,7 @@ public:
 		Scene* scene;
 		ComponentManager(Scene* scene);
         std::unordered_map<std::type_index, ComponentPtr> componentTypes;
-        IComponentArray* CreateComponentArray();
+        IComponentArray* CreateComponentArray(uint32_t entity);
     };
 	using Entities  = std::unordered_map<uint32_t,  std::unique_ptr<IComponentArray>>;
 public:
@@ -168,11 +185,29 @@ public:
 
 struct Children
 {
-	std::unordered_map<uint32_t, Scene::IComponentArray>* children;
+	Scene::Entities entities;
 };
+
+struct Message
+{
+	Message() = default;
+	virtual ~Message() {};
+};
+using QueryMessages= std::unordered_map<uint32_t, std::queue<std::unique_ptr<Message>>>;
 
 struct System
 {
     virtual void LoadScene(Scene* scene) = 0;
     virtual void update(float deltaTime) = 0;
+	std::weak_ptr<QueryMessages> messagingSystem;
+};
+
+struct SystemManager
+{
+	SystemManager();
+	std::vector<std::unique_ptr<System>> systems;
+	void Add(System* system);
+	void LoadScene(Scene* scene);
+	void update(float deltaTime);
+	std::shared_ptr<QueryMessages> queryMessages;
 };

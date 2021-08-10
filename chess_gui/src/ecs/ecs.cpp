@@ -9,6 +9,11 @@
 
 
 
+void* ComponentPtr::emplace(BaseImpl* impl)
+{
+	this->base = impl;
+	return base->Create();
+}
 Scene::EntityManager::EntityManager(Scene* scene)
 {
     owner = scene;
@@ -16,8 +21,8 @@ Scene::EntityManager::EntityManager(Scene* scene)
 
 Scene::Scene()
 {
-	componentTypeMap.insert(std::make_pair(std::type_index(typeid(Transform)), ComponentType::TRANSFORM));
-	componentTypeMap.insert(std::make_pair(std::type_index(typeid(Mesh)), ComponentType::MESH));
+	componentTypeMap.insert(std::make_pair(std::type_index(typeid(Transform)), ComponentTypes::TRANSFORM));
+	componentTypeMap.insert(std::make_pair(std::type_index(typeid(Mesh)), ComponentTypes::MESH));
     entityManager = new EntityManager(this);
     componentManager = new ComponentManager(this);
 }
@@ -43,12 +48,13 @@ void Scene::EntityManager::DestroyEntity(uint32_t& entity)
 }
 
 Scene::IComponentArray::IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, 
-		std::unordered_map<std::type_index, ComponentType>& componentTypeMap)
+		std::unordered_map<std::type_index, ComponentType>& componentTypeMap, uint32_t entity)
 {
     for(auto& i: componentTypes)
     {
 		ComponentType type = componentTypeMap[i.first];
         components.insert(std::move(std::make_pair(type, ComponentPtr(i.second.base))));
+		components[type].entity = entity;
         components[type].base->Create();
     }
 }
@@ -58,16 +64,15 @@ Scene::ComponentManager::ComponentManager(Scene* scene)
 	this->scene = scene;
 }
 
-Scene::IComponentArray* Scene::ComponentManager::CreateComponentArray()
+Scene::IComponentArray* Scene::ComponentManager::CreateComponentArray(uint32_t entity)
 {
-    return new IComponentArray(componentTypes, scene->componentTypeMap);
+    return new IComponentArray(componentTypes, scene->componentTypeMap, entity);
 }
-
 
 uint32_t Scene::Push()
 {
     uint32_t entity = entityManager->CreateEntity();
-    entities[entity] = std::unique_ptr<IComponentArray>(componentManager->CreateComponentArray());
+    entities[entity] = std::unique_ptr<IComponentArray>(componentManager->CreateComponentArray(entity));
     return entity;
 }
 
@@ -99,3 +104,30 @@ void Scene::SaveScene(std::string filePath)
 	fout.close();
 }
 
+SystemManager::SystemManager()
+{
+	queryMessages = std::shared_ptr<QueryMessages>(new QueryMessages);
+}
+
+void SystemManager::Add(System* system)
+{
+	system->messagingSystem = queryMessages;
+	systems.emplace_back();
+	systems.back().reset(system);
+}
+
+void SystemManager::LoadScene(Scene* scene)
+{
+	for(auto itr = systems.begin(); itr != systems.end(); itr++)
+	{
+		itr->get()->LoadScene(scene);
+	}
+}
+
+void SystemManager::update(float deltaTime)
+{
+	for(auto itr = systems.begin(); itr != systems.end(); itr++)
+	{
+		itr->get()->update(deltaTime);
+	}
+}

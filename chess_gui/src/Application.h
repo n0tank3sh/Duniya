@@ -2,12 +2,12 @@
 
 #include <cstdint>
 #include <string>
-#include <SDL2/SDL.h>
+#include <SDLUtiliy.h>
 #include <ecs/ecs.h>
 
 enum class Graphics_API
 {
-    OPENGL
+    OPENGL, DIRECTX
 };
 
 class Application
@@ -23,4 +23,5 @@ private:
     Graphics_API graphicsAPI;
     Scene* scene;
     void* deviceContext;
+	SystemManager* manager;
 };

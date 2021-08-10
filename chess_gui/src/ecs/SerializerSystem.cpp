@@ -24,7 +24,7 @@ void SerializerSystem::SetOStream(std::ostream& os)
 SerializerSystem* SerializerSystem::init()
 {
 	if(singleton == nullptr)
-	singleton = new SerializerSystem(); 
+		singleton = new SerializerSystem(); 
 	return singleton;
 }
 
@@ -108,17 +108,17 @@ void SerializerSystem::Serialize<Scene::IComponentArray>(const Scene::IComponent
 	while(comptritr != var.components.end())
 	{
 		os->write((char*)&comptritr->first, sizeof(uint32_t));
-		if(comptritr->first == ComponentType::TRANSFORM)
+		if(comptritr->first == ComponentTypes::TRANSFORM)
 		{
 			Transform* transform = (Transform*)comptritr->second.base->GetPointer();
 			SerializerSystem::singleton->Serialize<Transform>(*transform);
 		}
-		else if(comptritr->first == ComponentType::MESH)
+		else if(comptritr->first == ComponentTypes::MESH)
 		{
 			Mesh* mesh = (Mesh*)comptritr->second.base->GetPointer();
 			SerializerSystem::singleton->Serialize<Mesh>(*mesh);
 		}
-		else if(comptritr->first == ComponentType::TEXTURE)
+		else if(comptritr->first == ComponentTypes::TEXTURE)
 		{
 			Texture* texture = (Texture*)comptritr->second.base->GetPointer();
 			SerializerSystem::singleton->Serialize<Texture>(*texture);
@@ -143,21 +143,21 @@ void SerializerSystem::Deserialize<Scene::IComponentArray>(Scene::IComponentArra
 		componentTypeTemp = static_cast<ComponentType>(componentTypeinInt);
 		std::cout << "The size of the component array: " <<  var.components.size() << std::endl;
 		ComponentPtr& componentPtr= var.components[componentTypeTemp];
-		if(componentTypeTemp == ComponentType::MESH)
+		if(componentTypeTemp == ComponentTypes::MESH)
 		{
 			componentPtr.base = new ComponentPtr::Impl<Mesh>();
 			componentPtr.base->Create();
 			Mesh *mesh = (Mesh*)componentPtr.base->GetPointer();
 			SerializerSystem::singleton->Deserialize<Mesh>(*mesh);
 		}
-		else if(componentTypeTemp == ComponentType::TEXTURE)
+		else if(componentTypeTemp == ComponentTypes::TEXTURE)
 		{				
 			componentPtr.base = new ComponentPtr::Impl<Texture>();
 			componentPtr.base->Create();
 			Texture* texture = (Texture*)componentPtr.base->GetPointer();
 			SerializerSystem::singleton->Deserialize<Texture>(*texture);
 		}
-		else if(componentTypeTemp == ComponentType::TRANSFORM)
+		else if(componentTypeTemp == ComponentTypes::TRANSFORM)
 		{
 			componentPtr.base = new ComponentPtr::Impl<Transform>();
 			componentPtr.base->Create();
@@ -222,7 +222,7 @@ void SerializerSystem::Deserialize<ComponentTypeMap>(ComponentTypeMap& var)
 		else if(typeName == "Material")
 			typeIndex = new std::type_index(typeid(Material));
 		if(var.find(*typeIndex) == var.end())
-		var.insert(std::make_pair(*typeIndex, static_cast<ComponentType>(componentTypeUI)));
+			var.insert(std::make_pair(*typeIndex, static_cast<ComponentType>(componentTypeUI)));
 		delete[] typeNameChar;
 		typeNameChar = nullptr;
 	}

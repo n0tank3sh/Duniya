@@ -19,3 +19,16 @@ Vect4::Vect4(Vect3 a, float w)
     :
         x(a.x), y(a.y), z(a.z), w(w)
 {}
+
+
+float Vect4::dot(const Vect4& other) const
+{
+	float game = .0f;
+	for(uint32_t i = 0; i < 4; i++)
+	{
+		game += this->coordinates[i] * other.coordinates[i];
+	}
+	return game;
+}
+
+

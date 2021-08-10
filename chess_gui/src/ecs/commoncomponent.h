@@ -11,9 +11,30 @@ struct Transform
     Vect3 rotation;
 };
 
+namespace ComponentTypes
+{
+	constexpr uint32_t POINTLIGHT = 7;
+	constexpr uint32_t DIRLIGHT = 8;
+};
+
+struct LightColor
+{
+	Vect3 specular, ambient, diffuse;
+};
+
+struct DirectionalLight
+{
+	LightColor lightColor;
+};
+
 struct PointLight
 {
-	Vect3 color;
+	LightColor lightColor;
+	float constant, linear, quadratic;
+};
+
+struct Camera
+{
 };
 
 inline Mat* ConvertTranforToMatrix(Transform& transform)
@@ -26,5 +47,6 @@ inline Mat* ConvertTranforToMatrix(Transform& transform)
         .0f, .0f, .0f, 1.0f
     };
     Mat* mat = new Mat({4, 4}, trans);
+	*mat *= DefaultMatrix::generateRollMatrix({4, 4}, transform.rotation.x) * DefaultMatrix::generatePitchMatrix({4, 4}, transform.rotation.y) * DefaultMatrix::generateYawMatrix({4, 4}, transform.rotation.z);
     return mat;
 }

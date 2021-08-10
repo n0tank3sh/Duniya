@@ -1,7 +1,9 @@
 #include "RendererSystem.h"
 #include "Graphics/opengl/GLRenderer.h"
-#include <ecs/commoncomponent.h>
+#include "ecs/commoncomponent.h"
+#include "ecs/ecs.h"
 #include <AssetLoader.h>
+#include <chrono>
 
 RendererSystem* RendererSystem::singleton = nullptr;
 
@@ -14,7 +16,11 @@ RendererSystem::RendererSystem()
 	{
 		transformDefault.buffer.get()[i * 4 + i] = .5f;
 	}
+	camera = new Scene::IComponentArray;
 	transformDefault.buffer.get()[4 * 4 - 1] = 1.f;
+	camera->components[ComponentTypes::CAMERA].emplace(new ComponentPtr::Impl<Camera>);
+	Transform* transform = (Transform*)(camera->components[ComponentTypes::TRANSFORM].emplace(new ComponentPtr::Impl<Transform>));
+	transform->pos = Vect3(.0f, .0f, 1.f);
 }
 
 RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
@@ -23,7 +29,7 @@ RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
     singleton->renderer.reset(new GLRenderer());
 	std::string vertexShaderSrc, fragShaderSrc;
 	if(AssetLoader::GetSingleton() == nullptr)
-	AssetLoader::init();
+		AssetLoader::init();
 	AssetLoader* assLoader = AssetLoader::GetSingleton();
 	assLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertexShaderSrc);
 	assLoader->LoadTextFile("Resource/Shaders/FragmentShader.glsl", fragShaderSrc);
@@ -37,6 +43,21 @@ RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
 RendererSystem* RendererSystem::GetSingleton()
 {
     return singleton;
+}
+
+void RendererSystem::LoadLights()
+{
+	for(auto i: lights)
+	{
+		if(scene->entities[i]->get<ComponentTypes::POINTLIGHT>() != nullptr)
+		{
+			auto transform = reinterpret_cast<Transform*>(scene->entities[i]->get<ComponentTypes::TRANSFORM>());
+			auto light = reinterpret_cast<PointLight*>(scene->entities[i]->get<ComponentTypes::POINTLIGHT>());
+		}
+		if(scene->entities[i]->get<ComponentTypes::DIRLIGHT>() != nullptr)
+		{
+		}
+	}
 }
 void RendererSystem::CreateGBufferMesh(Mesh* mesh, GBuffer* indexBuffer, GBuffer* vertexBuffer)
 {
@@ -60,15 +81,15 @@ void RendererSystem::LoadScene(Scene* scene)
     this->scene = scene;
     Mesh* mesh;
 	Texture* texture;
-	std::cout << "Entities size: " << scene->entities.size() << std::endl;
+	bool foundCamera = false;
     for(auto& i: scene->entities)
     {
 		Scene::IComponentArray* componentArray;
 		componentArray = i.second.get();
-		Mesh* mesh = (Mesh*)componentArray->components.find(ComponentType::MESH)->second.base->GetPointer();
-		componentArray->components.insert(std::make_pair(ComponentType::RENDERERSTUFF, ComponentPtr(new ComponentPtr::Impl<RendererStuff>())));
-		componentArray->components[ComponentType::RENDERERSTUFF].base->Create();
-		RendererStuff* rendererStuff = (RendererStuff*)componentArray->components[ComponentType::RENDERERSTUFF].base->GetPointer();
+		Mesh* mesh = (Mesh*)componentArray->components.find(ComponentTypes::MESH)->second.base->GetPointer();
+		componentArray->components.insert(std::make_pair(ComponentTypes::RENDERERSTUFF, ComponentPtr(new ComponentPtr::Impl<RendererStuff>())));
+		componentArray->components[ComponentTypes::RENDERERSTUFF].base->Create();
+		RendererStuff* rendererStuff = (RendererStuff*)componentArray->components[ComponentTypes::RENDERERSTUFF].base->GetPointer();
 		rendererStuff->iBuffer = new GBuffer;
 		rendererStuff->vBuffer = new GBuffer;
 		CreateGBufferMesh(mesh, rendererStuff->iBuffer, rendererStuff->vBuffer);
@@ -78,50 +99,112 @@ void RendererSystem::LoadScene(Scene* scene)
 		//{
 		//}
 		Vertex* vertex = static_cast<Vertex*>(rendererStuff->vBuffer->data);
-		std::cout << "Vertex Buffer: " << std::endl;
-		for(uint32_t i = 0; i < rendererStuff->vBuffer->count; i++)
+		auto findingCamera = componentArray->components.find(ComponentTypes::CAMERA);
+		if(findingCamera != componentArray->components.end())
 		{
-			std::cout << vertex[i].aPos << " " << vertex[i].aNormal << " " << vertex[i].texCord << std::endl;
+			foundCamera = true;
+			mainCamera = i.first;
 		}
-		std::cout << "Index Buffer: " << std::endl;
-		for(uint32_t i = 0; i < rendererStuff->iBuffer->count; i++)
-			std::cout << static_cast<uint32_t*>(rendererStuff->iBuffer->data)[i] << " ";
-		std::cout << std::endl;
 
     }
+	if(!foundCamera)
+	{
+		uint32_t entity = scene->entityManager->CreateEntity();
+		scene->entities[entity] = std::unique_ptr<Scene::IComponentArray>(camera);
+		for(auto& i : scene->GetEntity(entity)->components)
+		{
+			i.second.entity = entity;
+		}
+		mainCamera = entity;
+	}
 }
 
+Mat RendererSystem::SetUpCamera(uint32_t entity, Vect3& pos, const Vect3& temp = Vect3(0, 1, 0))
+{
+	Mat mat({4, 4});
+	Transform* transform = (Transform*)scene->entities[entity]->get<ComponentTypes::TRANSFORM>();
+	Vect3 forward = transform->pos - pos;
+	Vect3 right = Vect3::cross(Vect3::normalize(temp), forward);
+	Vect3 up = Vect3::cross(forward, right);
+	lookAt(transform->pos, forward, up, right, mat);
+	return mat;
+}
+
+void RendererSystem::lookAt(Vect3& from, Vect3& forward, Vect3& up, Vect3& right, Mat& mat)
+{
+	mat[{0, 0}] = right.x;
+	mat[{0, 1}] = right.y;
+	mat[{0, 2}] = right.z;
+	mat[{1, 0}] = up.x;
+	mat[{1, 1}] = up.y;
+	mat[{1, 2}] = up.z;
+	mat[{2, 0}] = forward.x; 
+	mat[{2, 1}] = forward.y;
+	mat[{2, 2}] = forward.z;
+	//mat[{3, 0}] = from.x;
+	//mat[{3, 1}] = from.y;
+	//mat[{3, 2}] = from.z;
+	mat[{3, 3}] = 1.f;
+}
+
+void RendererSystem::LoadMaterial(Scene::Entities::iterator& itr)
+{
+	float materialProvided = .0f;
+	Material* material = (Material*)itr->second->get<ComponentTypes::MATERIAL>();
+	if(itr->second->get<ComponentTypes::MATERIAL>() != nullptr)
+	{
+		materialProvided = 1.f;
+	}
+	if(materialProvided != .0f)
+	{				
+		renderer->Uniform3f(1, &material->diffuse, "material.diffuse");
+		renderer->Uniform3f(1, &material->spectacular, "material.spectacular");
+		renderer->Uniform3f(1, &material->ambient, "material.ambient");
+		renderer->Uniform1f(1, &material->shininess, "material.shininess");
+	}
+	renderer->Uniform1f(1, &materialProvided, "materialProvided");
+}
+
+void RendererSystem::LoadTransform(Scene::Entities::iterator& itr)
+{
+	Mat* mat = nullptr;
+	Transform* transform = static_cast<Transform*>(itr->second->get<ComponentTypes::TRANSFORM>());
+	if(transform != nullptr)
+	{
+		mat = ConvertTranforToMatrix(*transform);
+	}
+	else
+	{
+		mat = &transformDefault;
+		ComponentPtr& comptr = itr->second->components[ComponentTypes::TRANSFORM];
+		comptr.base = new ComponentPtr::Impl<Transform>;
+		transform =  (Transform*)comptr.base->Create();
+		transform->scale = Vect3(.5f, .5f, .5f);
+		comptr.entity = itr->first;
+	}
+	*mat *= SetUpCamera(mainCamera, transform->pos);
+	renderer->UniformMat(1, mat, "MVP");
+}
 void RendererSystem::update(float deltaTime)
 {
-//	renderer->ClearColor(.0f, 1.f, 0.5f);
-	//std::cout << "Entering the renderering " << std::endl;
-	renderer->ClearColor(std::abs(std::cos(animated)/100 * deltaTime) , std::abs(std::sin(animated)/10 * deltaTime)  , .5f);
+	//renderer->ClearColor(.0f, 1.f, 0.5f);
 	renderer->Clear();
     RendererStuff* rendererStuff;
-    for(auto& i: scene->entities)
+    for(auto itr = scene->entities.begin(); itr != scene->entities.end(); itr++)
     {
-		auto rendererStuffitr = i.second->components.find(ComponentType::RENDERERSTUFF);
-		if( rendererStuffitr != i.second->components.end())
+		auto rendererStuffitr = itr->second->components.find(ComponentTypes::RENDERERSTUFF);
+		if( rendererStuffitr != itr->second->components.end())
 		{
         	rendererStuff = (RendererStuff*)rendererStuffitr->second.base->GetPointer();
         	rendererStuff->vBuffer->Bind();
         	rendererStuff->iBuffer->Bind();
-        	//rendererStuff->texture->Bind();
-			Mat* mat = nullptr;
-			Transform* transform = static_cast<Transform*>(i.second->get<ComponentType::TRANSFORM>());
-			if(transform != nullptr)
-			mat = ConvertTranforToMatrix(*transform);
-			else
-			{
-				mat = &transformDefault;
-		//		std::cout << "Loading the default mvp" << std::endl;
-		//		std::cout << "Size of the default transform " << mat->sizet << std::endl;
-			}
-		//	std::cout << *mat << std::endl;
-        	renderer->UniformMat(*mat, "MVP");
-			
+        	//rendererStuff->texture->Bind();		
+			LoadMaterial(itr);
+			LoadTransform(itr);
         	renderer->Draw(rendererStuff->iBuffer);
 		}
-    }
+
+	}
+    
 	animated += .01f;
 }

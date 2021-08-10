@@ -55,11 +55,13 @@ public:
     void Clear() override;
     void ClearColor(float r, float g, float b) override;
     void ClearDepth(float depthLevel) override;
-    void Uniform1f(const float& data, std::string name) override;
-    void Uniform2f(const Vect2& data, std::string name) override;
-    void Uniform3f(const Vect3& data, std::string name) override;
-    void Uniform4f(const Vect4& data, std::string name) override;
-    void UniformMat(const Mat& mat, std::string name) override;
+	void Uniform1u(const uint32_t count, const uint32_t* data, std::string name) override;
+	void Uniform1i(const uint32_t count, const int32_t* data, std::string name) override;
+    void Uniform1f(const uint32_t count, const float* data, std::string name) override;
+    void Uniform2f(const uint32_t count, const Vect2* data, std::string name) override;
+    void Uniform3f(const uint32_t count, const Vect3* data, std::string name) override;
+    void Uniform4f(const uint32_t count, const Vect4* data, std::string name) override;
+    void UniformMat(const uint32_t count, const Mat* mat, std::string name) override;
 private:
     void LoadGladGL();
     void FinalizeVertexSpecification();

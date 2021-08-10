@@ -51,7 +51,6 @@ public:
     bool operator==(const Vect4& other) const;
 
     float dot(const Vect4& other) const;
-    float cross(const Vect4& other) const;
     void normalize();
 	friend std::istream& operator>>(std::istream &input, Vect4& a)
 	{
@@ -62,6 +61,18 @@ public:
 	{
 		output << a.x << " " << a.y << " " << a.z << " " << a.w;
 		return output;
+	}
+public:
+	inline static Vect4 normalize(const Vect4& temp)
+	{
+		auto temp1 = temp;
+		temp1.normalize();
+		return temp1;
+	}
+	inline static float dot(const Vect4& first, const Vect4& other)
+	{
+		auto temp = first;
+		return temp.dot(other);
 	}
 };
 
@@ -187,4 +198,17 @@ inline Vect4 Vect4::operator/=(const Vect4& other)
 
 inline bool Vect4::operator<(const Vect4& other) const
 {
+	if(this->x == other.x)
+	{
+		if(this->y == other.y)
+		{
+			if(this->z == other.z)
+			{
+				return this->w < other.w;
+			}
+			else return this->z < other.z;
+		}
+		else return this->y < other.y;
+	}
+	else return this->x < other.x;
 }

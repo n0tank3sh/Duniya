@@ -25,6 +25,11 @@ set(EXCEPTION_SRC
     "src/Exception.h"
 	)
 
+
+set(TEST_GAME_SRC
+	"src/TestGame.h"
+	"src/TestGame.cpp"
+	)
 set(CHESS_SRC
     "src/main.cpp"
     "src/Application.h"
@@ -38,6 +43,7 @@ set(CHESS_SRC
     "src/Graphics/opengl/GLUtils.h"
     "src/Graphics/opengl/GLRenderer.h"
     "src/Graphics/opengl/GLRenderer.cpp"
+	"src/SDLUtiliy.h"
 	"src/Renderer2DSystem.h"
 	"src/Renderer2DSystem.cpp"
 )
@@ -54,6 +60,7 @@ include_directories(${SDL2_INCLUDE_DIRS})
 add_executable(
     chess_gui
     ${CHESS_SRC}
+	${TEST_GAME_SRC}
 	${MATH_UTILS}
 	${ECS_SRC}
 	${EXCEPTION_SRC}
@@ -75,7 +82,7 @@ target_include_directories(
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-set(RESOURCE_TEST_FILE "Resource/Test/Goat.obj")
+set(RESOURCE_TEST_FILE "Resource/Test/chess.fbx")
 set(TEST_FILE "justChecking.dick")
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resource/)
@@ -88,6 +95,8 @@ add_custom_target( checking_chess_gui
 )
 add_dependencies(chess_gui resources checking_chess_gui)
 add_dependencies(checking_chess_gui resources sceneconverter)
+
+#add_dependencies(chess_gui resources)
 
 target_link_libraries(
     chess_gui
