@@ -2,6 +2,7 @@
 #include <Graphics/Renderer.h>
 #include <Exception.h>
 #include <glad/glad.h>
+#include <vector>
 
 class GLException : public CException 
 {
@@ -49,9 +50,11 @@ class GLRenderer : public Renderer
 public:
     GLRenderer();
     void Draw(GBuffer* gBuffer) override;
+	void DrawInstanced(GBuffer* gBuffer) override;
+	void DrawBuffer(GBuffer* gBuffer) override;
+	void DrawArrays(GBuffer* gBuffer) override;
     void LoadBuffer(GBuffer* gBuffer) override;
     void LoadTexture(Texture* texture, GBuffer* gbuffer) override;
-    void AddShader(ShaderType type, std::string& source) override;
     void Clear() override;
     void ClearColor(float r, float g, float b) override;
     void ClearDepth(float depthLevel) override;
@@ -62,16 +65,44 @@ public:
     void Uniform3f(const uint32_t count, const Vect3* data, std::string name) override;
     void Uniform4f(const uint32_t count, const Vect4* data, std::string name) override;
     void UniformMat(const uint32_t count, const Mat* mat, std::string name) override;
+	void UseShaderStage(ShaderStageHandler* shaderStagerHandler) override;
+	void SetLayout(const uint32_t layout) override;
+	uint32_t AddSpecification(VertexSpecification& vertexSpecification) override;
+	NativeShaderHandlerParent* CreateShader(ShaderType type) override;
+	ShaderStageHandler * CreateShaderStage() override;
 private:
-    void LoadGladGL();
+    static void LoadGladGL();
     void FinalizeVertexSpecification();
     void UseCurrentShaderProgram();
 private:
-    struct ShaderProgram
-    {
-        bool Linked;
-        uint32_t id;
-    } shaderProgram;
-    uint32_t pvao;
-    std::vector<uint32_t> shaders;
+	static bool gladLoaded;
+	uint32_t pvao;
+private:
+	std::vector<uint32_t> vaos;
+public:
+	uint32_t shaderProgram;
 };
+
+template<>
+struct NativeShaderHandler<GLRenderer> : public NativeShaderHandlerParent
+{
+	uint32_t shader;
+	NativeShaderHandler(ShaderType shaderType);
+	~NativeShaderHandler();
+	void Load() override;
+	void UnLoad() override;
+};
+
+template<>
+struct NativeShaderStageHandler<GLRenderer> : public ShaderStageHandler
+{
+	bool linked;
+	uint32_t program;
+	GLRenderer* renderer;
+	NativeShaderStageHandler();
+	~NativeShaderStageHandler();
+	void Load() override;
+	void UnLoad() override;
+};
+
+

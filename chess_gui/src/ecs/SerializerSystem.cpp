@@ -67,10 +67,6 @@ void SerializerSystem::Deserialize<Mesh>(Mesh& var)
 	var.indicies = new uint32_t[var.indexCount];
 	is->read((char*)var.verticies, sizeof(Vertex) * var.vertexCount);
 	is->read((char*)var.indicies, sizeof(uint32_t) * var.indexCount);
-	for(uint32_t i = 0; i < var.indexCount; i++)
-	{
-		std::cout << var.indicies[i] << " ";
-	}
 }
 
 
@@ -136,12 +132,10 @@ void SerializerSystem::Deserialize<Scene::IComponentArray>(Scene::IComponentArra
 	//in.read((char*)componentArray->componentTypes.data(), sizeof(uint32_t) * totalSize);
 	for(uint32_t itr = 0; itr < totalSize; itr++)
 	{
-		std::cout << "Is it even entering here " << std::endl;
 		ComponentType componentTypeTemp;
 		uint32_t componentTypeinInt;
 		is->read((char*)&componentTypeinInt, sizeof(uint32_t));
 		componentTypeTemp = static_cast<ComponentType>(componentTypeinInt);
-		std::cout << "The size of the component array: " <<  var.components.size() << std::endl;
 		ComponentPtr& componentPtr= var.components[componentTypeTemp];
 		if(componentTypeTemp == ComponentTypes::MESH)
 		{
@@ -184,7 +178,6 @@ void SerializerSystem::Serialize<ComponentTypeMap>(const ComponentTypeMap& var)
 		else if(i.first == std::type_index(typeid(Material)))
 			temp = "Material";
 		uint32_t tempSize = temp.size();
-		std::cout << "The Temp Size: " << tempSize << std::endl;
 		//std::cout << "Temp Name " <<  temp << std::endl;
 		os->write((char*)&tempSize, sizeof(uint32_t));
 		os->write(temp.data(), tempSize);
@@ -210,8 +203,6 @@ void SerializerSystem::Deserialize<ComponentTypeMap>(ComponentTypeMap& var)
 
 		std::type_index* typeIndex = nullptr;
 		std::string typeName(typeNameChar, tempSize);
-		std::cout << "String size " << tempSize << std::endl;
-		std::cout <<"The type name is: " <<  typeName << std::endl;
 		
 		if(typeName == "Transform")
 			typeIndex = new std::type_index(typeid(Transform));

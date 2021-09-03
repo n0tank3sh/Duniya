@@ -1,9 +1,5 @@
 #include "Renderer.h"
 
-void Renderer::SetLayout(VertexSpecification& specification)
-{
-	this->specification = specification;
-}
 
 void GBuffer::Bind() const noexcept
 {

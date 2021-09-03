@@ -1,9 +1,12 @@
 #include "RendererSystem.h"
+#include "Application.h"
+#include "Graphics/Renderer.h"
 #include "Graphics/opengl/GLRenderer.h"
 #include "ecs/commoncomponent.h"
 #include "ecs/ecs.h"
 #include <AssetLoader.h>
 #include <chrono>
+#include <string>
 
 RendererSystem* RendererSystem::singleton = nullptr;
 
@@ -21,22 +24,30 @@ RendererSystem::RendererSystem()
 	camera->components[ComponentTypes::CAMERA].emplace(new ComponentPtr::Impl<Camera>);
 	Transform* transform = (Transform*)(camera->components[ComponentTypes::TRANSFORM].emplace(new ComponentPtr::Impl<Transform>));
 	transform->pos = Vect3(.0f, .0f, 1.f);
+	renderer = std::unique_ptr<Renderer>(new GLRenderer);
+	mainShaderStage.reset(renderer->CreateShaderStage());	
+	std::unique_ptr<NativeShaderHandlerParent> fragShader(renderer->CreateShader(ShaderType::FRAGMENT)), 
+											   vertShader(renderer->CreateShader(ShaderType::VERTEX));
+	if(AssetLoader::GetSingleton() == nullptr)
+		AssetLoader::init();
+	AssetLoader* assLoader = AssetLoader::GetSingleton();
+
+
+	assLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertShader->source);
+	assLoader->LoadTextFile("Resource/Shaders/FragmentShader.glsl", fragShader->source);
+
+	mainShaderStage->shaderHandler.push_back(std::move(vertShader));
+	mainShaderStage->shaderHandler.push_back(std::move(fragShader));
 }
 
 RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
 {
     singleton = new RendererSystem();
-    singleton->renderer.reset(new GLRenderer());
-	std::string vertexShaderSrc, fragShaderSrc;
-	if(AssetLoader::GetSingleton() == nullptr)
-		AssetLoader::init();
-	AssetLoader* assLoader = AssetLoader::GetSingleton();
-	assLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertexShaderSrc);
-	assLoader->LoadTextFile("Resource/Shaders/FragmentShader.glsl", fragShaderSrc);
-	singleton->renderer->AddShader(ShaderType::VERTEX, vertexShaderSrc);
-	singleton->renderer->AddShader(ShaderType::FRAGMENT, fragShaderSrc);
+
+
 	VertexSpecification specification  = { {"pos", 4}, {"aNormal", 3}, {"texCoord", 3}};
-	singleton->renderer->SetLayout(specification);
+	singleton->mainShaderStage->Load();
+	singleton->layout = singleton->renderer->AddSpecification(specification);
     return singleton;
 }
 
@@ -45,19 +56,42 @@ RendererSystem* RendererSystem::GetSingleton()
     return singleton;
 }
 
+void RendererSystem::LoadLightColor(const LightColor& color, std::string name)
+{
+	renderer->Uniform3f(1, &color.ambient, name + ".ambient");
+	renderer->Uniform3f(1, &color.specular, name + ".specular");
+	renderer->Uniform3f(1, &color.diffuse, name + ".diffuse");
+}
+
+
 void RendererSystem::LoadLights()
 {
+	uint32_t numPointLights = 0, numDirLights = 0;
 	for(auto i: lights)
 	{
 		if(scene->entities[i]->get<ComponentTypes::POINTLIGHT>() != nullptr)
 		{
-			auto transform = reinterpret_cast<Transform*>(scene->entities[i]->get<ComponentTypes::TRANSFORM>());
-			auto light = reinterpret_cast<PointLight*>(scene->entities[i]->get<ComponentTypes::POINTLIGHT>());
+			auto pointLight = reinterpret_cast<PointLight*>(scene->entities[i]->get<ComponentTypes::POINTLIGHT>());
+			std::string pointLightName("pointLight[");
+			pointLightName += std::to_string(numPointLights) + "]";
+			renderer->Uniform3f(1, &pointLight->pos, pointLightName + ".pos");
+			LoadLightColor(pointLight->lightColor, pointLightName + ".lightColor");
+			renderer->Uniform1f(1, &pointLight->constant, pointLightName + ".constant");
+			renderer->Uniform1f(1, &pointLight->linear, pointLightName + ".linear");
+			renderer->Uniform1f(1, &pointLight->quadratic, ".quadratic");
+			numPointLights++;
 		}
 		if(scene->entities[i]->get<ComponentTypes::DIRLIGHT>() != nullptr)
 		{
+			auto dirLight = reinterpret_cast<DirectionalLight*>(scene->entities[i]->get<ComponentTypes::DIRLIGHT>());
+			std::string dirLightName("dirLight[");
+			dirLightName += std::to_string(numDirLights) + "]";
+			renderer->Uniform3f(1, &dirLight->dir, dirLightName + ".dir");
+			numDirLights++;
 		}
 	}
+	renderer->Uniform1u(1, &numPointLights, "numPointLights");
+	renderer->Uniform1u(1, &numDirLights, "numDirLights");
 }
 void RendererSystem::CreateGBufferMesh(Mesh* mesh, GBuffer* indexBuffer, GBuffer* vertexBuffer)
 {
@@ -78,10 +112,12 @@ void RendererSystem::CreateGBufferMesh(Mesh* mesh, GBuffer* indexBuffer, GBuffer
 void RendererSystem::LoadScene(Scene* scene)
 {
 //	renderer->ClearColor(.0f, 1.f, 0.5f);
+	mainShaderStage->Load();
     this->scene = scene;
     Mesh* mesh;
 	Texture* texture;
 	bool foundCamera = false;
+	renderer->SetLayout(layout);
     for(auto& i: scene->entities)
     {
 		Scene::IComponentArray* componentArray;
@@ -95,6 +131,7 @@ void RendererSystem::LoadScene(Scene* scene)
 		CreateGBufferMesh(mesh, rendererStuff->iBuffer, rendererStuff->vBuffer);
 		renderer->LoadBuffer(rendererStuff->iBuffer);
 		renderer->LoadBuffer(rendererStuff->vBuffer);
+		renderer->SetLayout(layout);
 		//if(meshItr != componentArray->components.end())
 		//{
 		//}
@@ -105,6 +142,10 @@ void RendererSystem::LoadScene(Scene* scene)
 			foundCamera = true;
 			mainCamera = i.first;
 		}
+		if(componentArray->components.find(ComponentTypes::DIRLIGHT) == componentArray->components.end() || 
+				componentArray->components.find(ComponentTypes::POINTLIGHT) == componentArray->components.end()
+		  )
+			lights.push_back(i.first);
 
     }
 	if(!foundCamera)
@@ -117,6 +158,7 @@ void RendererSystem::LoadScene(Scene* scene)
 		}
 		mainCamera = entity;
 	}
+	LoadLights();
 }
 
 Mat RendererSystem::SetUpCamera(uint32_t entity, Vect3& pos, const Vect3& temp = Vect3(0, 1, 0))
@@ -185,11 +227,13 @@ void RendererSystem::LoadTransform(Scene::Entities::iterator& itr)
 	*mat *= SetUpCamera(mainCamera, transform->pos);
 	renderer->UniformMat(1, mat, "MVP");
 }
+
 void RendererSystem::update(float deltaTime)
 {
-	//renderer->ClearColor(.0f, 1.f, 0.5f);
 	renderer->Clear();
     RendererStuff* rendererStuff;
+	mainShaderStage->Load();
+	renderer->SetLayout(layout);
     for(auto itr = scene->entities.begin(); itr != scene->entities.end(); itr++)
     {
 		auto rendererStuffitr = itr->second->components.find(ComponentTypes::RENDERERSTUFF);

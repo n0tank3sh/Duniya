@@ -5,9 +5,21 @@
 #include <SDLUtiliy.h>
 #include <ecs/ecs.h>
 
+constexpr const char* CHESS_GUI_PATH = "CHESS_GUI_PATH";
+
 enum class Graphics_API
 {
     OPENGL, DIRECTX
+};
+
+struct ApplicationMessage
+{
+	enum class MessageType
+	{
+		ADD_SYSTEM
+	};
+	MessageType messageType;
+	System* system;
 };
 
 class Application

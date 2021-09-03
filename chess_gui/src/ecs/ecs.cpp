@@ -83,6 +83,13 @@ Scene::IComponentArray* Scene::GetEntity(uint32_t entity)
     else return nullptr;
 }
 
+uint32_t Scene::PushDef()
+{
+	auto tmp = entityManager->CreateEntity();
+	entities[tmp].reset(new IComponentArray);
+	return tmp;
+}
+
 void Scene::LoadScene(std::string filePath)
 {
 	std::ifstream fin(filePath, std::ifstream::binary);

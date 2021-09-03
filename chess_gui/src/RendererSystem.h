@@ -24,18 +24,22 @@ public:
     void LoadScene(Scene* scene) override;
     void update(float deltaTime) override;
 private:
+	Mat SetUpCamera(uint32_t entity, Vect3& pos, const Vect3& temp );
+	void LoadMaterial(Scene::Entities::iterator& itr);
+	void LoadLights();
+	void LoadLightColor(const LightColor& color, std::string name);
+	void LoadTransform(Scene::Entities::iterator& itr);
+	void lookAt(Vect3& from, Vect3& forward, Vect3& up, Vect3& right, Mat& mat);
+private:
     std::unique_ptr<Renderer> renderer;
     Scene* scene;
     static RendererSystem* singleton;
 	float animated;
 	Mat transformDefault;
 	uint32_t mainCamera;
+	uint32_t layout;
 	Scene::IComponentArray* camera;
 	std::vector<uint32_t> lights;
-private:
-	Mat SetUpCamera(uint32_t entity, Vect3& pos, const Vect3& temp );
-	void LoadMaterial(Scene::Entities::iterator& itr);
-	void LoadLights();
-	void LoadTransform(Scene::Entities::iterator& itr);
-	void lookAt(Vect3& from, Vect3& forward, Vect3& up, Vect3& right, Mat& mat);
+	std::unique_ptr<ShaderStageHandler> mainShaderStage;
+
 };

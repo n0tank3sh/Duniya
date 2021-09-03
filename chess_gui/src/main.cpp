@@ -19,12 +19,12 @@ int main(int argc, const char* argv[])
 	}
 	catch(CException& e)
 	{
-		//if(!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, e.GetType().c_str(), e.what(), NULL))
-		//{
-		//	std::cout << SDL_GetError() << std::endl;
-		//}
-		std::cout << e.GetType() << std::endl
-			<< e.what() << std::endl;
+		if(!SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, e.GetType().c_str(), e.what(), NULL))
+		{
+			std::cout << SDL_GetError() << std::endl;
+		}
+		//std::cout << e.GetType() << std::endl
+			//<< e.what() << std::endl;
 	}
     SDL_Quit();
     return runFlag;

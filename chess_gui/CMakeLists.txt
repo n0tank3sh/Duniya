@@ -82,7 +82,7 @@ target_include_directories(
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-set(RESOURCE_TEST_FILE "Resource/Test/chess.fbx")
+set(RESOURCE_TEST_FILE "Resource/Test/model/Earth 2K.obj")
 set(TEST_FILE "justChecking.dick")
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resource/)

@@ -1,11 +1,25 @@
 #include "Application.h"
 #include <Graphics/Renderer.h>
 #include "Exception.h"
+#include <cstdint>
 #include <ecs/commoncomponent.h>
 #include <ecs/GraphicsComponent.h>
 #include <RendererSystem.h>
 #include "AssetLoader.h"
 #include "TestGame.h"
+#include <filesystem>
+#include <iterator>
+#include <string>
+#include <Renderer2DSystem.h>
+
+namespace ComponentTypes
+{
+	constexpr uint32_t MAINTYPE = 0;
+};
+
+struct MainType
+{
+};
 
 
 Application::Application()
@@ -18,49 +32,33 @@ Application::Application()
     uint32_t windowFlag =  SDL_WINDOW_OPENGL;
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     window = SDL_CreateWindow(title.c_str(), 0, 0, width, height, windowFlag);
-	if(window == NULL) printf("Can't create window reason: %s", SDL_GetError());
+	if(window == NULL) throw CException(__LINE__, __FILE__, "Window Error", SDL_GetError());
 	
 
     deviceContext = SDL_GL_CreateContext(window);
-	if(deviceContext == NULL) printf("%s", SDL_GetError());
-	RendererSystem::init(gpi);
+	if(deviceContext == NULL) throw CException(__LINE__, __FILE__, "GL Device Context", SDL_GetError());
 	
-
-//	const GLubyte* version;
-//	version = glGetString(GL_VERSION);
-//	std::cout << "The version of opengl is : " << version << std::endl;
-//	glClearColor(.0f, .5f, 0.25f, 1.0f);
-//	glClear(GL_COLOR_BUFFER_BIT);
-//	SDL_GL_SwapWindow(window);
-
 	scene = new Scene();
-//	scene->RegisterComponent<Transform>();
-//	scene->RegisterComponent<Mesh>();
-//	Scene::IComponentArray* ica = scene->GetEntity(scene->Push());
-//	
-//	AssetLoader::init();
-//	Mesh* mesh = (Mesh*)ica->get<ComponentType::MESH>();
-//	Transform* transform = (Transform*)ica->get<ComponentType::TRANSFORM>();
-//	if(mesh == nullptr) std::cout << "Error found in Mesh" << std::endl;
-//	AssetLoader::GetSingleton()->LoadObj("Resource/Test/Goat.obj", mesh);
-//	mesh->texture = new Texture();
-//	AssetLoader::GetSingleton()->LoadTextureFile("Resource/Test/Tex.png", mesh->texture);
-//	if(mesh->texture == nullptr) std::cout << "Texture is nullptr after Load Texture " << std::endl;
-//	
-//	transform->pos = Vect3();
-//	transform->rotation = Vect3();
-//	transform->scale = Vect3(.25f, .25f, .25f);
-//	std::cout  << scene->entities.size() << std::endl;
-//	scene->SaveScene("justChecking.dick");
 	scene->LoadScene("justChecking.dick");
+	char* c = getenv(CHESS_GUI_PATH);
+	std::string paths;
+	if(c != NULL) paths = c;
+	std::string directory;
+	int i = 0; 
+	while(i < paths.size())
+	{
+		auto itr = paths.find(";", i);
+		directory = paths.substr(i, itr);
+		i = itr + i; 
+	}
 
 	manager = new SystemManager;
-	manager->Add(RendererSystem::GetSingleton());
-	manager->Add(new TestGame());
+	manager->Add(RendererSystem::init(Graphics_API::OPENGL));
+	manager->Add(Renderer2DSystem::init());
 	manager->LoadScene(scene);
 }
 

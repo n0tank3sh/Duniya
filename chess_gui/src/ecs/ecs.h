@@ -15,13 +15,13 @@
 using ComponentType = uint32_t;
 namespace ComponentTypes
 {
-	constexpr uint32_t MESH = 0;
-	constexpr uint32_t TRANSFORM = 1;
-	constexpr uint32_t CHILDREN = 2;
-	constexpr uint32_t MATERIAL = 3;
-	constexpr uint32_t TEXTURE = 4;
-	constexpr uint32_t RENDERERSTUFF = 5;
-	constexpr uint32_t CAMERA = 6;
+	constexpr uint32_t MESH = 0x1;
+	constexpr uint32_t TRANSFORM = 0x2;
+	constexpr uint32_t CHILDREN = 0x3;
+	constexpr uint32_t MATERIAL = 0x4;
+	constexpr uint32_t TEXTURE = 0x5;
+	constexpr uint32_t RENDERERSTUFF = 0x6;
+	constexpr uint32_t CAMERA = 0x7;
 
 };
 
@@ -41,7 +41,7 @@ struct TypeNotFoundException : public CException
 {
 	TypeNotFoundException(uint32_t line, const char* file)
 		:
-			CException(line, file, "Type Not Found", "Cannot find the type you are refercing")
+			CException(line, file, "Type Not Found", "Cannot find the type you are referencing")
 	{}
 };
 
@@ -145,6 +145,10 @@ public:
 			if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
 			return basePointer;
         }
+		void* insert(ComponentType component, ComponentPtr::BaseImpl* base)
+		{
+			return components[component].emplace(base);
+		}
     };    
 
     struct ComponentManager
@@ -163,6 +167,8 @@ public:
 public:
     Scene();
     uint32_t Push();
+	uint32_t PushDef();
+	void Merge(Scene* scene);
     IComponentArray* GetEntity(uint32_t entity);
     template <typename T>
     void RegisterComponent()
@@ -199,7 +205,10 @@ struct System
 {
     virtual void LoadScene(Scene* scene) = 0;
     virtual void update(float deltaTime) = 0;
+	template<typename T> 
+	static System* Create();
 	std::weak_ptr<QueryMessages> messagingSystem;
+	bool isSingelton;
 };
 
 struct SystemManager

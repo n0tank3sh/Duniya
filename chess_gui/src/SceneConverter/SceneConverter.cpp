@@ -131,6 +131,7 @@ void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const a
 		material->Get(AI_MATKEY_COLOR_SPECULAR, resultedMaterial->spectacular.coordinates);
 		material->Get(AI_MATKEY_COLOR_DIFFUSE, resultedMaterial->diffuse.coordinates);
 		material->Get(AI_MATKEY_COLOR_AMBIENT, resultedMaterial->ambient.coordinates);
+		material->Get(AI_MATKEY_SHININESS_STRENGTH, resultedMaterial->shininess);
 	}
 }
 
@@ -168,13 +169,12 @@ void SceneConverter::ProcessLight(Scene* scene, const aiScene* queryScene)
 		auto entity = scene->entityManager->CreateEntity();
 		scene->entities[entity].reset(new Scene::IComponentArray);
 		auto LightComponent = scene->entities[entity].get();
-		Transform* transform = (Transform*)LightComponent->components[ComponentTypes::TRANSFORM].emplace(new ComponentPtr::Impl<Transform>);
 		LightColor color;
 		ProcessLightColor(light, color);	
 		if(light->mType == aiLightSource_POINT)
 		{
 			PointLight* pointLight = (PointLight*)LightComponent->components[ComponentTypes::POINTLIGHT].emplace(new ComponentPtr::Impl<PointLight>);
-			ConVec3(transform->pos, light->mPosition);
+			ConVec3(pointLight->pos, light->mPosition);
 			pointLight->lightColor = color;
 			pointLight->constant = light->mAttenuationConstant;
 			pointLight->linear = light->mAttenuationLinear;
@@ -183,7 +183,7 @@ void SceneConverter::ProcessLight(Scene* scene, const aiScene* queryScene)
 		else if(light->mType == aiLightSource_DIRECTIONAL)
 		{
 			DirectionalLight* dirLight = (DirectionalLight*)LightComponent->components[ComponentTypes::DIRLIGHT].emplace(new ComponentPtr::Impl<DirectionalLight>);
-			ConVec3(transform->rotation, light->mDirection);
+			ConVec3(dirLight->dir, light->mDirection);
 			dirLight->lightColor = color;
 		}
 	}

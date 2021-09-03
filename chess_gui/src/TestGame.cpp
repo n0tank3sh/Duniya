@@ -19,7 +19,6 @@ void TestGame::update(float deltaTime)
 	auto& messages = (*messagingSystem.lock())[EVENTS::KEYBOARD_EVENTS];
 	while(!messages.empty())
 	{
-		std::cout << messages.size() << std::endl;
 		auto message = static_cast<KeyboardEvent*>(messages.front().get());
 		switch(message->event.keysym.sym)
 		{

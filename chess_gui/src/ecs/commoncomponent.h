@@ -25,12 +25,14 @@ struct LightColor
 struct DirectionalLight
 {
 	LightColor lightColor;
+	Vect3 dir;
 };
 
 struct PointLight
 {
 	LightColor lightColor;
 	float constant, linear, quadratic;
+	Vect3 pos;
 };
 
 struct Camera

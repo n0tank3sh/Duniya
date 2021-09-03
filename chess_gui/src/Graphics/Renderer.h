@@ -51,14 +51,44 @@ enum class ShaderType
 
 
 
+struct NativeShaderHandlerParent
+{
+	ShaderType type;
+	std::string source;
+	virtual ~NativeShaderHandlerParent(){}
+	virtual void Load() = 0;
+	virtual void UnLoad() = 0;
+};
+
+template<typename T>
+struct NativeShaderHandler : public NativeShaderHandlerParent
+{
+};
+struct ShaderStageHandler
+{
+	std::vector<std::unique_ptr<NativeShaderHandlerParent>> shaderHandler;
+	virtual ~ShaderStageHandler(){}
+	virtual void Load() = 0;
+	virtual void UnLoad() = 0;
+};
+
+template<typename t>
+struct NativeShaderStageHandler : ShaderStageHandler
+{
+};
+
+
+
 class Renderer
 {
 public:
 	//Override function
     virtual void Draw(GBuffer* gBuffer) = 0;
+	virtual void DrawInstanced(GBuffer* gBuffer) = 0;
+	virtual void DrawBuffer(GBuffer* gBuffer) = 0;
+	virtual void DrawArrays(GBuffer* gBuffer) = 0;
     virtual void LoadBuffer(GBuffer* gBuffer) = 0;
     virtual void LoadTexture(Texture* texture, GBuffer* gBuffer) = 0;
-    virtual void AddShader(ShaderType type, std::string& source) = 0;
     virtual void Uniform1f(const uint32_t count, const float* data, std::string name) = 0;
     virtual void Uniform2f(const uint32_t count, const Vect2* data, std::string name) = 0;
     virtual void Uniform3f(const uint32_t count, const Vect3* data, std::string name) = 0;
@@ -66,11 +96,12 @@ public:
 	virtual void Uniform1i(const uint32_t count, const int32_t* data, std::string name) = 0;
     virtual void Uniform4f(const uint32_t count, const Vect4* data, std::string name) = 0;
     virtual void UniformMat(const uint32_t count, const Mat* mat, std::string name) = 0;
+	virtual void UseShaderStage(ShaderStageHandler* shaderStageHandler) = 0;
+	virtual void SetLayout(const uint32_t layout) = 0;
     virtual void Clear() = 0;
     virtual void ClearColor(float r, float g, float b) = 0;
     virtual void ClearDepth(float depthLevel) = 0;
-public:
-    void SetLayout(VertexSpecification& specification);
-protected:
-    VertexSpecification specification;
+	virtual NativeShaderHandlerParent* CreateShader(ShaderType type) = 0;
+	virtual ShaderStageHandler* CreateShaderStage() = 0;
+	virtual uint32_t AddSpecification(VertexSpecification& vertexSpecification) = 0;
 };
