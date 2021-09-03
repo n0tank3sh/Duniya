@@ -2,8 +2,7 @@
 out/
 glad/
 CMakeFiles/
-Resource/Test/model
-Resource/Test/chess.fbx
+Resource/Test/
 compile_commands.json
 CMakeCache.txt
 
