@@ -49,10 +49,10 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer();
-    void Draw(GBuffer* gBuffer) override;
-	void DrawInstanced(GBuffer* gBuffer) override;
-	void DrawBuffer(GBuffer* gBuffer) override;
-	void DrawArrays(GBuffer* gBuffer) override;
+    void Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
+	void DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
+	void DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
+	void DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
     void LoadBuffer(GBuffer* gBuffer) override;
     void LoadTexture(Texture* texture, GBuffer* gbuffer) override;
     void Clear() override;
@@ -78,7 +78,7 @@ private:
 	static bool gladLoaded;
 	uint32_t pvao;
 private:
-	std::vector<uint32_t> vaos;
+	std::vector<std::pair<uint32_t, std::vector<uint32_t>>> vaos;
 public:
 	uint32_t shaderProgram;
 };

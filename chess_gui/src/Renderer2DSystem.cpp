@@ -18,10 +18,10 @@ Renderer2DSystem::Renderer2DSystem()
 		 in vec2 goat;																\
 		 uniform vec4 panel;														\
 		 void main() {  															\
-			 vec2 tmp;																\
-			 tmp.x = panel.x + goat.x + goat.x * panel.z;	 						\
-			 tmp.y = panel.y + goat.y + goat.y * panel.w;							\
-			 gl_Position = vec4(tmp, 0., 1.0);										\
+			 vec2 tmp;\n																\
+			 tmp.x = panel.x * goat.x + (goat.x * (panel.x + panel.z));	 		\
+			 tmp.y = panel.y * goat.y + (goat.y * (panel.y + panel.w));			\
+			 gl_Position = vec4(goat, .0, 1.0);										\
 		 }																			\
 		";
 	fragShader->source =
@@ -31,22 +31,21 @@ Renderer2DSystem::Renderer2DSystem()
 		 out vec4 outColor;															\
 		 uniform sampler2D text;													\
 		 void main() {																\
-			outColor = vec4(inColor, 1); 											\
+			outColor = vec4(inColor, 0.1); 											\
 		 }																			\
 		";
+	shaderStageHandler->shaderHandler.push_back(std::move(vertShader));
+	shaderStageHandler->shaderHandler.push_back(std::move(fragShader));
+	shaderStageHandler->Load();
 	VertexSpecification vertexSpecification;
 	vertexSpecification.push_back(std::make_pair("goat", 2));
 	layout = renderer->AddSpecification(vertexSpecification);
-	shaderStageHandler->shaderHandler.push_back(std::move(vertShader));
-	shaderStageHandler->shaderHandler.push_back(std::move(fragShader));
 	uint32_t vertCount = 4, indexCount = 6;
 	auto vert = new Vect2[vertCount];
-	vert[0] = {0.f, 0.f};
-	vert[1] = {1.f, 0.f};
-	vert[2] = {0.f, 1.f};
+	vert[0] = {-1.f, -1.f};
+	vert[1] = {-1.f, 1.f};
+	vert[2] = {1.f, -1.f};
 	vert[3] = {1.f, 1.f}; 
-	auto index = new uint32_t[indexCount];
-	index[0] = 0, index[1] = 1, index[2] = 2, index[3] = 2, index[4] = 1, index[5] = 3;
 
 	panel.vertBuffer = new GBuffer;
 	auto& style = panel.vertBuffer->bufferStyle;
@@ -59,14 +58,6 @@ Renderer2DSystem::Renderer2DSystem()
 	renderer->LoadBuffer(panel.vertBuffer);
 	renderer->SetLayout(layout);
 
-	panel.iBuffer = new GBuffer; style = panel.iBuffer->bufferStyle;
-	style.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC;
-	style.type = GBuffer::GBufferStyle::BufferType::INDEX;
-	style.usage = GBuffer::GBufferStyle::Usage::DRAW;
-	panel.iBuffer->count = indexCount;
-	panel.iBuffer->data = index;
-	panel.iBuffer->sizet = indexCount * sizeof(uint32_t);
-	renderer->LoadBuffer(panel.iBuffer);
 }
 
 Renderer2DSystem* Renderer2DSystem::init()
@@ -87,7 +78,7 @@ void Renderer2DSystem::LoadScene(Scene* scene)
 	auto goat = new Vect2[4];
 	auto entity = scene->PushDef();
 	auto panel = reinterpret_cast<Panel*>(scene->GetEntity(entity)->insert(ComponentTypes::PANEL, new ComponentPtr::Impl<Panel>));
-	*panel = {.25, .23, .23, .23};
+	*panel = {.025f, .023f, .01f, .01f};
 	auto bgColor = reinterpret_cast<BackgroundColor*>(scene->GetEntity(entity)->insert(ComponentTypes::BACKGROUNDCOLOR, new ComponentPtr::Impl<BackgroundColor>));
 	bgColor->color = Vect3(1.f);
 
@@ -120,8 +111,7 @@ void Renderer2DSystem::update(float deltaTime)
 			{
 				renderer->Uniform3f(1, &reinterpret_cast<BackgroundColor*>(componentList->get<ComponentTypes::BACKGROUNDCOLOR>())->color, "inColor");
 			}
-			panel.vertBuffer->Bind();
-			renderer->Draw(panel.iBuffer);
+			renderer->DrawArrays(DrawPrimitive::TRIANGLES_STRIPS, panel.vertBuffer);
 		}
 	}
 }

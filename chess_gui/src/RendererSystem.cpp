@@ -25,6 +25,7 @@ RendererSystem::RendererSystem()
 	Transform* transform = (Transform*)(camera->components[ComponentTypes::TRANSFORM].emplace(new ComponentPtr::Impl<Transform>));
 	transform->pos = Vect3(.0f, .0f, 1.f);
 	renderer = std::unique_ptr<Renderer>(new GLRenderer);
+	if(renderer.get() == nullptr) std::cout << "Renderer is nullptr" << std::endl;
 	mainShaderStage.reset(renderer->CreateShaderStage());	
 	std::unique_ptr<NativeShaderHandlerParent> fragShader(renderer->CreateShader(ShaderType::FRAGMENT)), 
 											   vertShader(renderer->CreateShader(ShaderType::VERTEX));
@@ -38,17 +39,16 @@ RendererSystem::RendererSystem()
 
 	mainShaderStage->shaderHandler.push_back(std::move(vertShader));
 	mainShaderStage->shaderHandler.push_back(std::move(fragShader));
+	VertexSpecification specification  = { {"pos", 4}, {"aNormal", 3}, {"texCoord", 3}};
+	mainShaderStage->Load();
+	layout = renderer->AddSpecification(specification);
+
 }
 
 RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
 {
     singleton = new RendererSystem();
-
-
-	VertexSpecification specification  = { {"pos", 4}, {"aNormal", 3}, {"texCoord", 3}};
-	singleton->mainShaderStage->Load();
-	singleton->layout = singleton->renderer->AddSpecification(specification);
-    return singleton;
+	return singleton;
 }
 
 RendererSystem* RendererSystem::GetSingleton()
@@ -245,7 +245,7 @@ void RendererSystem::update(float deltaTime)
         	//rendererStuff->texture->Bind();		
 			LoadMaterial(itr);
 			LoadTransform(itr);
-        	renderer->Draw(rendererStuff->iBuffer);
+        	renderer->Draw(DrawPrimitive::TRIANGLES, rendererStuff->iBuffer);
 		}
 
 	}

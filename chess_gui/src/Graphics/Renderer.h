@@ -16,6 +16,11 @@ struct GBinder
     virtual void UnBind() const noexcept  = 0;
 };
 
+enum class DrawPrimitive : uint32_t
+{
+	TRIANGLES, POINTS, TRIANGLES_ADJACENCIES, TRIANGLES_STRIPS
+};
+
 
 struct GBuffer
 {
@@ -50,7 +55,6 @@ enum class ShaderType
 };
 
 
-
 struct NativeShaderHandlerParent
 {
 	ShaderType type;
@@ -83,10 +87,10 @@ class Renderer
 {
 public:
 	//Override function
-    virtual void Draw(GBuffer* gBuffer) = 0;
-	virtual void DrawInstanced(GBuffer* gBuffer) = 0;
-	virtual void DrawBuffer(GBuffer* gBuffer) = 0;
-	virtual void DrawArrays(GBuffer* gBuffer) = 0;
+    virtual void Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
+	virtual void DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
+	virtual void DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
+	virtual void DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
     virtual void LoadBuffer(GBuffer* gBuffer) = 0;
     virtual void LoadTexture(Texture* texture, GBuffer* gBuffer) = 0;
     virtual void Uniform1f(const uint32_t count, const float* data, std::string name) = 0;

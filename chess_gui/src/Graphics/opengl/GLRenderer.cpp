@@ -481,22 +481,43 @@ void GLRenderer::UseShaderStage(ShaderStageHandler* shaderStageHandler)
 	shaderStageHandler->Load();
 }
 
-void GLRenderer::Draw(GBuffer* gBuffer)
+void GLRenderer::Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
 	gBuffer->Bind();
     GLDEBUGCALL(glDrawElements(GL_TRIANGLES, gBuffer->count, GL_UNSIGNED_INT, (const void*) 0));
 }
 
-void GLRenderer::DrawInstanced(GBuffer* gBuffer)
+void GLRenderer::DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
 	gBuffer->Bind();
 }
 
-void GLRenderer::DrawArrays(GBuffer* gBuffer)
+void GLRenderer::DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
+	GLenum target;
+	switch(drawPrimitive)
+	{
+		case DrawPrimitive::POINTS:
+			target = GL_POINTS;
+			break;
+		case DrawPrimitive::TRIANGLES:
+			target = GL_TRIANGLES;
+			break;
+		case DrawPrimitive::TRIANGLES_ADJACENCIES:
+			target = GL_TRIANGLES_ADJACENCY;
+			break;
+		case DrawPrimitive::TRIANGLES_STRIPS:
+			target = GL_TRIANGLE_STRIP;
+			break;
+		default:
+			throw CException(__LINE__, __FILE__, "Primitive Not found", "Primitive is not supported by this renderer \nPrimitive no: " 
+					+ std::to_string(static_cast<uint32_t>(drawPrimitive)));
+	};
+	gBuffer->Bind();
+	glDrawArrays(target, 0, gBuffer->count);
 }
 
-void GLRenderer::DrawBuffer(GBuffer* gBuffer)
+void GLRenderer::DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
 	gBuffer->Bind();
 	GLDEBUGCALL(glDrawBuffer(GL_TRIANGLES));
@@ -509,7 +530,15 @@ void GLRenderer::Clear()
 
 void GLRenderer::SetLayout(const uint32_t layout)
 {
-	glBindVertexArray(vaos[layout]);
+	glBindVertexArray(vaos[layout].first);
+	auto& tmp = vaos[layout].second;
+	uint32_t offset = 0, totalSize = tmp.back();
+	for(uint32_t i = 0; i < tmp.size() - 1; i++)
+	{
+    	GLDEBUGCALL(glVertexAttribPointer(i, tmp[i], GL_FLOAT, GL_FALSE, 
+                	totalSize, (const void*)offset));
+        offset+= tmp[i] * sizeof(float);
+	}
 }
 
 uint32_t GLRenderer::AddSpecification(VertexSpecification& vertexSpecification)
@@ -518,19 +547,19 @@ uint32_t GLRenderer::AddSpecification(VertexSpecification& vertexSpecification)
 	glGenVertexArrays(1, &pvao);
 	glBindVertexArray(pvao);
     uint32_t totalSize = 0;
-    for(auto& i: vertexSpecification) totalSize += i.second;
     uint32_t offset = 0;
     totalSize *= sizeof(float);
+	vaos.emplace_back();
+	vaos.back().first = pvao;
     for(uint32_t i = 0; i < vertexSpecification.size(); i++)
     {
+		totalSize += vertexSpecification[i].second;
         GLDEBUGCALL(glBindAttribLocation(shaderProgram, i, vertexSpecification[i].first.c_str()));
-        GLDEBUGCALL(glVertexAttribPointer(i, vertexSpecification[i].second, GL_FLOAT, GL_FALSE, 
-                totalSize, (const void*)offset));
+		vaos.back().second.push_back(vertexSpecification[i].second);
         GLDEBUGCALL(glEnableVertexAttribArray(i));
-        offset+= vertexSpecification[i].second * sizeof(float);
     }
-	vaos.push_back(pvao);
-	return vaos.size();
+	vaos.back().second.push_back(totalSize);
+	return vaos.size() - 1;
 }
 
 
