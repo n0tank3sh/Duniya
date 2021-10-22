@@ -1,11 +1,8 @@
 #include "SceneConverter.h"
-#include "ecs/ecs.h"
 #include <assimp/Importer.hpp>
 #include <assimp/light.h>
 #include <assimp/material.h>
 #include <assimp/vector3.h>
-#include <ecs/commoncomponent.h>
-#include <ecs/GraphicsComponent.h>
 #include <memory>
 #include <chrono>
 #include <thread>

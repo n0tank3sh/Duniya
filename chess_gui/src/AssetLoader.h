@@ -2,8 +2,8 @@
 #include <iostream>
 #include <SDL.h>
 #include <string>
-#include <ecs/GraphicsComponent.h>
-#include <ecs/commoncomponent.h>
+#include <ECS/GraphicsComponent.h>
+#include <ECS/CommonComponent.h>
 
 
 class AssetLoader

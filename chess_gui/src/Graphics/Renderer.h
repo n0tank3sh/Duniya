@@ -4,8 +4,8 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <math/mat.h>
-#include <ecs/GraphicsComponent.h>
+#include <Math/Mat.h>
+#include <ECS/GraphicsComponent.h>
 
 using VertexSpecification = std::vector<std::pair<std::string, uint32_t>>;
 

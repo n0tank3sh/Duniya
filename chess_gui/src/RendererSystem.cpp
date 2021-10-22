@@ -1,9 +1,7 @@
 #include "RendererSystem.h"
 #include "Application.h"
 #include "Graphics/Renderer.h"
-#include "Graphics/opengl/GLRenderer.h"
-#include "ecs/commoncomponent.h"
-#include "ecs/ecs.h"
+#include "Graphics/OpenGL/GLRenderer.h"
 #include <AssetLoader.h>
 #include <chrono>
 #include <string>

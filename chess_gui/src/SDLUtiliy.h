@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include <ecs/ecs.h>
+#include <ECS/ECS.h>
 
 
 struct KeyboardEvent : public Message

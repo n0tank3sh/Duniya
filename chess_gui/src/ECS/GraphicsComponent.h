@@ -1,7 +1,7 @@
 #pragma once
-#include <math/vect2.h>
-#include <math/vect3.h>
-#include <math/vect4.h>
+#include <Math/Vect2.h>
+#include <Math/Vect3.h>
+#include <Math/Vect4.h>
 #include <vector>
 #include "SerializerSystem.h"
 #include <cassert>

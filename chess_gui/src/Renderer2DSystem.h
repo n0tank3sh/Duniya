@@ -1,7 +1,6 @@
 #pragma once
-#include "Application.h"
 #include <cstdint>
-#include <ecs/ecs.h>
+#include <ECS/ECS.h>
 #include <Graphics/Renderer.h>
 
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mathutils.h"
+#include "MathUtils.h"
 #include <iostream>
 
 class Vect2

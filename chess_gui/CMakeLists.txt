@@ -1,23 +1,23 @@
 
 set(MATH_UTILS
-	"src/math/mat.h"
-    "src/math/mat.cpp"
-    "src/math/vect2.h"
-    "src/math/vect2.cpp"
-    "src/math/vect3.h"
-    "src/math/vect3.cpp"
-    "src/math/vect4.h"
-    "src/math/vect4.cpp"
-    "src/math/mathutils.h"
+	"src/Math/Mat.h"
+    "src/Math/Mat.cpp"
+    "src/Math/Vect2.h"
+    "src/Math/Vect2.cpp"
+    "src/Math/Vect3.h"
+    "src/Math/Vect3.cpp"
+    "src/Math/Vect4.h"
+    "src/Math/Vect4.cpp"
+    "src/Math/MathUtils.h"
 )
 
 set(ECS_SRC
-    "src/ecs/ecs.h"
-    "src/ecs/ecs.cpp"
-	"src/ecs/commoncomponent.h"
-    "src/ecs/GraphicsComponent.h"
-	"src/ecs/SerializerSystem.h"
-	"src/ecs/SerializerSystem.cpp"
+    "src/ECS/ECS.h"
+    "src/ECS/ECS.cpp"
+	"src/ECS/CommonComponent.h"
+    "src/ECS/GraphicsComponent.h"
+	"src/ECS/SerializerSystem.h"
+	"src/ECS/SerializerSystem.cpp"
 	)
 
 set(EXCEPTION_SRC
@@ -31,7 +31,7 @@ set(TEST_GAME_SRC
 	"src/TestGame.cpp"
 	)
 set(CHESS_SRC
-    "src/main.cpp"
+    "src/Main.cpp"
     "src/Application.h"
     "src/Application.cpp"
     "src/AssetLoader.h"
@@ -40,9 +40,9 @@ set(CHESS_SRC
     "src/RendererSystem.cpp"
     "src/Graphics/Renderer.h"
 	"src/Graphics/Renderer.cpp"
-    "src/Graphics/opengl/GLUtils.h"
-    "src/Graphics/opengl/GLRenderer.h"
-    "src/Graphics/opengl/GLRenderer.cpp"
+    "src/Graphics/OpenGL/GLUtils.h"
+    "src/Graphics/OpenGL/GLRenderer.h"
+    "src/Graphics/OpenGL/GLRenderer.cpp"
 	"src/SDLUtiliy.h"
 	"src/Renderer2DSystem.h"
 	"src/Renderer2DSystem.cpp"
@@ -51,8 +51,8 @@ set(CHESS_SRC
 set(SCENECONVERTER_SRC
 	"src/SceneConverter/SceneConverter.h"
 	"src/SceneConverter/SceneConverter.cpp"
-	"src/ecs/ecs.h"
-	"src/ecs/ecs.cpp"
+	"src/ECS/ECS.h"
+	"src/ECS/ECS.cpp"
 	)
 
 

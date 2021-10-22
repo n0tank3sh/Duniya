@@ -2,8 +2,8 @@
 #include <Graphics/Renderer.h>
 #include "Exception.h"
 #include <cstdint>
-#include <ecs/commoncomponent.h>
-#include <ecs/GraphicsComponent.h>
+#include <ECS/CommonComponent.h>
+#include <ECS/GraphicsComponent.h>
 #include <RendererSystem.h>
 #include "AssetLoader.h"
 #include "TestGame.h"

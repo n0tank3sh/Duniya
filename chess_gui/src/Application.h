@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string>
 #include <SDLUtiliy.h>
-#include <ecs/ecs.h>
 
 constexpr const char* CHESS_GUI_PATH = "CHESS_GUI_PATH";
 

@@ -1,9 +1,9 @@
-#include "ecs.h"
+#include "ECS.h"
 #include <random>
 #include <unordered_map>
 #include <fstream>
-#include <ecs/commoncomponent.h>
-#include <ecs/GraphicsComponent.h>
+#include <ECS/CommonComponent.h>
+#include <ECS/GraphicsComponent.h>
 #include <Exception.h>
 #include "SerializerSystem.h"
 

@@ -1,5 +1,5 @@
 
-#include "mat.h"
+#include "Mat.h"
 #include <initializer_list>
 #include <cassert>
 #include <string.h>

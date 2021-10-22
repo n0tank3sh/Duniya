@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mathutils.h"
-#include "vect2.h"
-#include "vect3.h"
+#include "MathUtils.h"
+#include "Vect2.h"
+#include "Vect3.h"
 
 
 class Vect4

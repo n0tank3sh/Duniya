@@ -1,7 +1,5 @@
-#include "Graphics/Renderer.h"
-#include "ecs/ecs.h"
 #include <Renderer2DSystem.h>
-#include <Graphics/opengl/GLRenderer.h>
+#include <Graphics/OpenGL/GLRenderer.h>
 
 
 Renderer2DSystem* Renderer2DSystem::singleton = nullptr;
