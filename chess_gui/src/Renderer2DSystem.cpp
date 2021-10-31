@@ -16,9 +16,9 @@ Renderer2DSystem::Renderer2DSystem()
 		 in vec2 goat;																\
 		 uniform vec4 panel;														\
 		 void main() {  															\
-			 vec2 tmp;\n																\
-			 tmp.x = panel.x * goat.x + (goat.x * (panel.x + panel.z));	 		\
-			 tmp.y = panel.y * goat.y + (goat.y * (panel.y + panel.w));			\
+			 vec2 tmp;																\
+			 tmp.x = panel.x * goat.x + (goat.x * (panel.x + panel.z));	 			\
+			 tmp.y = panel.y * goat.y + (goat.y * (panel.y + panel.w));				\
 			 gl_Position = vec4(goat, .0, 1.0);										\
 		 }																			\
 		";

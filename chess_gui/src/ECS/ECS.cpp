@@ -1,5 +1,7 @@
 #include "ECS.h"
 #include <random>
+#include <condition_variable>
+#include <thread>
 #include <unordered_map>
 #include <fstream>
 #include <ECS/CommonComponent.h>
@@ -27,24 +29,14 @@ Scene::Scene()
     componentManager = new ComponentManager(this);
 }
 
-uint32_t Scene::EntityManager::CreateEntity() const
+uint32_t Scene::EntityManager::CreateEntity() 
 {
-    std::random_device rd;
-    std::uniform_int_distribution<uint32_t> distrib;
-    uint32_t entity = distrib(rd); 
-    while(owner->entities.find(entity) != owner->entities.end())
-    {
-        entity = distrib(rd);
-    }
-    return entity;
+	owner->entities.emplace_back();
+	return owner->entities.size() - 1;
 }
 
-void Scene::EntityManager::DestroyEntity(uint32_t& entity)
+void Scene::EntityManager::DestroyEntity(uint32_t entity)
 {
-    if(owner->entities.find(entity) != owner->entities.end())
-    {
-        owner->entities.erase(entity);
-    }
 }
 
 Scene::IComponentArray::IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, 
@@ -78,7 +70,7 @@ uint32_t Scene::Push()
 
 Scene::IComponentArray* Scene::GetEntity(uint32_t entity)
 {
-    if(entities.find(entity) != entities.end())
+    if(entity >= 0 && entity < entities.size())
         return entities[entity].get();
     else return nullptr;
 }
@@ -137,4 +129,20 @@ void SystemManager::update(float deltaTime)
 	{
 		itr->get()->update(deltaTime);
 	}
+}
+
+ThreadPool::ThreadPool(SystemManager* systemManager)
+{
+	this->systemManager = systemManager;
+	threads.resize(std::thread::hardware_concurrency());
+}
+
+void ThreadPool::Run() 
+{
+	std::mutex moduleRunnerMutex;
+	auto ModuleRunner = [](System* system, Scene* scene) {
+		for(auto& e: scene->entities)
+		{
+		}
+	};
 }

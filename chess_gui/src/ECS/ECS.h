@@ -9,6 +9,7 @@
 #include <typeindex>
 #include <string>
 #include <memory>
+#include <thread>
 
 
 
@@ -117,6 +118,74 @@ public:
 
 };
 
+class ResourceBank
+{
+	public:
+		struct ResourcePtr
+		{
+			char* data;
+			size_t size;
+			ResourcePtr()
+				:
+					data(nullptr), size(0)
+			{}
+			ResourcePtr(size_t size)
+				:
+					size(size)
+			{
+				if(size == 0) data = nullptr;
+				else data = new char[size];
+			}
+			ResourcePtr(char* data, size_t size)
+				:
+					data(data), size(size)
+			{}
+			ResourcePtr(const ResourcePtr& ptr)
+			{
+				size = ptr.size;
+				if(ptr.data != nullptr)
+				{
+					data = new char[ptr.size];
+					std::copy(ptr.data, ptr.data + size, data);
+				}
+				else data = nullptr;
+			}
+			ResourcePtr& operator=(const ResourcePtr& ptr)
+			{
+				size = ptr.size;
+				if(ptr.data != nullptr)
+				{
+					data = new char[ptr.size];
+					std::copy(ptr.data, ptr.data + size, data);
+				}
+				else data = nullptr;
+				return *this;
+			}
+			ResourcePtr(const ResourcePtr&& ptr)
+			{
+				this->data = ptr.data;
+				this->size = ptr.size;
+			}
+			ResourcePtr& operator=(const ResourcePtr&& ptr)
+			{
+			}
+			~ResourcePtr()
+			{
+				delete[] data;
+			}
+			char* get()
+			{
+				return data;
+			}
+		}; 
+//		std::vector<std::unique_ptr<char>> resouces;
+		std::vector<ResourcePtr> resources;
+		void Push_Back(char* __ptr, size_t size)
+		{
+			resources.push_back(std::move(ResourcePtr(__ptr, size)));
+		}
+};
+
 class Scene
 {
 public:
@@ -125,8 +194,8 @@ public:
         Scene* owner;
     public:
         EntityManager(Scene* scene);
-        uint32_t CreateEntity() const;
-        void DestroyEntity(uint32_t& entity);
+        uint32_t CreateEntity();
+        void DestroyEntity(uint32_t entity);
     };
 
     struct IComponentArray
@@ -145,6 +214,9 @@ public:
 			if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
 			return basePointer;
         }
+		void set()
+		{
+		}
 		void* insert(ComponentType component, ComponentPtr::BaseImpl* base)
 		{
 			return components[component].emplace(base);
@@ -158,7 +230,7 @@ public:
         std::unordered_map<std::type_index, ComponentPtr> componentTypes;
         IComponentArray* CreateComponentArray(uint32_t entity);
     };
-	using Entities  = std::unordered_map<uint32_t,  std::unique_ptr<IComponentArray>>;
+	using Entities  = std::vector<std::unique_ptr<IComponentArray>>;
 public:
 	ComponentTypeMap componentTypeMap;
     Entities entities;
@@ -219,4 +291,17 @@ struct SystemManager
 	void LoadScene(Scene* scene);
 	void update(float deltaTime);
 	std::shared_ptr<QueryMessages> queryMessages;
+};
+
+struct ThreadPool
+{
+private:
+	std::vector<std::thread> threads;
+	SystemManager* systemManager;
+	Scene* scene;
+public:
+	ThreadPool(SystemManager* systemManager);
+	void LoadScene(Scene* scene);
+	void Run();
+	~ThreadPool();
 };
