@@ -1,7 +1,7 @@
 #include "SerializerSystem.h"
-#include "ECS.h"
 #include "GraphicsComponent.h"
 #include "CommonComponent.h"
+#include "ECS.h"
 
 SerializerSystem* SerializerSystem::singleton = nullptr;
 
@@ -42,58 +42,7 @@ void SerializerSystem::Deserialize(T& var)
 	is->read((char*)&var, sizeof(T));
 }
 
-template<>
-void SerializerSystem::Serialize<Mesh>(const Mesh& var)
-{
-	CHECKOS;
-	assert(var.verticies != nullptr);
-	assert(var.indicies  != nullptr);
-	uint32_t meshSizes[2] = { (uint32_t)var.vertexCount, (uint32_t)var.indexCount};	
-	os->write((char*)meshSizes, sizeof(uint32_t) * 2);
-	os->write((char*)var.verticies, sizeof(Vertex) * var.vertexCount);
-	os->write((char*)var.indicies, sizeof(uint32_t) * var.indexCount);
-}
 
-template<>
-void SerializerSystem::Deserialize<Mesh>(Mesh& var)
-{
-	CHECKIS;
-
-	uint32_t meshSizes[2];
-	is->read((char*)meshSizes, sizeof(uint32_t) * 2);
-	var.vertexCount = meshSizes[0];
-	var.indexCount = meshSizes[1];
-	var.verticies = new Vertex[var.vertexCount];
-	var.indicies = new uint32_t[var.indexCount];
-	is->read((char*)var.verticies, sizeof(Vertex) * var.vertexCount);
-	is->read((char*)var.indicies, sizeof(uint32_t) * var.indexCount);
-}
-
-
-template<>
-void SerializerSystem::Serialize<Texture>(const Texture& var)
-{
-	CHECKOS;
-	os->write((char*)&var.width, sizeof(uint32_t));
-	os->write((char*)&var.height, sizeof(uint32_t));
-	os->write((char*)&var.depth, sizeof(uint32_t));
-	os->write((char*)&var.type, sizeof(uint32_t));
-	os->write((char*)&var.sizet, sizeof(uint32_t));
-	os->write((char*)var.data, var.sizet);
-}
-
-template<>
-void SerializerSystem::Deserialize<Texture>(Texture& var)
-{
-	CHECKIS;
-	is->read((char*)&var.width, sizeof(uint32_t));
-	is->read((char*)&var.height, sizeof(uint32_t));
-	is->read((char*)&var.depth, sizeof(uint32_t));
-	is->read((char*)&var.type, sizeof(uint32_t));
-	is->read((char*)&var.sizet, sizeof(uint32_t));
-	is->read((char*)var.data, var.sizet);
-
-}
 
 template<>
 void SerializerSystem::Serialize<Scene::IComponentArray>(const Scene::IComponentArray& var)
@@ -119,7 +68,7 @@ void SerializerSystem::Serialize<Scene::IComponentArray>(const Scene::IComponent
 			Texture* texture = (Texture*)comptritr->second.base->GetPointer();
 			SerializerSystem::singleton->Serialize<Texture>(*texture);
 		}
-	comptritr++;
+		comptritr++;
 	}
 }
 
@@ -224,10 +173,10 @@ void SerializerSystem::Serialize<Scene::Entities>(const Scene::Entities& var)
 {
 	uint32_t entitySize = var.size();
 	singleton->Serialize<uint32_t>(entitySize);
-	for(auto& i: var)
+	for(int i = 0; i < var.size(); i++)
 	{
-		singleton->Serialize<uint32_t>(i.first);
-		singleton->Serialize<Scene::IComponentArray>(*(i.second.get()));
+		singleton->Serialize<uint32_t>(i);
+		singleton->Serialize<Scene::IComponentArray>(*(var[i].get()));
 	}
 }
 
@@ -236,11 +185,12 @@ void SerializerSystem::Deserialize<Scene::Entities>(Scene::Entities& var)
 {
 	uint32_t entitySize;
 	singleton->Deserialize<uint32_t>(entitySize);
+	var.resize(entitySize);
 	while(entitySize--)
 	{
 		uint32_t entity;
 		singleton->Deserialize<uint32_t>(entity);
-		var.insert(std::make_pair(entity, std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray)));
+		var[entity] = std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray);
 		singleton->Deserialize<Scene::IComponentArray>(*(var[entity].get()));
 	}
 }

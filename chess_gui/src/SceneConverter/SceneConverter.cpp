@@ -1,8 +1,10 @@
 #include "SceneConverter.h"
+#include "ECS/GraphicsComponent.h"
 #include <assimp/Importer.hpp>
 #include <assimp/light.h>
 #include <assimp/material.h>
 #include <assimp/vector3.h>
+#include <cstdint>
 #include <memory>
 #include <chrono>
 #include <thread>
@@ -60,7 +62,7 @@ void SceneConverter::Import(std::string filePath, std::string resultedPath)
 
 	for(auto& i: resultedScene->entities)
 	{
-		for(auto& j: i.second.get()->components)
+		for(auto& j: i.get()->components)
 		{
 			if(j.first == ComponentTypes::MESH)
 			{
@@ -82,8 +84,10 @@ void SceneConverter::ProcessLightColor(const aiLight* light, LightColor& color)
 void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* queryScene, const uint32_t& entity)
 {
 	Mesh* resultedMesh = (Mesh*)scene->entities[entity]->components[ComponentTypes::MESH].emplace(new ComponentPtr::Impl<Mesh>);
-	resultedMesh->verticies = new Vertex[mesh->mNumVertices];
+	resultedMesh->verticiesIndex = scene->resourceBank->Push_Back(reinterpret_cast<uint8_t*>(new Vertex[mesh->mNumVertices]), 
+															sizeof(Vertex) * mesh->mNumVertices);
 	resultedMesh->vertexCount = mesh->mNumVertices;
+	auto verticies = reinterpret_cast<Vertex*>(scene->resourceBank->resources[resultedMesh->verticiesIndex].Get());
 	for(uint32_t i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
@@ -92,19 +96,21 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 		vertex.aPos.w = 1.f;
 		vertex.aNormal = *((Vect3*)&mesh->mNormals[i]);
 		vertex.texCord = *((Vect3*)&mesh->mTextureCoords[0][i]);
-		resultedMesh->verticies[i] = vertex;
+		verticies[i] = vertex;
 	}
 	if(mesh->HasFaces())
 	{
 		resultedMesh->indexCount = mesh->mNumFaces * 3;
-		resultedMesh->indicies = new uint32_t[resultedMesh->indexCount];
+		resultedMesh->indiciesIndex = scene->resourceBank->Push_Back(reinterpret_cast<uint8_t*>(new uint32_t[resultedMesh->indexCount]),  
+														resultedMesh->indexCount * sizeof(uint32_t));
+		auto indicies = reinterpret_cast<uint32_t*>(scene->resourceBank->resources[resultedMesh->indiciesIndex].Get());
 		
 		for(uint32_t i = 0; i < mesh->mNumFaces; i++)
 		{
 			aiFace* face = &mesh->mFaces[i];
 			for(uint32_t j = 0; j < 3; j++)
 			{
-				resultedMesh->indicies[i * 3 + j] = face->mIndices[j];
+				indicies[i * 3 + j] = face->mIndices[j];
 			}
 		}
 	}
@@ -137,7 +143,7 @@ void SceneConverter::ProcessNodes(aiNode* node, Scene* scene, const aiScene* que
 	for(uint32_t i = 0; i < node->mNumMeshes; i++)
 	{
 		auto entity = scene->entityManager->CreateEntity();
-		scene->entities.insert(std::move(std::make_pair(entity, std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray))));
+		scene->entities.push_back(std::move(std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray)));
 		ProcessTransform(node, scene, entity);
 		ProcessMeshes(queryScene->mMeshes[node->mMeshes[i]], scene, queryScene, entity);
 	}

@@ -1,4 +1,5 @@
 #include "ECS.h"
+#include <memory>
 #include <random>
 #include <condition_variable>
 #include <thread>
@@ -16,6 +17,29 @@ void* ComponentPtr::emplace(BaseImpl* impl)
 	this->base = impl;
 	return base->Create();
 }
+ComponentPtr::ComponentPtr()
+{
+    base = nullptr;
+	entity = 0;
+}
+
+ComponentPtr::ComponentPtr(BaseImpl* baseImpl) 
+{
+    base = baseImpl->Clone();
+	entity = 0;
+}
+
+ComponentPtr::ComponentPtr(const ComponentPtr& comptr)
+{
+	if(comptr.base != nullptr)
+    base = comptr.base->Clone();
+	else base = nullptr;
+}
+ComponentPtr::~ComponentPtr() 
+{
+	if(base != nullptr)
+    delete base;
+}
 Scene::EntityManager::EntityManager(Scene* scene)
 {
     owner = scene;
@@ -27,8 +51,7 @@ Scene::Scene()
 	componentTypeMap.insert(std::make_pair(std::type_index(typeid(Mesh)), ComponentTypes::MESH));
     entityManager = new EntityManager(this);
     componentManager = new ComponentManager(this);
-}
-
+} 
 uint32_t Scene::EntityManager::CreateEntity() 
 {
 	owner->entities.emplace_back();
@@ -49,6 +72,20 @@ Scene::IComponentArray::IComponentArray(std::unordered_map<std::type_index, Comp
 		components[type].entity = entity;
         components[type].base->Create();
     }
+}
+void* Scene::IComponentArray::Get(uint32_t componentType)
+{
+    auto i = components.find(componentType);
+    if(i == components.end()) return nullptr;
+	void* basePointer = i->second.base->GetPointer();
+	if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
+	return basePointer;
+}
+
+
+void* Scene::IComponentArray::Insert(ComponentType component, ComponentPtr::BaseImpl* base)
+{
+	return components[component].emplace(base);
 }
 
 Scene::ComponentManager::ComponentManager(Scene* scene)
@@ -102,24 +139,28 @@ void Scene::SaveScene(std::string filePath)
 	SerializerSystem::singleton->Serialize<Entities>(entities);
 	fout.close();
 }
-
+	
 SystemManager::SystemManager()
 {
-	queryMessages = std::shared_ptr<QueryMessages>(new QueryMessages);
+	queryMessages.reset(new QueryMessages);
 }
 
+void SystemManager::AddQueryMessageBlock(uint32_t messageID)
+{
+	queryMessages->insert(std::make_pair(messageID, std::deque<std::pair<uint32_t, std::unique_ptr<Message>>>()));
+}
 void SystemManager::Add(System* system)
 {
-	system->messagingSystem = queryMessages;
-	systems.emplace_back();
-	systems.back().reset(system);
+	system->messagingSystem = queryMessages.get();
+	AddQueryMessageBlock(system->messageID);
+	systems.push_back(system);
 }
 
 void SystemManager::LoadScene(Scene* scene)
 {
 	for(auto itr = systems.begin(); itr != systems.end(); itr++)
 	{
-		itr->get()->LoadScene(scene);
+		(*itr)->LoadScene(scene);
 	}
 }
 
@@ -127,7 +168,7 @@ void SystemManager::update(float deltaTime)
 {
 	for(auto itr = systems.begin(); itr != systems.end(); itr++)
 	{
-		itr->get()->update(deltaTime);
+		(*itr)->update(deltaTime);
 	}
 }
 
@@ -141,8 +182,77 @@ void ThreadPool::Run()
 {
 	std::mutex moduleRunnerMutex;
 	auto ModuleRunner = [](System* system, Scene* scene) {
-		for(auto& e: scene->entities)
-		{
-		}
+		system->update(0);
 	};
+}
+
+ResourceBank::ResourcePtr::ResourcePtr()
+	:
+		data(nullptr), size(0)
+{}
+
+ResourceBank::ResourcePtr::ResourcePtr(size_t size)
+	:
+	size(size)
+{
+	if(size == 0) data = nullptr;
+	else data = new uint8_t[size];
+}
+ResourceBank::ResourcePtr::ResourcePtr(uint8_t* data, size_t size)
+	:
+		data(data), size(size)
+{}
+ResourceBank::ResourcePtr::ResourcePtr(const ResourceBank::ResourcePtr& ptr)
+{
+	size = ptr.size;
+	if(ptr.data != nullptr)
+	{
+		data = new uint8_t[ptr.size];
+		std::copy(ptr.data, ptr.data + size, data);
+	}
+	else data = nullptr;
+}
+
+ResourceBank::ResourcePtr::ResourcePtr(ResourceBank::ResourcePtr&& ptr)
+{
+	this->size = ptr.size;
+	this->data = ptr.data;
+	ptr.data = nullptr;
+	ptr.size = 0;
+}
+
+ResourceBank::ResourcePtr& ResourceBank::ResourcePtr::operator=(const ResourceBank::ResourcePtr& ptr)
+{
+	size = ptr.size;
+	if(ptr.data != nullptr)
+	{
+		data = new uint8_t[ptr.size];
+		std::copy(ptr.data, ptr.data + size, data);
+	}
+	else data = nullptr;
+	return *this;
+}
+
+ResourceBank::ResourcePtr& ResourceBank::ResourcePtr::operator=(ResourceBank::ResourcePtr&& ptr)
+{
+	if(this->data != nullptr)
+		delete this->data;
+	this->data = ptr.data;
+	this->size = ptr.size;
+	ptr.data = nullptr;
+	ptr.size = 0;
+	return *this;
+}
+ResourceBank::ResourcePtr::~ResourcePtr()
+{
+	delete[] data;
+}
+uint8_t* ResourceBank::ResourcePtr::Get()
+{
+	return data;
+}
+
+size_t ResourceBank::ResourcePtr::GetSize()
+{
+	return size;
 }

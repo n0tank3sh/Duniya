@@ -19,25 +19,21 @@ struct Material
 	Vect3 ambient;
 	float shininess;
 };
+
 struct Mesh
 {
 	uint32_t vertexCount;
 	uint32_t indexCount;
-    Vertex* verticies;
-    uint32_t* indicies;
+    uint32_t verticiesIndex;
+    uint32_t indiciesIndex;
 };
 
 struct Texture
 {
-	Texture() = default;
-	~Texture() = default;
-    uint32_t width, height, depth,  sizet;
-    enum class Type : uint32_t
-    {
-        T1D,
-        T2D,
-        T3D,
-    } type;
-    uint8_t* data;
+	uint32_t width, height, channels, data;
+	enum Format
+	{
+		RGBA, RGB, R
+	} format;
 };
 

@@ -2,6 +2,7 @@
 #include "Graphics/Renderer.h"
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <Exception.h>
 #include <sstream>
@@ -163,9 +164,10 @@ void NativeShaderHandler<GLRenderer>::Load()
     GLDEBUGCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &shaderCompiled));
     if(shaderCompiled != GL_TRUE)
     {
-        char message[1024];
+		size_t debugMessageSize = 2048;
+        char message[debugMessageSize];
 		int32_t logLength;
-        GLDEBUGCALL(glGetShaderInfoLog(shader, 1024, &logLength, message));
+        GLDEBUGCALL(glGetShaderInfoLog(shader, debugMessageSize, &logLength, message));
         throw CException(__LINE__, __FILE__, "Shader Compile Error", std::string(message) + (shaderType == GL_VERTEX_SHADER?"Vertex Shader":"Fragment Shader"));
     }
 }
@@ -198,9 +200,10 @@ void NativeShaderStageHandler<GLRenderer>::Load()
 		GLDEBUGCALL(glGetProgramiv(program, GL_LINK_STATUS, &programLinked));
 		if(programLinked != GL_TRUE)
 		{
-			char message[1024];
+			size_t debugMessageSize = 2048;
+			char message[debugMessageSize];
 			int32_t logLength;
-			GLDEBUGCALL(glGetProgramInfoLog(program, 1024, &logLength, message));
+			GLDEBUGCALL(glGetProgramInfoLog(program, debugMessageSize, &logLength, message));
 			throw CException(__LINE__, __FILE__, "GL Program Link Error", message);
 		}
 		shaderHandler.clear();
@@ -347,6 +350,30 @@ void GLRenderer::UniformMat(const uint32_t count, const Mat* mat, std::string na
     }
 }
 
+GLenum GLRenderer::GetDrawTarget(DrawPrimitive drawPrimitive)
+{
+	GLenum target;
+	switch(drawPrimitive)
+	{
+		case DrawPrimitive::POINTS:
+			target = GL_POINTS;
+			break;
+		case DrawPrimitive::TRIANGLES:
+			target = GL_TRIANGLES;
+			break;
+		case DrawPrimitive::TRIANGLES_ADJACENCIES:
+			target = GL_TRIANGLES_ADJACENCY;
+			break;
+		case DrawPrimitive::TRIANGLES_STRIPS:
+			target = GL_TRIANGLE_STRIP;
+			break;
+		default:
+			throw CException(__LINE__, __FILE__, "Primitive Not found", "Primitive is not supported by this renderer \nPrimitive no: " 
+					+ std::to_string(static_cast<uint32_t>(drawPrimitive)));
+	};
+	return target;
+}
+
 void GLRenderer::ClearColor(float r, float g, float b)
 {
     glClearColor(r, g, b, 1.0f);
@@ -420,16 +447,17 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
     {
         case GBuffer::GBufferStyle::BufferType::VERTEX:
             bufferType = GL_ARRAY_BUFFER;
-            gBuffer->gBinder.reset(new GLVertexBinder(rendererID));
+            binders.push_back(std::unique_ptr<GBinder>(new GLVertexBinder(rendererID)));
+			gBuffer->bindNo = binders.size() - 1;
             break;        
         case GBuffer::GBufferStyle::BufferType::INDEX:
             bufferType = GL_ELEMENT_ARRAY_BUFFER;
-            gBuffer->gBinder.reset(new GLIndexBinder(rendererID));
+            binders.push_back(std::unique_ptr<GBinder>(new GLIndexBinder(rendererID)));
             break;
     };
 
-    GLDEBUGCALL(gBuffer->Bind());
-    GLDEBUGCALL(glBufferData(bufferType, gBuffer->sizet, gBuffer->data, flags));
+    GLDEBUGCALL(this->Bind(*gBuffer));
+    GLDEBUGCALL(glBufferData(bufferType, gBuffer->sizet, resourceBank->resources[gBuffer->data].Get(), flags));
 }
 
 NativeShaderHandlerParent* GLRenderer::CreateShader(ShaderType type)
@@ -442,31 +470,34 @@ void GLRenderer::LoadTexture(Texture* texture, GBuffer* gBuffer)
     uint32_t rendererID;
 	gBuffer = new GBuffer;
     GLDEBUGCALL(glGenTextures(1, &rendererID));
-    GLenum type;
-    switch(texture->type)
-    {
-        case Texture::Type::T1D:
-            type = GL_TEXTURE_1D;
-            glBindTexture(type, rendererID);
-            glTexImage1D(type, 0, GL_RGBA, texture->width, 
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
-            break;
-        case Texture::Type::T2D:
-            type = GL_TEXTURE_2D;
-            glBindTexture(type, rendererID);
-            GLDEBUGCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height,
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data));
-            break;
-        case Texture::Type::T3D:
-            type = GL_TEXTURE_3D;
-            glBindTexture(type, rendererID);
-            glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, texture->width, texture->height, texture->depth,
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
-            break;
-    };
-    gBuffer->gBinder = std::unique_ptr<GBinder>(new GLTextureBinder(rendererID, type));
-    gBuffer->Bind();
-    GLDEBUGCALL(glGenerateMipmap(type));
+    //GLenum type;
+    //switch(texture->type)
+    //{
+    //    case Texture::Type::T1D:
+    //        type = GL_TEXTURE_1D;
+    //        glBindTexture(type, rendererID);
+    //        glTexImage1D(type, 0, GL_RGBA, texture->width, 
+    //                0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
+    //        break;
+    //    case Texture::Type::T2D:
+    //        type = GL_TEXTURE_2D;
+    //                    break;
+    //    case Texture::Type::T3D:
+    //        type = GL_TEXTURE_3D;
+    //        glBindTexture(type, rendererID);
+    //        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, texture->width, texture->height, texture->depth,
+    //                0, GL_RGBA, GL_UNSIGNED_BYTE, texture->data);
+    //        break;
+    //};
+	glBindTexture(GL_TEXTURE_2D, rendererID);
+    GLDEBUGCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height,
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, resourceBank->resources[texture->data].Get()));
+
+	binders.push_back(std::unique_ptr<GBinder>(new GLTextureBinder(rendererID, GL_TEXTURE_2D)));
+
+    gBuffer->bindNo = binders.size() - 1;
+	Bind(*gBuffer);
+    GLDEBUGCALL(glGenerateMipmap(GL_TEXTURE_2D));
 }
 
 ShaderStageHandler* GLRenderer::CreateShaderStage()
@@ -483,44 +514,36 @@ void GLRenderer::UseShaderStage(ShaderStageHandler* shaderStageHandler)
 
 void GLRenderer::Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
-	gBuffer->Bind();
-    GLDEBUGCALL(glDrawElements(GL_TRIANGLES, gBuffer->count, GL_UNSIGNED_INT, (const void*) 0));
+	if(gBuffer != nullptr)
+		this->Bind(*gBuffer);
+    GLDEBUGCALL(glDrawElements(GetDrawTarget(drawPrimitive), gBuffer->count, GL_UNSIGNED_INT, (const void*) 0));
 }
 
-void GLRenderer::DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
+void GLRenderer::DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numInstanced)
 {
-	gBuffer->Bind();
+	if(gBuffer != nullptr)
+	this->Bind(*gBuffer);
+	glDrawElementsInstanced(GetDrawTarget(drawPrimitive), gBuffer->count, GL_UNSIGNED_INT, (const void*)0, numInstanced);
 }
 
-void GLRenderer::DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
+void GLRenderer::DrawInstancedArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElements, uint32_t numInstanced)
 {
-	GLenum target;
-	switch(drawPrimitive)
-	{
-		case DrawPrimitive::POINTS:
-			target = GL_POINTS;
-			break;
-		case DrawPrimitive::TRIANGLES:
-			target = GL_TRIANGLES;
-			break;
-		case DrawPrimitive::TRIANGLES_ADJACENCIES:
-			target = GL_TRIANGLES_ADJACENCY;
-			break;
-		case DrawPrimitive::TRIANGLES_STRIPS:
-			target = GL_TRIANGLE_STRIP;
-			break;
-		default:
-			throw CException(__LINE__, __FILE__, "Primitive Not found", "Primitive is not supported by this renderer \nPrimitive no: " 
-					+ std::to_string(static_cast<uint32_t>(drawPrimitive)));
-	};
-	gBuffer->Bind();
-	glDrawArrays(target, 0, gBuffer->count);
+	if(gBuffer != nullptr)
+		Bind(*gBuffer);
+	glDrawArraysInstanced(GetDrawTarget(drawPrimitive), 0, numElements, numInstanced);
+}
+
+void GLRenderer::DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElements)
+{
+	if(gBuffer != nullptr)
+		Bind(*gBuffer);
+	glDrawArrays(GetDrawTarget(drawPrimitive), 0, numElements);
 }
 
 void GLRenderer::DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
-	gBuffer->Bind();
-	GLDEBUGCALL(glDrawBuffer(GL_TRIANGLES));
+	this->Bind(*gBuffer);
+	GLDEBUGCALL(glDrawBuffer(GetDrawTarget(drawPrimitive)));
 }
 
 void GLRenderer::Clear()

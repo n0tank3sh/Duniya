@@ -43,7 +43,6 @@ Application::Application()
 	if(deviceContext == NULL) throw CException(__LINE__, __FILE__, "GL Device Context", SDL_GetError());
 	
 	scene = new Scene();
-	scene->LoadScene("justChecking.dick");
 	char* c = getenv(CHESS_GUI_PATH);
 	std::string paths;
 	if(c != NULL) paths = c;
@@ -57,8 +56,10 @@ Application::Application()
 	}
 
 	manager = new SystemManager;
-	manager->Add(RendererSystem::init(Graphics_API::OPENGL));
-	manager->Add(Renderer2DSystem::init());
+	manager->AddQueryMessageBlock(0x0);
+	//manager->Add(RendererSystem::init(Graphics_API::OPENGL));
+	manager->Add(Renderer2DSystem::Init());
+	manager->Add(new TestGame);
 	manager->LoadScene(scene);
 }
 
@@ -72,22 +73,21 @@ uint32_t Application::run()
 		currentTime = SDL_GetTicks();
 		while(SDL_PollEvent(&event))
 		{
-			if(event.type == SDL_QUIT)
+			switch(event.type)
 			{
+			case SDL_QUIT:
 			    quit = true;
-			}
-			else if(event.type == SDL_KEYDOWN)
-			{
+				break;
+			case SDL_KEYDOWN:
 				auto keyboardEvent = new KeyboardEvent;
 				keyboardEvent->event = event.key;
-				(*manager->queryMessages)[EVENTS::KEYBOARD_EVENTS].push(std::unique_ptr<Message>(static_cast<Message*>(keyboardEvent)));
+				(*manager->queryMessages)[0x0].push_back(std::make_pair(EVENTS::KEYBOARD_EVENTS, std::unique_ptr<Message>(keyboardEvent)));
+				break;
 			}
 		}
 		manager->update(1/(currentTime - lastTime));
 		SDL_GL_SwapWindow(window);
 		lastTime = currentTime;
-	}
-	SDL_GL_DeleteContext(deviceContext);
-	SDL_DestroyWindow(window);
+	} SDL_GL_DeleteContext(deviceContext); SDL_DestroyWindow(window);
 	return 0;
 }

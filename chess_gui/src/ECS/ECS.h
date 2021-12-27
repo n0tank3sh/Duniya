@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ECS/SerializerSystem.h"
 #include <Exception.h>
 #include <queue>
 #include <memory>
@@ -9,6 +10,7 @@
 #include <typeindex>
 #include <string>
 #include <memory>
+#include <cstdint>
 #include <thread>
 
 
@@ -61,128 +63,60 @@ public:
     struct Impl : public BaseImpl
     {
         T* data;
-        Impl()
-        {
-            data = nullptr;
-        }
-        Impl(const Impl& imp)
-        {
-			data = nullptr;
-        }
-        void CheckingToSeeBase() override {std::cout << "If derived \n";}
-        BaseImpl* Clone() override
-        {
-            return static_cast<BaseImpl*>(new Impl<T>(*this));
-        }
-        void* Create() override
-        {
-            data = new T();
-			return data;
-        }
-        void* GetPointer() override
-        {
-			if(data == nullptr) std::cout << "Data is NULL " << std::endl;
-            return data;
-        }
-        ~Impl()
-        {
-            if(data != nullptr) delete data;
-        }
+        Impl();
+        Impl(const Impl& imp);
+		Impl(T* data);
+
+		~Impl();
+
+        void CheckingToSeeBase() override;         
+		BaseImpl* Clone() override;
+        void* Create() override;
+        void* GetPointer() override;
     };
     BaseImpl* base;
 public:
 	uint32_t entity;
-    ComponentPtr()
-    {
-        base = nullptr;
-		entity = 0;
-    }
 
-    ComponentPtr(BaseImpl* baseImpl) 
-    {
-        base = baseImpl->Clone();
-		entity = 0;
-    }
+    ComponentPtr();
+    ComponentPtr(BaseImpl* baseImpl);
+    ComponentPtr(const ComponentPtr& comptr);    
+
+	~ComponentPtr();
+
 	void* emplace(BaseImpl* baseImpl);
-    ComponentPtr(const ComponentPtr& comptr)
-    {
-		if(comptr.base != nullptr)
-        base = comptr.base->Clone();
-		else base = nullptr;
-    }
-    ~ComponentPtr() 
-    {
-		if(base != nullptr)
-        delete base;
-    }
 
 };
 
 class ResourceBank
 {
 	public:
-		struct ResourcePtr
+		class ResourcePtr
 		{
-			char* data;
+		private:
+			uint8_t* data;
 			size_t size;
-			ResourcePtr()
-				:
-					data(nullptr), size(0)
-			{}
-			ResourcePtr(size_t size)
-				:
-					size(size)
-			{
-				if(size == 0) data = nullptr;
-				else data = new char[size];
-			}
-			ResourcePtr(char* data, size_t size)
-				:
-					data(data), size(size)
-			{}
-			ResourcePtr(const ResourcePtr& ptr)
-			{
-				size = ptr.size;
-				if(ptr.data != nullptr)
-				{
-					data = new char[ptr.size];
-					std::copy(ptr.data, ptr.data + size, data);
-				}
-				else data = nullptr;
-			}
-			ResourcePtr& operator=(const ResourcePtr& ptr)
-			{
-				size = ptr.size;
-				if(ptr.data != nullptr)
-				{
-					data = new char[ptr.size];
-					std::copy(ptr.data, ptr.data + size, data);
-				}
-				else data = nullptr;
-				return *this;
-			}
-			ResourcePtr(const ResourcePtr&& ptr)
-			{
-				this->data = ptr.data;
-				this->size = ptr.size;
-			}
-			ResourcePtr& operator=(const ResourcePtr&& ptr)
-			{
-			}
-			~ResourcePtr()
-			{
-				delete[] data;
-			}
-			char* get()
-			{
-				return data;
-			}
+		public:
+			ResourcePtr();
+			ResourcePtr(size_t size);
+			ResourcePtr(uint8_t* data, size_t size);			
+			ResourcePtr(const ResourcePtr& ptr);
+			ResourcePtr(ResourcePtr&& ptr);
+
+			~ResourcePtr();
+
+			ResourcePtr& operator=(const ResourcePtr& ptr);
+			ResourcePtr& operator=(ResourcePtr&& ptr);
+
+			uint8_t* Get();
+			size_t GetSize();
 		}; 
 //		std::vector<std::unique_ptr<char>> resouces;
 		std::vector<ResourcePtr> resources;
-		void Push_Back(char* __ptr, size_t size)
+		uint32_t Push_Back(uint8_t* __ptr, size_t size)
 		{
-			resources.push_back(std::move(ResourcePtr(__ptr, size)));
+			resources.emplace_back(__ptr, size);
+			return resources.size() - 1;
 		}
 };
 
@@ -198,30 +132,30 @@ public:
         void DestroyEntity(uint32_t entity);
     };
 
-    struct IComponentArray
+    class IComponentArray
     {
-		std::unordered_map<ComponentType, ComponentPtr> components;
         //std::unordered_map<std::type_index, ComponentPtr> components;
 		std::vector<ComponentType> componentTypes;
+		friend SerializerSystem;
+	public:
+		std::unordered_map<ComponentType, ComponentPtr> components;
+	public:
         IComponentArray() = default;
-        IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, std::unordered_map<std::type_index, ComponentType>& componentTypeMap, uint32_t entity);
-        template<ComponentType T>
-        void* get()
-        {
-            auto i = components.find(T);
-            if(i == components.end()) return nullptr;
-			void* basePointer = i->second.base->GetPointer();
-			if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
-			return basePointer;
-        }
-		void set()
-		{
-		}
-		void* insert(ComponentType component, ComponentPtr::BaseImpl* base)
-		{
-			return components[component].emplace(base);
-		}
+        IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, 
+				std::unordered_map<std::type_index, ComponentType>& componentTypeMap, uint32_t entity);
+
+        void* Get(uint32_t componentType);
+		template<typename T>
+		T* Get(uint32_t componentType);
+		template<typename T>
+		void Insert(uint32_t componentType, T* data);
+		template<typename T> 
+		T* Emplace(uint32_t componentType);
+		void* Insert(ComponentType component, ComponentPtr::BaseImpl* base);
     };    
+	struct IComponentArrayIterator
+	{
+	};
 
     struct ComponentManager
     {
@@ -242,22 +176,14 @@ public:
 	uint32_t PushDef();
 	void Merge(Scene* scene);
     IComponentArray* GetEntity(uint32_t entity);
-    template <typename T>
-    void RegisterComponent()
-    {
-        componentManager->componentTypes.insert(std::make_pair
-                	(std::type_index(typeid(T)), 
-                	 ComponentPtr(new ComponentPtr::Impl<T>())
-                	)
-                );
-    }
-    template <typename T>
-    void UnRegisterComponent()
-    {
-        componentManager->componentTypes.erase(std::type_index(typeid(T)));
-    }
+	ResourceBank* resourceBank;
 
-    void LoadScene(std::string filePath);
+    template <typename T>
+    void RegisterComponent();    
+	template <typename T>
+    void UnRegisterComponent();
+
+	void LoadScene(std::string filePath);
     void SaveScene(std::string filePath);
 };
 
@@ -271,26 +197,28 @@ struct Message
 	Message() = default;
 	virtual ~Message() {};
 };
-using QueryMessages= std::unordered_map<uint32_t, std::queue<std::unique_ptr<Message>>>;
+using QueryMessages= std::unordered_map<uint32_t, std::deque<std::pair<uint32_t, std::unique_ptr<Message>>>>;
 
 struct System
 {
+	uint32_t messageID;
     virtual void LoadScene(Scene* scene) = 0;
     virtual void update(float deltaTime) = 0;
 	template<typename T> 
 	static System* Create();
-	std::weak_ptr<QueryMessages> messagingSystem;
+	QueryMessages* messagingSystem;
 	bool isSingelton;
 };
 
 struct SystemManager
 {
 	SystemManager();
-	std::vector<std::unique_ptr<System>> systems;
+	std::vector<System*> systems;
 	void Add(System* system);
 	void LoadScene(Scene* scene);
 	void update(float deltaTime);
-	std::shared_ptr<QueryMessages> queryMessages;
+	void AddQueryMessageBlock(uint32_t messageID);
+	std::unique_ptr<QueryMessages> queryMessages;
 };
 
 struct ThreadPool
@@ -305,3 +233,96 @@ public:
 	void Run();
 	~ThreadPool();
 };
+
+
+// Impl definition for avoiding link error stupid c++
+template<typename T>
+ComponentPtr::Impl<T>::Impl()
+	:
+	data(nullptr)
+{}
+
+template<typename T>
+ComponentPtr::Impl<T>::Impl(const Impl& imp)
+	:
+	data(nullptr)
+{}
+
+template<typename T>
+ComponentPtr::Impl<T>::Impl(T* data)
+	:
+	data(data)
+{}
+
+template<typename T>
+void ComponentPtr::Impl<T>::CheckingToSeeBase()  
+{
+	std::cout << "If derived \n";
+}
+
+template<typename T>
+ComponentPtr::BaseImpl* ComponentPtr::Impl<T>::Clone() 
+{
+    return static_cast<BaseImpl*>(new Impl<T>(*this));
+}
+
+template<typename T>
+void* ComponentPtr::Impl<T>::Create() 
+{
+    data = new T();
+	return data;
+}
+
+template<typename T>
+void* ComponentPtr::Impl<T>::GetPointer() 
+{
+	if(data == nullptr) std::cout << "Data is NULL " << std::endl;
+    return data;
+}
+
+template<typename T>
+ComponentPtr::Impl<T>::~Impl()
+{
+    if(data != nullptr) delete data;
+}
+
+template<typename T>
+void Scene::IComponentArray::Insert(uint32_t componentType, T* data)
+{
+	components[componentType].emplace(new ComponentPtr::Impl<T>(data));
+}
+
+template<typename T>
+T* Scene::IComponentArray::Get(uint32_t componentType)
+{
+	if(components.find(componentType) != components.end())
+		return reinterpret_cast<T*>(components[componentType].base->GetPointer());
+	return nullptr;
+}
+
+template<typename T>
+T* Scene::IComponentArray::Emplace(uint32_t componentType)
+{
+	auto compImpl = new ComponentPtr::Impl<T>();
+	components[componentType].emplace(compImpl);
+	return reinterpret_cast<T*>(compImpl->Create());
+}
+
+
+template <typename T>
+void Scene::RegisterComponent()
+{
+    componentManager->componentTypes.insert(std::make_pair
+            	(std::type_index(typeid(T)), 
+            	 ComponentPtr(new ComponentPtr::Impl<T>())
+            	)
+            );
+}
+
+template <typename T>
+void Scene::UnRegisterComponent()
+{
+    componentManager->componentTypes.erase(std::type_index(typeid(T)));
+}
+
+

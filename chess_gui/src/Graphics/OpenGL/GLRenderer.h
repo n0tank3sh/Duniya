@@ -50,9 +50,10 @@ class GLRenderer : public Renderer
 public:
     GLRenderer();
     void Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
-	void DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
+	void DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numInstanced) override;
 	void DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
-	void DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
+	void DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElement) override;
+	void DrawInstancedArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElement, uint32_t numInstanced) override;
     void LoadBuffer(GBuffer* gBuffer) override;
     void LoadTexture(Texture* texture, GBuffer* gbuffer) override;
     void Clear() override;
@@ -74,6 +75,7 @@ private:
     static void LoadGladGL();
     void FinalizeVertexSpecification();
     void UseCurrentShaderProgram();
+	GLenum GetDrawTarget(DrawPrimitive drawPrimitive);
 private:
 	static bool gladLoaded;
 	uint32_t pvao;

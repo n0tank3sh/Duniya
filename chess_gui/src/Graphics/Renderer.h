@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <Math/Mat.h>
+#include <ECS/ECS.h>
 #include <ECS/GraphicsComponent.h>
 
 using VertexSpecification = std::vector<std::pair<std::string, uint32_t>>;
@@ -41,12 +42,8 @@ struct GBuffer
     } bufferStyle;
     uint32_t count;
     uint32_t sizet;
-    void* data;
-    std::unique_ptr<GBinder> gBinder;
-
-    void Bind() const noexcept;
-    void UnBind() const noexcept;
-
+    uint32_t  data;
+	uint32_t bindNo;
 };
 
 enum class ShaderType
@@ -62,10 +59,7 @@ struct NativeShaderHandlerParent
 	virtual ~NativeShaderHandlerParent(){}
 	virtual void Load() = 0;
 	virtual void UnLoad() = 0;
-};
-
-template<typename T>
-struct NativeShaderHandler : public NativeShaderHandlerParent
+}; template<typename T> struct NativeShaderHandler : public NativeShaderHandlerParent
 {
 };
 struct ShaderStageHandler
@@ -85,12 +79,19 @@ struct NativeShaderStageHandler : ShaderStageHandler
 
 class Renderer
 {
+protected:
+	std::vector<std::unique_ptr<GBinder>> binders;
+	ResourceBank* resourceBank;
 public:
 	//Override function
+	void SetResourceBank(ResourceBank* resourceBank);
+	void Bind(GBuffer& buffer);
+	void UnBind(GBuffer& buffer);
     virtual void Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
-	virtual void DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
+	virtual void DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numInstanced) = 0;
 	virtual void DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
-	virtual void DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer) = 0;
+	virtual void DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElement) = 0;
+	virtual void DrawInstancedArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElement, uint32_t numInstanced) = 0;
     virtual void LoadBuffer(GBuffer* gBuffer) = 0;
     virtual void LoadTexture(Texture* texture, GBuffer* gBuffer) = 0;
     virtual void Uniform1f(const uint32_t count, const float* data, std::string name) = 0;

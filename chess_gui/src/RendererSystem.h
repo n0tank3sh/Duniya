@@ -5,9 +5,9 @@
 
 struct RendererStuff
 {
-	GBuffer* iBuffer;
-	GBuffer* vBuffer;
-	GBuffer* texture;
+	GBuffer iBuffer;
+	GBuffer vBuffer;
+	GBuffer texture;
 };
 
 class RendererSystem : public System
@@ -27,6 +27,7 @@ private:
 	void LoadLights();
 	void LoadLightColor(const LightColor& color, std::string name);
 	void LoadTransform(Scene::Entities::iterator& itr);
+	void LoadBuffer(GBuffer* buffer);
 	void lookAt(Vect3& from, Vect3& forward, Vect3& up, Vect3& right, Mat& mat);
 private:
     std::unique_ptr<Renderer> renderer;

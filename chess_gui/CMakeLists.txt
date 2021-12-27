@@ -93,10 +93,10 @@ add_custom_target( resources
 add_custom_target( checking_chess_gui
 	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/sceneconverter ${RESOURCE_TEST_FILE} ${TEST_FILE}
 )
-add_dependencies(chess_gui resources checking_chess_gui)
-add_dependencies(checking_chess_gui resources sceneconverter)
+#add_dependencies(chess_gui resources checking_chess_gui)
+#add_dependencies(checking_chess_gui resources sceneconverter)
 
-#add_dependencies(chess_gui resources)
+add_dependencies(chess_gui resources)
 
 target_link_libraries(
     chess_gui
