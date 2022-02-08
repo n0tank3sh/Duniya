@@ -18,6 +18,8 @@ set(ECS_SRC
     "src/ECS/GraphicsComponent.h"
 	"src/ECS/SerializerSystem.h"
 	"src/ECS/SerializerSystem.cpp"
+	"src/ECS/Logger.h"
+	"src/ECS/Logger.cpp"
 	)
 
 set(EXCEPTION_SRC
@@ -46,6 +48,8 @@ set(CHESS_SRC
 	"src/SDLUtiliy.h"
 	"src/Renderer2DSystem.h"
 	"src/Renderer2DSystem.cpp"
+	"src/TexturePacker.h"
+	"src/TexturePacker.cpp"
 )
 
 set(SCENECONVERTER_SRC
@@ -98,12 +102,18 @@ add_custom_target( checking_chess_gui
 
 add_dependencies(chess_gui resources)
 
+target_include_directories(
+	chess_gui PUBLIC
+	${FREETYPE_INCLUDE_DIRS}
+)
+
 target_link_libraries(
     chess_gui
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
     glad
 	${OPENGL_LIBRARIES}
+	${FREETYPE_LIBRARIES}
     ${CMAKE_DL_LIBS}
 )
 

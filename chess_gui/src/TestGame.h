@@ -10,6 +10,6 @@ struct TestGame : public System
 		messageID = 0x25;
 	}
 	void LoadScene(Scene* scene) override;
-	void update(float deltaTime) override;
+	void Update(float deltaTime) override;
 	Transform* player;
 };

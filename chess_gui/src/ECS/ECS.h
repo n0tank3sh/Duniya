@@ -2,6 +2,7 @@
 
 #include "ECS/SerializerSystem.h"
 #include <Exception.h>
+#include <list>
 #include <queue>
 #include <memory>
 #include <iostream>
@@ -12,6 +13,7 @@
 #include <memory>
 #include <cstdint>
 #include <thread>
+#include "Logger.h"
 
 
 
@@ -34,6 +36,7 @@ namespace EVENTS
 	constexpr uint32_t MAIN_EVENTS = 2;
 	constexpr uint32_t KEYBOARD_EVENTS = 3;
 	constexpr uint32_t MOUSE_EVENTS = 4;
+	constexpr uint32_t MOUSEMOTION_EVENT = 5;
 };
 
 
@@ -113,6 +116,9 @@ class ResourceBank
 		}; 
 //		std::vector<std::unique_ptr<char>> resouces;
 		std::vector<ResourcePtr> resources;
+		ResourceBank() = default;
+		ResourceBank(ResourceBank&) = default;
+		~ResourceBank() = default;
 		uint32_t Push_Back(uint8_t* __ptr, size_t size)
 		{
 			resources.emplace_back(__ptr, size);
@@ -202,8 +208,9 @@ using QueryMessages= std::unordered_map<uint32_t, std::deque<std::pair<uint32_t,
 struct System
 {
 	uint32_t messageID;
+	Logger* logger;
     virtual void LoadScene(Scene* scene) = 0;
-    virtual void update(float deltaTime) = 0;
+    virtual void Update(float deltaTime) = 0;
 	template<typename T> 
 	static System* Create();
 	QueryMessages* messagingSystem;
@@ -214,6 +221,7 @@ struct SystemManager
 {
 	SystemManager();
 	std::vector<System*> systems;
+	Logger* logger;
 	void Add(System* system);
 	void LoadScene(Scene* scene);
 	void update(float deltaTime);

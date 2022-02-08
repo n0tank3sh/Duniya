@@ -229,7 +229,7 @@ void RendererSystem::LoadTransform(Scene::Entities::iterator& itr)
 	renderer->UniformMat(1, mat, "MVP");
 }
 
-void RendererSystem::update(float deltaTime)
+void RendererSystem::Update(float deltaTime)
 {
 	renderer->Clear();
     RendererStuff* rendererStuff;

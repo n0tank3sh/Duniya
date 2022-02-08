@@ -1,9 +1,16 @@
 #include "AssetLoader.h"
 #include "ECS/ECS.h"
 #include "Graphics/Renderer.h"
+#include "Math/Vect4.h"
 #include <Renderer2DSystem.h>
 #include <Graphics/OpenGL/GLRenderer.h>
+#include <exception>
+#include <filesystem>
+#include <fstream>
 #include <queue>
+#include <stdexcept>
+#include <SDLUtiliy.h>
+
 
 
 
@@ -19,17 +26,20 @@ Renderer2DSystem::Renderer2DSystem()
 	fontShaderStageHandler.reset(renderer->CreateShaderStage());
 
 	std::unique_ptr<NativeShaderHandlerParent> vertShader(renderer->CreateShader(ShaderType::VERTEX)), 
-											   fragShader(renderer->CreateShader(ShaderType::FRAGMENT)),
-											   fontVertShader(renderer->CreateShader(ShaderType::VERTEX)),
-											   fontFragShader(renderer->CreateShader(ShaderType::FRAGMENT));
+		fragShader(renderer->CreateShader(ShaderType::FRAGMENT)),
+		fontVertShader(renderer->CreateShader(ShaderType::VERTEX)),
+		fontFragShader(renderer->CreateShader(ShaderType::FRAGMENT));
 
 	AssetLoader::GetSingleton()->LoadTextFile("Resource/Shaders/RectVert.glsl", vertShader->source);
 	AssetLoader::GetSingleton()->LoadTextFile("Resource/Shaders/RectFrag.glsl", fragShader->source);
 	AssetLoader::GetSingleton()->LoadTextFile("Resource/Shaders/FontFrag.glsl", fontFragShader->source);
 	AssetLoader::GetSingleton()->LoadTextFile("Resource/Shaders/FontVert.glsl", fontVertShader->source);
-	
+
 	shaderStageHandler->shaderHandler.push_back(std::move(vertShader));
 	shaderStageHandler->shaderHandler.push_back(std::move(fragShader));
+	fontShaderStageHandler->shaderHandler.push_back(std::move(fontVertShader));
+	fontShaderStageHandler->shaderHandler.push_back(std::move(fontFragShader));
+	fontShaderStageHandler->Load();
 	shaderStageHandler->Load();
 	//VertexSpecification vertexSpecification;
 	//vertexSpecification.push_back(std::make_pair("goat", 2));
@@ -50,7 +60,8 @@ Renderer2DSystem::Renderer2DSystem()
 	//panel.vertBuffer.sizet = vertCount * sizeof(Vect2);
 	//renderer->LoadBuffer(&panel.vertBuffer);
 	//renderer->SetLayout(layout);
-
+	resolution.x = 1400;
+	resolution.y = 900; 
 }
 
 Renderer2DSystem* Renderer2DSystem::Init()
@@ -67,10 +78,30 @@ Renderer2DSystem* Renderer2DSystem::GetSingleton()
 void Renderer2DSystem::LoadScene(Scene* scene)
 {
 	shaderStageHandler->Load();
+	TexturePacker texturePacker(256, 256);
+	texturePacker.SetScene(scene);
+	std::string fontFile("/home/mightygoat/B/Projects/chess_gui/chess_gui/Resource/Fonts/myFont.otf"); 
+	if(!std::filesystem::exists(fontFile))
+	{
+		throw std::runtime_error("Font File doesn't exist");
+	}
+	if(texturePacker.PackFont(fontFile, defaultFont))
+	{
+		throw std::runtime_error("Couldn't pack font");
+	}
+	renderer->SetResourceBank(scene->resourceBank);
+	renderer->LoadTexture(&defaultFont.texture, &defaultFont.gBuffer);
 	this->scene = scene;
+	texts.push_back(scene->PushDef());
+	auto& panel = *scene->GetEntity(texts.back())->Emplace<TextPanel>(ComponentTypes::TEXTPANEL);
+	auto& str = *scene->GetEntity(texts.back())->Emplace<std::string>(ComponentTypes::TEXTBOX);
+	str = "hello world";
+	panel.dimension = Vect4(0, 0, (float)(32 * str.size())/resolution.x * 2, (float)32/resolution.y * 2);
 	Scan();
+}
 
-
+void Renderer2DSystem::LoadFontFile(std::string fontFile)
+{
 }
 
 void Renderer2DSystem::Scan()
@@ -112,20 +143,30 @@ void Renderer2DSystem::ProcessMessages()
 	}
 }
 
-void Renderer2DSystem::update(float deltaTime)
+void Renderer2DSystem::Update(float deltaTime)
 {
 	ProcessMessages();
 	shaderStageHandler->Load();
+	
+	renderer->ClearColor(0.f, 0.f, 0.f);
+	renderer->Clear();
+	uint32_t goat = 0;
 	for(auto i = 0; i < panels.size(); i++)
 	{
 		auto& componentList = scene->entities[panels[i]];
 		if(componentList->Get(ComponentTypes::PANEL) != nullptr)
 		{
-			std::string panelIndex = "[" + std::to_string(i) + "]";
+			std::string panelIndex = "[" + std::to_string(goat) + "]";
+			goat++;
 			auto panel = reinterpret_cast<Panel*>(componentList->Get(ComponentTypes::PANEL));
 			renderer->Uniform4f(1, &panel->dimension, "panels" + panelIndex);
 			renderer->Uniform4f(1, &panel->color, "panelColors" + panelIndex);
 			renderer->Uniform1f(1, &panel->sideDist, "panelCorners" + panelIndex);
+			if(goat == 50)
+			{
+				renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, goat);
+				goat = 0;
+			}
 		}
 		else
 		{
@@ -133,10 +174,49 @@ void Renderer2DSystem::update(float deltaTime)
 			panels.pop_back();
 		}
 	}
-	
-	if(panels.size() != 0)
+	if(goat != 0)
+		renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, goat);
+	goat = 0;
+	fontShaderStageHandler->Load();
+	uint32_t batchSize = 10;
+	renderer->Bind(defaultFont.gBuffer);
+	//Vect4 uv(0.f, 0.f, 1.f, 1.f);
+	for(int i = 0; i < texts.size(); i++)
 	{
-		renderer->Clear();
-		renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, panels.size());
+		auto& text = *scene->GetEntity(texts[i])->Get<std::string>(ComponentTypes::TEXTBOX);
+		auto& panel = *scene->GetEntity(texts[i])->Get<TextPanel>(ComponentTypes::TEXTPANEL);
+		auto curPos = Vect2(panel.dimension.x, panel.dimension.y + panel.dimension.w);
+		auto& panelPos = panel.dimension;
+		auto advanceY = 0.f;
+		for(auto e: text)
+		{
+			auto& temp = defaultFont.glyps[e];
+			auto uv = temp.uv;
+			//auto uv = Vect4(0, 0, 1, 1);
+			auto glyphPos = Vect4(curPos, temp.pos/resolution * 2);
+			glyphPos.y = panel.dimension.y;
+			auto luft = "[" + std::to_string(goat) + "]";
+			renderer->Uniform4f(1, &glyphPos, "pos" + luft);
+			renderer->Uniform4f(1, &uv, "uvs" + luft);
+			//renderer->Uniform4f(1, &panel.dimension, "boxPositions" + luft);
+			goat++; 
+			if(goat == batchSize)                                       
+			{
+				renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, goat);
+				goat = 0;
+			}
+			advanceY = std::max(temp.advance.y, advanceY); 
+			curPos.x += lerp(0.f, 2.f, (float)temp.advance.x / resolution.x);
+			if(curPos.x > panelPos.x + panelPos.z)
+			{
+				curPos.y -= lerp(0.f, 2.f, (float)advanceY / resolution.y);
+			}
+			if(curPos.y < panelPos.y)
+				break;
+		}
+	}
+	if(goat != 0)
+	{
+		renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, goat);
 	}
 }

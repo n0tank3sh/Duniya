@@ -10,12 +10,12 @@ void TestGame::LoadScene(Scene* scene)
 	uint32_t entity = scene->PushDef();
 	auto panel = scene->GetEntity(entity)->Emplace<Panel>(ComponentTypes::PANEL);
 	panel->dimension = Vect4(0.5, 0.5, 0.5, 0.5);
-	panel->color = Vect4(0.5, 1, 0.0, 1.);
-	panel->sideDist = .8f;
+	panel->color = Vect4(0.5, 1, 0.0, 0.5);
+	panel->sideDist = .0f;
 	messagingSystem->at(0x35).push_back(std::make_pair(0, nullptr));
 }
 
-void TestGame::update(float deltaTime)
+void TestGame::Update(float deltaTime)
 {
 	//auto& messages = (*messagingSystem)[EVENTS::KEYBOARD_EVENTS];
 	//while(!messages.empty())

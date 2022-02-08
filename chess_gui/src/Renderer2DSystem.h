@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <ECS/ECS.h>
 #include <Graphics/Renderer.h>
+#include <unordered_map>
+#include <TexturePacker.h>
 
 
 namespace ComponentTypes
@@ -9,6 +11,8 @@ namespace ComponentTypes
 		enum : uint32_t
 	   {
 		   PANEL = 20,
+		   TEXTBOX,
+		   TEXTPANEL,
 	   };
 };
 
@@ -19,9 +23,26 @@ struct Panel
 	float sideDist;
 };
 
+struct TextPanel
+{
+	Vect4 dimension;
+};
+
+struct Sprite
+{
+	Vect2 uv[4];
+	uint32_t data;
+};
+
 struct Button
 {
 	uint32_t id;
+};
+
+struct Font
+{
+	uint32_t width, height, data;
+	Vect2 umap[128][4];
 };
 
 
@@ -35,7 +56,7 @@ class Renderer2DSystem : public System
 	};
 public:
 	void LoadScene(Scene* scene) override;
-	void update(float deltaTime) override;
+	void Update(float deltaTime) override;
 	friend class RendererSystem;
 	static Renderer2DSystem* Init();
 	static Renderer2DSystem* GetSingleton();
@@ -45,12 +66,17 @@ public:
 	static Renderer2DSystem* singleton;
 	Renderer* renderer;
 private:
+	FontDict defaultFont;
+	std::vector<Font> fonts;
+	std::vector<uint32_t> texts;
 	std::unique_ptr<ShaderStageHandler> shaderStageHandler;
 	std::unique_ptr<ShaderStageHandler> fontShaderStageHandler;
+	Vect2 resolution;
+	Scene* scene;
+	std::vector<uint32_t> panels;
+	uint32_t layout;
+	void LoadFontFile(std::string fontFile);
 	void ProcessMessages();
 	void Scan();
 	void Add(uint32_t);
-	Scene* scene;
-	uint32_t layout;
-	std::vector<uint32_t> panels;
 };

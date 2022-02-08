@@ -20,7 +20,7 @@ public:
 	void CreateGBufferMesh(Mesh* mesh, GBuffer* iBuffer, GBuffer* vBuffer);
     ~RendererSystem();
     void LoadScene(Scene* scene) override;
-    void update(float deltaTime) override;
+    void Update(float deltaTime) override;
 private:
 	Mat SetUpCamera(uint32_t entity, Vect3& pos, const Vect3& temp );
 	void LoadMaterial(Scene::Entities::iterator& itr);

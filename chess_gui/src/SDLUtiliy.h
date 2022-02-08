@@ -1,4 +1,5 @@
 #pragma once
+#include "SDL_events.h"
 #include <SDL2/SDL.h>
 #include <ECS/ECS.h>
 
@@ -8,9 +9,18 @@ struct KeyboardEvent : public Message
 	SDL_KeyboardEvent event; 
 };
 
-struct MouseEvent : public Message
+struct MouseButtonEvent : public Message
 {
-	SDL_MouseButtonEvent buttonEvent;
-	SDL_MouseMotionEvent motionEvent;
+	SDL_MouseButtonEvent event;
 };
+
+struct MouseMotionEvent : public Message
+{
+	SDL_MouseMotionEvent event;
+};
+
+#ifdef __unix__
+#include <signal.h>
+#define BREAKPOINT raise(SIGTRAP);
+#endif
 

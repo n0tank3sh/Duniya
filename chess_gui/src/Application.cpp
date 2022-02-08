@@ -1,11 +1,14 @@
 #include "Application.h"
 #include <Graphics/Renderer.h>
+#include "ECS/ECS.h"
 #include "Exception.h"
 #include <cstdint>
 #include <ECS/CommonComponent.h>
 #include <ECS/GraphicsComponent.h>
 #include <RendererSystem.h>
 #include "AssetLoader.h"
+#include "SDLUtiliy.h"
+#include "SDL_events.h"
 #include "TestGame.h"
 #include <filesystem>
 #include <iterator>
@@ -36,6 +39,11 @@ Application::Application()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     window = SDL_CreateWindow(title.c_str(), 0, 0, width, height, windowFlag);
+	{
+		int32_t width, height;
+		SDL_GetWindowSize(window, &width, &height);
+		std::cout << "Width: " << width << " height: " << height << std::endl;
+	}
 	if(window == NULL) throw CException(__LINE__, __FILE__, "Window Error", SDL_GetError());
 	
 
@@ -71,6 +79,9 @@ uint32_t Application::run()
 	while(!quit)
 	{
 		currentTime = SDL_GetTicks();
+		KeyboardEvent* keyboardEvent;
+		MouseButtonEvent* mouseButtonEvent;
+		MouseMotionEvent* mouseMotionEvent;
 		while(SDL_PollEvent(&event))
 		{
 			switch(event.type)
@@ -79,15 +90,27 @@ uint32_t Application::run()
 			    quit = true;
 				break;
 			case SDL_KEYDOWN:
-				auto keyboardEvent = new KeyboardEvent;
+				keyboardEvent = new KeyboardEvent;
 				keyboardEvent->event = event.key;
 				(*manager->queryMessages)[0x0].push_back(std::make_pair(EVENTS::KEYBOARD_EVENTS, std::unique_ptr<Message>(keyboardEvent)));
+				break;
+			case SDL_MOUSEBUTTONDOWN: 
+				mouseButtonEvent = new MouseButtonEvent;
+				mouseButtonEvent->event = event.button;
+				(*manager->queryMessages)[0x1].push_back(std::make_pair(EVENTS::MOUSE_EVENTS, std::unique_ptr<Message>(mouseButtonEvent))); 
+				break;
+			case SDL_MOUSEMOTION:
+				mouseMotionEvent = new MouseMotionEvent;
+				mouseMotionEvent->event = event.motion;
+				(*manager->queryMessages)[0x1].push_back(std::make_pair(EVENTS::MOUSEMOTION_EVENT, std::unique_ptr<Message>(mouseMotionEvent)));
 				break;
 			}
 		}
 		manager->update(1/(currentTime - lastTime));
 		SDL_GL_SwapWindow(window);
 		lastTime = currentTime;
-	} SDL_GL_DeleteContext(deviceContext); SDL_DestroyWindow(window);
+	} 
+	SDL_GL_DeleteContext(deviceContext); 
+	SDL_DestroyWindow(window);
 	return 0;
 }

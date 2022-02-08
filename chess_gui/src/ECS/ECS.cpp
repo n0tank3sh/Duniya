@@ -19,38 +19,39 @@ void* ComponentPtr::emplace(BaseImpl* impl)
 }
 ComponentPtr::ComponentPtr()
 {
-    base = nullptr;
+	base = nullptr;
 	entity = 0;
 }
 
 ComponentPtr::ComponentPtr(BaseImpl* baseImpl) 
 {
-    base = baseImpl->Clone();
+	base = baseImpl->Clone();
 	entity = 0;
 }
 
 ComponentPtr::ComponentPtr(const ComponentPtr& comptr)
 {
 	if(comptr.base != nullptr)
-    base = comptr.base->Clone();
+		base = comptr.base->Clone();
 	else base = nullptr;
 }
 ComponentPtr::~ComponentPtr() 
 {
 	if(base != nullptr)
-    delete base;
+		delete base;
 }
 Scene::EntityManager::EntityManager(Scene* scene)
 {
-    owner = scene;
+	owner = scene;
 }
 
 Scene::Scene()
 {
 	componentTypeMap.insert(std::make_pair(std::type_index(typeid(Transform)), ComponentTypes::TRANSFORM));
 	componentTypeMap.insert(std::make_pair(std::type_index(typeid(Mesh)), ComponentTypes::MESH));
-    entityManager = new EntityManager(this);
-    componentManager = new ComponentManager(this);
+	entityManager = new EntityManager(this);
+	componentManager = new ComponentManager(this);
+	resourceBank = new ResourceBank();
 } 
 uint32_t Scene::EntityManager::CreateEntity() 
 {
@@ -65,18 +66,18 @@ void Scene::EntityManager::DestroyEntity(uint32_t entity)
 Scene::IComponentArray::IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, 
 		std::unordered_map<std::type_index, ComponentType>& componentTypeMap, uint32_t entity)
 {
-    for(auto& i: componentTypes)
-    {
+	for(auto& i: componentTypes)
+	{
 		ComponentType type = componentTypeMap[i.first];
-        components.insert(std::move(std::make_pair(type, ComponentPtr(i.second.base))));
+		components.insert(std::move(std::make_pair(type, ComponentPtr(i.second.base))));
 		components[type].entity = entity;
-        components[type].base->Create();
-    }
+		components[type].base->Create();
+	}
 }
 void* Scene::IComponentArray::Get(uint32_t componentType)
 {
-    auto i = components.find(componentType);
-    if(i == components.end()) return nullptr;
+	auto i = components.find(componentType);
+	if(i == components.end()) return nullptr;
 	void* basePointer = i->second.base->GetPointer();
 	if(basePointer == nullptr) std::cout << "BasePointer is null" << std::endl;
 	return basePointer;
@@ -95,21 +96,21 @@ Scene::ComponentManager::ComponentManager(Scene* scene)
 
 Scene::IComponentArray* Scene::ComponentManager::CreateComponentArray(uint32_t entity)
 {
-    return new IComponentArray(componentTypes, scene->componentTypeMap, entity);
+	return new IComponentArray(componentTypes, scene->componentTypeMap, entity);
 }
 
 uint32_t Scene::Push()
 {
-    uint32_t entity = entityManager->CreateEntity();
-    entities[entity] = std::unique_ptr<IComponentArray>(componentManager->CreateComponentArray(entity));
-    return entity;
+	uint32_t entity = entityManager->CreateEntity();
+	entities[entity] = std::unique_ptr<IComponentArray>(componentManager->CreateComponentArray(entity));
+	return entity;
 }
 
 Scene::IComponentArray* Scene::GetEntity(uint32_t entity)
 {
-    if(entity >= 0 && entity < entities.size())
-        return entities[entity].get();
-    else return nullptr;
+	if(entity >= 0 && entity < entities.size())
+		return entities[entity].get();
+	else return nullptr;
 }
 
 uint32_t Scene::PushDef()
@@ -139,9 +140,10 @@ void Scene::SaveScene(std::string filePath)
 	SerializerSystem::singleton->Serialize<Entities>(entities);
 	fout.close();
 }
-	
+
 SystemManager::SystemManager()
 {
+	logger = new Logger;
 	queryMessages.reset(new QueryMessages);
 }
 
@@ -152,6 +154,7 @@ void SystemManager::AddQueryMessageBlock(uint32_t messageID)
 void SystemManager::Add(System* system)
 {
 	system->messagingSystem = queryMessages.get();
+	system->logger = logger;
 	AddQueryMessageBlock(system->messageID);
 	systems.push_back(system);
 }
@@ -168,8 +171,9 @@ void SystemManager::update(float deltaTime)
 {
 	for(auto itr = systems.begin(); itr != systems.end(); itr++)
 	{
-		(*itr)->update(deltaTime);
+		(*itr)->Update(deltaTime);
 	}
+	logger->Paste();
 }
 
 ThreadPool::ThreadPool(SystemManager* systemManager)
@@ -182,7 +186,7 @@ void ThreadPool::Run()
 {
 	std::mutex moduleRunnerMutex;
 	auto ModuleRunner = [](System* system, Scene* scene) {
-		system->update(0);
+		system->Update(0);
 	};
 }
 
@@ -193,7 +197,7 @@ ResourceBank::ResourcePtr::ResourcePtr()
 
 ResourceBank::ResourcePtr::ResourcePtr(size_t size)
 	:
-	size(size)
+		size(size)
 {
 	if(size == 0) data = nullptr;
 	else data = new uint8_t[size];
