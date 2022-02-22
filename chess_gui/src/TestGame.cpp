@@ -1,4 +1,6 @@
 #include "TestGame.h"
+#include "AssetLoader.h"
+#include "ECS/ECS.h"
 #include <SDLUtiliy.h>
 #include <Renderer2DSystem.h>
 #include <cstdlib>
@@ -13,6 +15,10 @@ void TestGame::LoadScene(Scene* scene)
 	panel->color = Vect4(0.5, 1, 0.0, 0.5);
 	panel->sideDist = .0f;
 	messagingSystem->at(0x35).push_back(std::make_pair(0, nullptr));
+	uint32_t cube = scene->Push();
+	AssetLoader::GetSingleton()->scene = scene;
+	auto mesh = scene->GetEntity(cube)->Emplace<Mesh>(ComponentTypes::MESH);
+	AssetLoader::GetSingleton()->LoadObj("Resource/Test/cube.obj", mesh);
 }
 
 void TestGame::Update(float deltaTime)

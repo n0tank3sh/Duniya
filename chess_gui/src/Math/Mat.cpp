@@ -2,6 +2,7 @@
 #include "Mat.h"
 #include <initializer_list>
 #include <cassert>
+#include <stdexcept>
 #include <string.h>
 
 Mat::Mat(Dimension dimension)
@@ -134,6 +135,14 @@ Mat DefaultMatrix::generateIdentityMatrix(Dimension s)
 		mat.buffer[i * s.column + i] = 1.f;
 	}
 	return mat;
+}
+
+float& Mat::Get(const uint32_t& a, const uint32_t& b)
+{
+	if(a < dimension.row && b < dimension.column)  
+		return buffer.get()[a * dimension.column + b];
+	else
+		throw std::out_of_range("indices out of range");
 }
 
 Mat DefaultMatrix::generateRollMatrix(Dimension s, float x)

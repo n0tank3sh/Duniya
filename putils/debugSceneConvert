@@ -5,4 +5,4 @@ cd $HOME_DIR/out/chess_gui
 #make -j8
 #SCENE_CONVERTER_SRC=~/Projects/Chess_gui/out/chess_gui
 #gdb --args $SCENE_CONVERTER_SRC/sceneconverter $SCENE_CONVERTER_SRC/Resource/Test/Goat.obj $SCENE_CONVERTER_SRC/justChecking.dick
-gdb --args sceneconverter Resource/Test/chess.fbx justChecking.dick
+gdb --args sceneconverter Resource/Test/cube.obj testcube

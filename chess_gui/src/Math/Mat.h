@@ -37,6 +37,7 @@ struct Mat
     Mat operator+(const Mat& other);
     Mat operator-(const Mat& other);
     Mat dot(const Mat& other);
+	float& Get(const uint32_t& a, const uint32_t& b);
     
 	Mat operator*=(const Mat& other);
 	Mat operator+=(const Mat& other);

@@ -22,20 +22,30 @@ public:
     void LoadScene(Scene* scene) override;
     void Update(float deltaTime) override;
 private:
-	Mat SetUpCamera(uint32_t entity, Vect3& pos, const Vect3& temp );
+	Mat SetUpCamera(uint32_t entity);
 	void LoadMaterial(Scene::Entities::iterator& itr);
 	void LoadLights();
 	void LoadLightColor(const LightColor& color, std::string name);
 	void LoadTransform(Scene::Entities::iterator& itr);
 	void LoadBuffer(GBuffer* buffer);
-	void lookAt(Vect3& from, Vect3& forward, Vect3& up, Vect3& right, Mat& mat);
+	void CreateRendererStuff(Mesh* mesh, RendererStuff* rendererStuff);
+	void SetupDefaultTexture();
+	Mat LookAt(const Vect3& pos, const Vect3& dir);
+	Mat SetupPerspective(Camera& camera);
+	Scene* GetScene();
 private:
     std::unique_ptr<Renderer> renderer;
     Scene* scene;
     static RendererSystem* singleton;
 	float animated;
+	Vect2 resoltuion;
+// Default Values
 	Mat transformDefault;
 	uint32_t mainCamera;
+	Texture defaultTexture;
+	GBuffer defaultTextureGBuffer;
+	Material defaultMaterial;
+// 
 	uint32_t layout;
 	Scene::IComponentArray* camera;
 	std::vector<uint32_t> lights;

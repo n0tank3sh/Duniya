@@ -460,13 +460,13 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
 		case GBuffer::GBufferStyle::BufferType::VERTEX:
 			bufferType = GL_ARRAY_BUFFER;
 			binders.push_back(std::unique_ptr<GBinder>(new GLVertexBinder(rendererID)));
-			gBuffer->bindNo = binders.size() - 1;
 			break;        
 		case GBuffer::GBufferStyle::BufferType::INDEX:
 			bufferType = GL_ELEMENT_ARRAY_BUFFER;
 			binders.push_back(std::unique_ptr<GBinder>(new GLIndexBinder(rendererID)));
 			break;
 	};
+	gBuffer->bindNo = binders.size() - 1;
 
 	GLDEBUGCALL(this->Bind(*gBuffer));
 	GLDEBUGCALL(glBufferData(bufferType, gBuffer->sizet, resourceBank->resources[gBuffer->data].Get(), flags));
@@ -535,6 +535,38 @@ ShaderStageHandler* GLRenderer::CreateShaderStage()
 	auto tmp = new NativeShaderStageHandler<GLRenderer>;
 	tmp->renderer = this;
 	return tmp;
+}
+
+void GLRenderer::Enable(Options option)
+{
+	switch(option)
+	{
+		case Options::BLEND:
+			glEnable(GL_BLEND);
+			break;
+		case Options::DEPTH_TEST:
+			glEnable(GL_DEPTH_TEST);
+			break;
+		case Options::FACE_CULL:
+			glEnable(GL_CULL_FACE);
+			break;
+	};
+}
+
+void GLRenderer::Disable(Options option)
+{
+	switch(option)
+	{
+		case Options::BLEND:
+			glDisable(GL_BLEND);
+			break;
+		case Options::DEPTH_TEST:
+			glDisable(GL_DEPTH_TEST);
+			break;
+		case Options::FACE_CULL:
+			glDisable(GL_CULL_FACE);
+			break;
+	};
 }
 
 void GLRenderer::UseShaderStage(ShaderStageHandler* shaderStageHandler)

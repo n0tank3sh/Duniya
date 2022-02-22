@@ -22,6 +22,12 @@ enum class DrawPrimitive : uint32_t
 	TRIANGLES, POINTS, TRIANGLES_ADJACENCIES, TRIANGLES_STRIPS
 };
 
+enum class Options
+{
+	BLEND,
+	DEPTH_TEST,
+	FACE_CULL
+};
 
 struct GBuffer
 {
@@ -94,6 +100,8 @@ public:
 	virtual void DrawInstancedArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElement, uint32_t numInstanced) = 0;
     virtual void LoadBuffer(GBuffer* gBuffer) = 0;
     virtual void LoadTexture(Texture* texture, GBuffer* gBuffer) = 0;
+	virtual void Enable(Options option) = 0;
+	virtual void Disable(Options option) = 0;
     virtual void Uniform1f(const uint32_t count, const float* data, std::string name) = 0;
     virtual void Uniform2f(const uint32_t count, const Vect2* data, std::string name) = 0;
     virtual void Uniform3f(const uint32_t count, const Vect3* data, std::string name) = 0;

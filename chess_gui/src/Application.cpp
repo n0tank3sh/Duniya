@@ -65,7 +65,7 @@ Application::Application()
 
 	manager = new SystemManager;
 	manager->AddQueryMessageBlock(0x0);
-	//manager->Add(RendererSystem::init(Graphics_API::OPENGL));
+	manager->Add(RendererSystem::init(Graphics_API::OPENGL));
 	manager->Add(Renderer2DSystem::Init());
 	manager->Add(new TestGame);
 	manager->LoadScene(scene);

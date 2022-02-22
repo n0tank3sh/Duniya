@@ -58,7 +58,7 @@ void SceneConverter::Import(std::string filePath, std::string resultedPath)
 	if(scene->HasCameras())
 		resultedScene->componentTypeMap.insert(std::make_pair(std::type_index(typeid(Camera)), ComponentTypes::CAMERA));
 
-	ProcessNodes(scene->mRootNode, resultedScene, scene);
+	ProcessNodes(scene->mRootNode, scene);
 
 	for(auto& i: resultedScene->entities)
 	{
@@ -81,7 +81,7 @@ void SceneConverter::ProcessLightColor(const aiLight* light, LightColor& color)
 	ConVec3(color.diffuse, light->mColorDiffuse);
 }
 
-void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* queryScene, const uint32_t& entity)
+void SceneConverter::ProcessMeshes(aiMesh* mesh, const aiScene* queryScene, const uint32_t& entity)
 {
 	Mesh* resultedMesh = (Mesh*)scene->entities[entity]->components[ComponentTypes::MESH].emplace(new ComponentPtr::Impl<Mesh>);
 	resultedMesh->verticiesIndex = scene->resourceBank->Push_Back(reinterpret_cast<uint8_t*>(new Vertex[mesh->mNumVertices]), 
@@ -95,7 +95,7 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 		vertex.aPos.z = mesh->mVertices[i].z;
 		vertex.aPos.w = 1.f;
 		vertex.aNormal = *((Vect3*)&mesh->mNormals[i]);
-		vertex.texCord = *((Vect3*)&mesh->mTextureCoords[0][i]);
+		vertex.texCord = *((Vect2*)&mesh->mTextureCoords[0][i]);
 		verticies[i] = vertex;
 	}
 	if(mesh->HasFaces())
@@ -116,15 +116,15 @@ void SceneConverter::ProcessMeshes(aiMesh* mesh, Scene* scene, const aiScene* qu
 	}
 	if(mesh->mMaterialIndex)
 	{
-		ProcessMaterial(queryScene->mMaterials[mesh->mMaterialIndex], scene, queryScene, entity);
+		ProcessMaterial(queryScene->mMaterials[mesh->mMaterialIndex], queryScene, entity);
 	}
 }
 
-void SceneConverter::ProcessTexture(aiTexture* texture, Scene* scene, const aiScene* queryScene, uint32_t entity)
+void SceneConverter::ProcessTexture(aiTexture* texture, const aiScene* queryScene, uint32_t entity)
 {
 }
 
-void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const aiScene* queryScene, uint32_t entity)
+void SceneConverter::ProcessMaterial(aiMaterial* material, const aiScene* queryScene, uint32_t entity)
 {
 	aiShadingMode shadingMode;
 	material->Get(AI_MATKEY_SHADING_MODEL, shadingMode);
@@ -138,22 +138,22 @@ void SceneConverter::ProcessMaterial(aiMaterial* material, Scene* scene, const a
 	}
 }
 
-void SceneConverter::ProcessNodes(aiNode* node, Scene* scene, const aiScene* queryScene)
+void SceneConverter::ProcessNodes(aiNode* node,  const aiScene* queryScene)
 {
 	for(uint32_t i = 0; i < node->mNumMeshes; i++)
 	{
 		auto entity = scene->entityManager->CreateEntity();
 		scene->entities.push_back(std::move(std::unique_ptr<Scene::IComponentArray>(new Scene::IComponentArray)));
-		ProcessTransform(node, scene, entity);
-		ProcessMeshes(queryScene->mMeshes[node->mMeshes[i]], scene, queryScene, entity);
+		ProcessTransform(node, entity);
+		ProcessMeshes(queryScene->mMeshes[node->mMeshes[i]], queryScene, entity);
 	}
 	for(uint32_t i = 0; i < node->mNumChildren; i++)
 	{
-		ProcessNodes(node->mChildren[i], scene, queryScene);
+		ProcessNodes(node->mChildren[i], queryScene);
 	}
 }
 
-void SceneConverter::ProcessTransform(const aiNode* node, Scene* scene, const uint32_t& entity)
+void SceneConverter::ProcessTransform(const aiNode* node, const uint32_t& entity)
 {
 	auto goatTransform = node->mTransformation;
 	auto transform = (Transform*)scene->entities[entity]->components[ComponentTypes::TRANSFORM].emplace(new ComponentPtr::Impl<Transform>);
@@ -164,7 +164,7 @@ void SceneConverter::ProcessTransform(const aiNode* node, Scene* scene, const ui
 	ConVec3(transform->scale, scale);
 }
 
-void SceneConverter::ProcessLight(Scene* scene, const aiScene* queryScene)
+void SceneConverter::ProcessLight(const aiScene* queryScene)
 {
 	for(uint32_t i = 0; i < queryScene->mNumLights; i++)
 	{

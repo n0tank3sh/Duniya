@@ -147,6 +147,9 @@ void Renderer2DSystem::Update(float deltaTime)
 {
 	ProcessMessages();
 	shaderStageHandler->Load();
+	renderer->Enable(Options::BLEND);
+	renderer->Disable(Options::DEPTH_TEST);
+	renderer->Disable(Options::FACE_CULL);
 	
 	renderer->ClearColor(0.f, 0.f, 0.f);
 	renderer->Clear();

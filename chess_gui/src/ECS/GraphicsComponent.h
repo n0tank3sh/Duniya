@@ -10,7 +10,7 @@ struct Vertex
 {
     Vect4 aPos;
     Vect3 aNormal;
-    Vect3 texCord;
+    Vect2 texCord;
 };
 struct Material
 {

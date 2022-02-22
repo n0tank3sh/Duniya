@@ -63,10 +63,11 @@ public:
 	}
 	// Static functions
 public:
-	inline static Vect3 normalize(const Vect3& temp)
+	inline Vect3 normalized()
 	{
-		auto temp1 = temp;
-		return temp;
+		auto tmp = *this;
+		tmp.normalize();
+		return tmp;
 	}
 	inline static float dot(const Vect3& first, const Vect3& other)
 	{
@@ -202,4 +203,13 @@ inline Vect3 Vect3::operator/=(const Vect3& other)
 
 inline bool Vect3::operator<(const Vect3& other) const
 {
+	if(this->x == other.x)
+	{
+		if(this->y == other.y)
+		{
+			return this->z < other.z;
+		}
+		return this->y < other.y;
+	}
+	return this->x < other.x;
 }

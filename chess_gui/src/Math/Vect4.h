@@ -51,6 +51,7 @@ public:
     bool operator==(const Vect4& other) const;
 
     float dot(const Vect4& other) const;
+	Vect4 cross(const Vect4& other) const;
     void normalize();
 	friend std::istream& operator>>(std::istream &input, Vect4& a)
 	{
@@ -63,11 +64,11 @@ public:
 		return output;
 	}
 public:
-	inline static Vect4 normalize(const Vect4& temp)
+	inline Vect4 normalized()
 	{
-		auto temp1 = temp;
-		temp1.normalize();
-		return temp1;
+		auto tmp = *this;
+		tmp.normalize();
+		return tmp;
 	}
 	inline static float dot(const Vect4& first, const Vect4& other)
 	{

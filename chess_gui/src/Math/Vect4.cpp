@@ -31,4 +31,7 @@ float Vect4::dot(const Vect4& other) const
 	return game;
 }
 
+Vect4 Vect4::cross(const Vect4& other) const
+{
+}
 

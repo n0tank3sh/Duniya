@@ -56,6 +56,8 @@ public:
 	void DrawInstancedArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElement, uint32_t numInstanced) override;
     void LoadBuffer(GBuffer* gBuffer) override;
     void LoadTexture(Texture* texture, GBuffer* gbuffer) override;
+	void Enable(Options option) override;
+	void Disable(Options option) override;
     void Clear() override;
     void ClearColor(float r, float g, float b) override;
     void ClearDepth(float depthLevel) override;

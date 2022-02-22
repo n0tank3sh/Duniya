@@ -37,6 +37,10 @@ struct PointLight
 
 struct Camera
 {
+	float fov;
+	float near;
+	float far;
+	Vect3 lookAt;
 };
 
 inline Mat* ConvertTranforToMatrix(Transform& transform)
