@@ -40,11 +40,7 @@ RendererSystem::RendererSystem()
 
 	mainShaderStage->shaderHandler.push_back(std::move(vertShader));
 	mainShaderStage->shaderHandler.push_back(std::move(fragShader));
-<<<<<<< HEAD
-	VertexSpecification specification  = { {"pos", 4}, {"aNormal", 3}, {"texCoord", 2}};
-=======
 	VertexSpecification specification  = { {"aPos", 4}, {"aNormal", 3}, {"texCoord", 2}};
->>>>>>> 1656a13 (Removing unncessary module)
 
 	defaultMaterial.ambient = Vect3() + 1.f;
 	defaultMaterial.diffuse = Vect3() +  1.f;
@@ -198,16 +194,10 @@ void RendererSystem::LoadScene(Scene* scene)
 Mat RendererSystem::SetUpCamera(uint32_t entity)
 {
 	auto scene = GetScene();
-<<<<<<< HEAD
-	auto pos = scene->GetEntity(entity)->Get<Transform>(ComponentTypes::TRANSFORM)->pos;
-	auto camera = scene->GetEntity(entity)->Get<Camera>(ComponentTypes::CAMERA);
-	return LookAt(pos, camera->lookAt) * SetupPerspective(*camera) ;
-=======
 	//auto pos = scene->GetEntity(entity)->Get<Transform>(ComponentTypes::TRANSFORM)->pos;
 	//auto camera = scene->GetEntity(entity)->Get<Camera>(ComponentTypes::CAMERA);
 	//return LookAt(pos, camera->lookAt) * SetupPerspective(*camera) ;
 	return DefaultMatrix::generateIdentityMatrix({4, 4});
->>>>>>> 1656a13 (Removing unncessary module)
 }
 
 Mat RendererSystem::LookAt(const Vect3& pos, const Vect3& dir)
@@ -252,15 +242,10 @@ void RendererSystem::LoadTransform(Scene::Entities::iterator& itr)
 		mat = &transformDefault;
 		transform = (*itr)->Emplace<Transform>(ComponentTypes::TRANSFORM);
 		transform->scale = Vect3(.5f, .5f, .5f);
-<<<<<<< HEAD
 	}
-	*mat *= SetUpCamera(mainCamera);
-=======
-		transform->pos = Vect3(0.f, 0.f, 1.f);
-	}
+	
 	*mat *= SetUpCamera(mainCamera);
 	//std::cout << *mat << std::endl;
->>>>>>> 1656a13 (Removing unncessary module)
 	renderer->UniformMat(1, mat, "MVP");
 }
 
@@ -271,12 +256,9 @@ void RendererSystem::Update(float deltaTime)
 	RendererStuff* rendererStuff;
 	mainShaderStage->Load();
 	auto scene = GetScene();
-<<<<<<< HEAD
-=======
 	renderer->Enable(Options::BLEND);
 	renderer->Enable(Options::DEPTH_TEST);
 	renderer->Enable(Options::FACE_CULL);
->>>>>>> 1656a13 (Removing unncessary module)
 	for(auto itr = scene->entities.begin(); itr != scene->entities.end(); itr++)
 	{
 		if((*itr)->Get(ComponentTypes::MESH) != nullptr)
@@ -289,19 +271,11 @@ void RendererSystem::Update(float deltaTime)
 			}
 			renderer->Bind(rendererStuff->vBuffer);
 			renderer->SetLayout(layout);
-<<<<<<< HEAD
-			renderer->Bind(rendererStuff->iBuffer);
-			if((*itr)->Get(ComponentTypes::TEXTURE) != nullptr)
-				renderer->Bind(rendererStuff->texture);
-			else
-				renderer->Bind(defaultTextureGBuffer);
-=======
 			//renderer->Bind(rendererStuff->iBuffer);
 			//if((*itr)->Get(ComponentTypes::TEXTURE) != nullptr)
 			//	renderer->Bind(rendererStuff->texture);
 			//else
 			//	renderer->Bind(defaultTextureGBuffer);
->>>>>>> 1656a13 (Removing unncessary module)
 			LoadMaterial(itr);
 			LoadTransform(itr);
 			renderer->Draw(DrawPrimitive::TRIANGLES, &rendererStuff->iBuffer);

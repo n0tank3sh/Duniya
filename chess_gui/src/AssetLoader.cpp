@@ -36,10 +36,7 @@ Scene* AssetLoader::GetScene()
 
 void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 {
-<<<<<<< HEAD
 	BREAKPOINT;
-=======
->>>>>>> 1656a13 (Removing unncessary module)
 	if(mesh == nullptr) mesh = new Mesh;
     std::ifstream fin;
     std::string line;
@@ -142,21 +139,15 @@ void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 						{
 							if(line[i] == '/')
 							{
-<<<<<<< HEAD
 								goat[count] = stoi(line.substr(nPrev, i - nPrev));
-=======
 								goat[count] = stoi(line.substr(nPrev, i - nPrev)) - 1;
->>>>>>> 1656a13 (Removing unncessary module)
 								nPrev = i + 1;
 								count++;
 							}
 						}
-<<<<<<< HEAD
 						verticies.push_back({aPos[goat[0]], vNormal[goat[1]], texCord[goat[2]]});
-=======
 						goat[count] = stoi(line.substr(nPrev, next - nPrev)) - 1;
 						verticies.push_back({aPos[goat[0]], vNormal[goat[2]], texCord[goat[1]]});
->>>>>>> 1656a13 (Removing unncessary module)
 						indicies.push_back(verticies.size() - 1);
 						if((verticies.size() - dif) == 3 && (next + 1) < line.size()) 
 						{
