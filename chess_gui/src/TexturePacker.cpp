@@ -15,9 +15,9 @@
 #include "stb_image_write.h"
 #include FT_FREETYPE_H
 
-TexturePacker::TexturePacker(uint32_t width, uint32_t height)
+TexturePacker::TexturePacker(uint32_t width, uint32_t height, Scene* scene)
 	:
-	width(width), height(height)
+	width(width), height(height), scene(scene)
 {}
 
 void TexturePacker::AddTexture(uint32_t entity)
@@ -49,6 +49,12 @@ void TexturePacker::AddTexture(uint32_t entity)
 void TexturePacker::SetScene(Scene* scene)
 {
 	this->scene = scene;
+}
+Scene* TexturePacker::GetScene()
+{
+	if(scene == nullptr)
+		throw std::runtime_error("Texture Packer scene is not set");
+	return this->scene;
 }
 
 //template<typename T, typename K>
@@ -125,6 +131,7 @@ uint32_t TexturePacker::Pack()
 int32_t TexturePacker::PackFont(std::string fontFile, FontDict& dict)
 {
 	//std::priority_queue<std::array<int32_t, 3>, std::vector<std::array<int32_t, 3>>, RectComp<std::array<int32_t, 3>>> rects;
+	auto scene = GetScene();
 	std::priority_queue<std::array<int32_t, 3>, std::vector<std::array<int32_t, 3>>> rects;
 	std::vector<std::vector<bool>> guide(height, std::vector<bool>(width, false));
 	auto data = new uint8_t[height * width];

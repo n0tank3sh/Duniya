@@ -217,10 +217,10 @@ ResourceBank::ResourcePtr::ResourcePtr(const ResourceBank::ResourcePtr& ptr)
 	else data = nullptr;
 }
 
-ResourceBank::ResourcePtr::ResourcePtr(ResourceBank::ResourcePtr&& ptr)
+ResourceBank::ResourcePtr::ResourcePtr(ResourceBank::ResourcePtr&& ptr) noexcept
 {
-	this->size = ptr.size;
-	this->data = ptr.data;
+	this->size = std::move(ptr.size);
+	this->data = std::move(ptr.data);
 	ptr.data = nullptr;
 	ptr.size = 0;
 }
@@ -247,9 +247,10 @@ ResourceBank::ResourcePtr& ResourceBank::ResourcePtr::operator=(ResourceBank::Re
 	ptr.size = 0;
 	return *this;
 }
-ResourceBank::ResourcePtr::~ResourcePtr()
+ResourceBank::ResourcePtr::~ResourcePtr() noexcept
 {
-	delete[] data;
+	if(data != nullptr)
+		delete[] data;
 }
 uint8_t* ResourceBank::ResourcePtr::Get()
 {

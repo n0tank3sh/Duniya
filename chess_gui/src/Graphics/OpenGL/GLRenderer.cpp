@@ -189,6 +189,7 @@ NativeShaderHandler<GLRenderer>::~NativeShaderHandler()
 NativeShaderStageHandler<GLRenderer>::NativeShaderStageHandler()
 {
 	program = glCreateProgram();
+	linked = false;
 }
 
 void NativeShaderStageHandler<GLRenderer>::Load()
@@ -212,8 +213,9 @@ void NativeShaderStageHandler<GLRenderer>::Load()
 			throw CException(__LINE__, __FILE__, "GL Program Link Error", message);
 		}
 		shaderHandler.clear();
+		linked = true;
 	}
-	glUseProgram(program);
+	GLDEBUGCALL(glUseProgram(program));
 	renderer->shaderProgram = program;
 }
 
@@ -242,43 +244,50 @@ GLRenderer::GLRenderer()
 
 bool GLRenderer::gladLoaded = false;
 
+GLenum GLRenderer::GetUniformLocation(const uint32_t& shaderProgram, std::string& uniformName)
+{
+	GLenum location;
+	GLDEBUGCALL(location = glGetUniformLocation(shaderProgram, uniformName.c_str()));
+	return location; 
+}
+
 void GLRenderer::Uniform1f(const uint32_t count, const float* data, std::string name)
 {
 	if(count == 1)
-		glUniform1f(glGetUniformLocation(shaderProgram, name.c_str()), *data);
+		glUniform1f(GetUniformLocation(shaderProgram, name), *data);
 	else
 	{
-		glUniform1fv(glGetUniformLocation(shaderProgram, name.c_str()), count,  data);
+		glUniform1fv(GetUniformLocation(shaderProgram, name), count,  data);
 	}
 }
 
 void GLRenderer::Uniform1u(const uint32_t count, const uint32_t* data, std::string name)
 {
 	if(count == 1)
-		glUniform1ui(glGetUniformLocation(shaderProgram, name.c_str()), *data);
+		glUniform1ui(GetUniformLocation(shaderProgram, name), *data);
 	else
 	{
-		glUniform1uiv(glGetUniformLocation(shaderProgram, name.c_str()), count, data);
+		glUniform1uiv(GetUniformLocation(shaderProgram, name), count, data);
 	}
 }
 
 void GLRenderer::Uniform1i(const uint32_t count, const int32_t* data, std::string name)
 {
 	if(count == 1)
-		glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), *data);
+		glUniform1i(GetUniformLocation(shaderProgram, name), *data);
 	else
 	{
-		glUniform1iv(glGetUniformLocation(shaderProgram, name.c_str()), count, data);
+		glUniform1iv(GetUniformLocation(shaderProgram, name), count, data);
 	}
 }
 
 void GLRenderer::Uniform2f(const uint32_t count, const Vect2* data, std::string name)
 {
 	if(count == 1)
-		glUniform2f(glGetUniformLocation(shaderProgram, name.c_str()), data->x, data->y);
+		glUniform2f(GetUniformLocation(shaderProgram, name), data->x, data->y);
 	else
 	{
-		glUniform2fv(glGetUniformLocation(shaderProgram, name.c_str()), count, (float*)data);
+		glUniform2fv(GetUniformLocation(shaderProgram, name), count, (float*)data);
 	}
 
 }
@@ -286,29 +295,27 @@ void GLRenderer::Uniform2f(const uint32_t count, const Vect2* data, std::string 
 void GLRenderer::Uniform3f(const uint32_t count, const Vect3* data, std::string name)
 {
 	if(count == 1)
-		glUniform3f(glGetUniformLocation(shaderProgram, name.c_str()), data->x, data->y, data->z);
+		glUniform3f(GetUniformLocation(shaderProgram, name), data->x, data->y, data->z);
 	else
 	{
-		glUniform3fv(glGetUniformLocation(shaderProgram, name.c_str()), count, (float*)(data));
+		glUniform3fv(GetUniformLocation(shaderProgram, name), count, (float*)(data));
 	}
 }
 
 void GLRenderer::Uniform4f(const uint32_t count, const Vect4* data, std::string name)
 {
-	auto location = glGetUniformLocation(shaderProgram, name.c_str());
+	auto location = GetUniformLocation(shaderProgram, name);
 	if(location == -1) throw std::runtime_error("uniform location not found\nvariable name:" + name);
 	if(count == 1)
 		glUniform4f(location, data->x, data->y, data->z, data->w);
 	else
 	{
-		BREAKPOINT;
-		glUniform4fv(glGetUniformLocation(shaderProgram, name.c_str()), count,  (float*)data);
-	}
+		glUniform4fv(GetUniformLocation(shaderProgram, name), count,  (float*)data); }
 }
 
 void GLRenderer::UniformMat(const uint32_t count, const Mat* mat, std::string name)
 {
-	GLDEBUGCALL(uint32_t uLocation = glGetUniformLocation(shaderProgram, name.c_str()));
+	GLDEBUGCALL(uint32_t uLocation = GetUniformLocation(shaderProgram, name));
 	float* answer = new float[mat->sizet * count];
 	for(uint32_t i = 0; i < count; i++)
 	{
@@ -320,13 +327,13 @@ void GLRenderer::UniformMat(const uint32_t count, const Mat* mat, std::string na
 			switch(mat->dimension.row)
 			{
 				case 2:
-					glUniformMatrix2fv(uLocation, count, GL_FALSE, answer);
+					glUniformMatrix2fv(uLocation, count, GL_TRUE, answer);
 					break;
 				case 3:
-					glUniformMatrix2x3fv(uLocation, count, GL_FALSE, answer);
+					glUniformMatrix2x3fv(uLocation, count, GL_TRUE, answer);
 					break;
 				case 4:
-					glUniformMatrix2x4fv(uLocation, count,  GL_FALSE, answer);
+					glUniformMatrix2x4fv(uLocation, count, GL_TRUE, answer);
 					break;
 			}
 			break;
@@ -334,13 +341,13 @@ void GLRenderer::UniformMat(const uint32_t count, const Mat* mat, std::string na
 			switch(mat->dimension.row)
 			{
 				case 2:
-					glUniformMatrix3x2fv(uLocation, count, GL_FALSE, answer);
+					glUniformMatrix3x2fv(uLocation, count, GL_TRUE, answer);
 					break;
 				case 3:
-					glUniformMatrix3fv(uLocation, count, GL_FALSE, answer);
+					glUniformMatrix3fv(uLocation, count, GL_TRUE, answer);
 					break;
 				case 4:
-					glUniformMatrix3x4fv(uLocation, count, GL_FALSE, answer);
+					glUniformMatrix3x4fv(uLocation, count, GL_TRUE, answer);
 					break;
 			}
 			break;
@@ -348,13 +355,13 @@ void GLRenderer::UniformMat(const uint32_t count, const Mat* mat, std::string na
 			switch(mat->dimension.row)
 			{
 				case 2:
-					glUniformMatrix4x2fv(uLocation, count, GL_FALSE, answer);
+					glUniformMatrix4x2fv(uLocation, count, GL_TRUE, answer);
 					break;
 				case 3:
-					glUniformMatrix4x3fv(uLocation, count, GL_FALSE, answer);
+					glUniformMatrix4x3fv(uLocation, count, GL_TRUE, answer);
 					break;
 				case 4:
-					GLDEBUGCALL(glUniformMatrix4fv(uLocation, count, GL_FALSE, answer));
+					GLDEBUGCALL(glUniformMatrix4fv(uLocation, count, GL_TRUE, answer));
 					break;
 			}
 			break;
@@ -537,6 +544,7 @@ ShaderStageHandler* GLRenderer::CreateShaderStage()
 	return tmp;
 }
 
+<<<<<<< HEAD
 void GLRenderer::Enable(Options option)
 {
 	switch(option)
@@ -567,6 +575,29 @@ void GLRenderer::Disable(Options option)
 			glDisable(GL_CULL_FACE);
 			break;
 	};
+=======
+GLenum GLRenderer::GetOption(Options option)
+{	
+	switch(option)
+	{
+		case Options::BLEND:
+			return GL_BLEND;
+		case Options::DEPTH_TEST:
+			return GL_DEPTH_TEST;
+		case Options::FACE_CULL:
+			return GL_CULL_FACE;
+	};
+}
+
+void GLRenderer::Enable(Options option)
+{
+	glEnable(GetOption(option));
+}
+
+void GLRenderer::Disable(Options option)
+{
+	glDisable(GetOption(option));
+>>>>>>> 1656a13 (Removing unncessary module)
 }
 
 void GLRenderer::UseShaderStage(ShaderStageHandler* shaderStageHandler)

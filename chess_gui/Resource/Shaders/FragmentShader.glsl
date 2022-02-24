@@ -4,9 +4,9 @@
 #define MAX_DIRLIGHT 75
 
 
-in vec3 otexCoord;
+in vec4 fragPos;
 in vec3 oNormal;
-in vec3 fragPos;
+in vec2 uv;
 out vec4 FragColor;
 
 struct Material
@@ -42,7 +42,7 @@ uniform bool materialProvided;
 uniform Material material;
 uniform DirectionalLight dirLights[MAX_DIRLIGHT];
 uniform PointLight pointLights[MAX_POINTLIGHT];
-uniform sampler2D image;
+uniform sampler2D tex;
 
 uniform uint numDirLights;
 uniform uint numPointLights;
@@ -77,8 +77,8 @@ vec3 CalcPointLights(vec3 normal, vec3 fragPos, vec3 viewDir)
 		vec3 ambient = dirLights[i].lightColor.ambient * material.ambient;
 		vec3 specular = dirLights[i].lightColor.specular * spec * material.specular;
 		vec3 diffuse = dirLights[i].lightColor.diffuse * diff * material.diffuse;
-		float distance = length(pointLights[i].pos - fragPos);
-		float attentuation = 1.0/(pointLights[i].constant + pointLights[i].linear * distance + pointLights[i].quadratic * distance * distance);
+		float dist = length(pointLights[i].pos - fragPos);
+		float attentuation = 1.0/(pointLights[i].constant + pointLights[i].linear * dist + pointLights[i].quadratic * dist * dist);
 		totalLightImpact += (ambient + specular + diffuse) * attentuation;
 
 	}
@@ -89,11 +89,8 @@ void main()
 {
 	//FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
 	//vec3 ambientLight = materialshininess * ambient;
-	vec3 col;
-	if(materialProvided)
-	{
-		col += CalcDirectionalLights(oNormal, vec3(0, 0, 0)) ;
-		col += CalcPointLights(oNormal, fragPos, vec3(0, 0, 0));
-	}
-	FragColor = vec4(col, 1);
+	//vec4 col = texture(tex, uv);
+	//	col += CalcDirectionalLights(oNormal, vec3(0, 0, 0)) ;
+	//	col += CalcPointLights(oNormal, pos.xyz, vec3(0, 0, 0));
+	FragColor = vec4(0, cos(uv.y), sin(uv.x), 1);
 }

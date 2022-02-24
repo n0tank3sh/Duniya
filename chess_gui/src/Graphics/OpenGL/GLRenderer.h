@@ -49,6 +49,8 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer();
+	GLenum GetOption(Options option);
+	GLenum GetUniformLocation(const uint32_t& shaderProgram, std::string& uniformName);
     void Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;
 	void DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numInstanced) override;
 	void DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer) override;

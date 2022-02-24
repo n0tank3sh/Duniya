@@ -104,9 +104,9 @@ class ResourceBank
 			ResourcePtr(size_t size);
 			ResourcePtr(uint8_t* data, size_t size);			
 			ResourcePtr(const ResourcePtr& ptr);
-			ResourcePtr(ResourcePtr&& ptr);
+			ResourcePtr(ResourcePtr&& ptr) noexcept;
 
-			~ResourcePtr();
+			~ResourcePtr() noexcept;
 
 			ResourcePtr& operator=(const ResourcePtr& ptr);
 			ResourcePtr& operator=(ResourcePtr&& ptr);

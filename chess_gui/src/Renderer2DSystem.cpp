@@ -78,9 +78,8 @@ Renderer2DSystem* Renderer2DSystem::GetSingleton()
 void Renderer2DSystem::LoadScene(Scene* scene)
 {
 	shaderStageHandler->Load();
-	TexturePacker texturePacker(256, 256);
-	texturePacker.SetScene(scene);
-	std::string fontFile("/home/mightygoat/B/Projects/chess_gui/chess_gui/Resource/Fonts/myFont.otf"); 
+	TexturePacker texturePacker(256, 256, scene);
+	std::string fontFile("Resource/Fonts/myFont.otf"); 
 	if(!std::filesystem::exists(fontFile))
 	{
 		throw std::runtime_error("Font File doesn't exist");
@@ -151,8 +150,8 @@ void Renderer2DSystem::Update(float deltaTime)
 	renderer->Disable(Options::DEPTH_TEST);
 	renderer->Disable(Options::FACE_CULL);
 	
-	renderer->ClearColor(0.f, 0.f, 0.f);
-	renderer->Clear();
+	//renderer->ClearColor(0.f, 0.f, 0.f);
+	//renderer->Clear();
 	uint32_t goat = 0;
 	for(auto i = 0; i < panels.size(); i++)
 	{

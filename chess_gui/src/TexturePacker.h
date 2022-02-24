@@ -54,10 +54,11 @@ private:
 	template<typename T, typename K>
 	void Util(T& rects, K& guide, uint8_t* data, Heuristic heuristic = Heuristic::Col);
 public:
-	TexturePacker(uint32_t width = 0, uint32_t height = 0);
+	TexturePacker(uint32_t width = 0, uint32_t height = 0, Scene* scene = nullptr);
 	void SetColumnSize(uint32_t colSize = 0);
 	void SetRowSize(uint32_t rowSize = 0);
 	void SetScene(Scene* scene);
+	Scene* GetScene();
 	void AddTexture(uint32_t id);
 	int32_t PackFont(std::string fontFile, FontDict& dict);
 	uint32_t Pack();
