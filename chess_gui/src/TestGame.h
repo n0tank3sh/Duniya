@@ -12,4 +12,5 @@ struct TestGame : public System
 	void LoadScene(Scene* scene) override;
 	void Update(float deltaTime) override;
 	Transform* player;
+	Camera* camera;
 };

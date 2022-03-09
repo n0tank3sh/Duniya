@@ -98,16 +98,60 @@ Mat Mat::operator*(const Mat& other)
     {
         for(uint32_t j = 0; j < dimension.row; j++)
         {
-            float& temp = mat.buffer[i * dimension.column + j];
-            temp = 0;
+            float& temp = mat.Get(i, j);
+            temp = 0.f;
             for(uint32_t a = 0; a < dimension.row; a++)
             {
-                temp += buffer[i * dimension.row + a] * other.buffer[a * other.dimension.row + j];
+                temp += Get(i, a) * other.Get(a, j);
             }
 
         }
     }
     return mat;
+}
+
+Vect2 Mat::operator*(const Vect2& other)
+{
+	Vect2 ans;
+	if(dimension.row != 2 || dimension.column != 2)
+		throw std::runtime_error("incompatible matrix dimension with type");
+	for(int i = 0; i < dimension.row; i++)
+	{
+		for(int j = 0; j < dimension.column; j++)
+		{
+			ans.coordinates[i] += Get(i, j) * other.coordinates[j];
+		}
+	}
+	return ans;
+}
+Vect3 Mat::operator*(const Vect3& other)
+{
+	Vect3 ans;
+	if(dimension.row != 3 || dimension.column != 3)
+		throw std::runtime_error("incompatible matrix dimension with type");
+	for(int i = 0; i < dimension.row; i++)
+	{
+		for(int j = 0; j < dimension.column; j++)
+		{
+			ans.coordinates[i] += Get(i, j) * other.coordinates[j];
+		}
+	}
+	return ans;
+}
+
+Vect4 Mat::operator*(const Vect4& other)
+{
+	Vect4 ans;
+	if(dimension.row != 4 || dimension.column != 4)
+		throw std::runtime_error("incompatible matrix dimension with type");
+	for(int i = 0; i < dimension.row; i++)
+	{
+		for(int j = 0; j < dimension.column; j++)
+		{
+			ans.coordinates[i] += Get(i, j) * other.coordinates[j];
+		}
+	}
+	return ans;
 }
 
 Mat Mat::operator*=(const Mat& other)
@@ -138,6 +182,14 @@ Mat DefaultMatrix::generateIdentityMatrix(Dimension s)
 }
 
 float& Mat::Get(const uint32_t& a, const uint32_t& b)
+{
+	if(a < dimension.row && b < dimension.column)  
+		return buffer.get()[a * dimension.column + b];
+	else
+		throw std::out_of_range("indices out of range");
+}
+
+const float& Mat::Get(const uint32_t& a, const uint32_t& b) const
 {
 	if(a < dimension.row && b < dimension.column)  
 		return buffer.get()[a * dimension.column + b];

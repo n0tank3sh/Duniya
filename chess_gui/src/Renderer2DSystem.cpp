@@ -41,25 +41,6 @@ Renderer2DSystem::Renderer2DSystem()
 	fontShaderStageHandler->shaderHandler.push_back(std::move(fontFragShader));
 	fontShaderStageHandler->Load();
 	shaderStageHandler->Load();
-	//VertexSpecification vertexSpecification;
-	//vertexSpecification.push_back(std::make_pair("goat", 2));
-	//layout = renderer->AddSpecification(vertexSpecification);
-	//uint32_t vertCount = 4, indexCount = 6;
-	//auto vert = new Vect2[vertCount];
-	//vert[0] = {-1.f, -1.f};
-	//vert[1] = {-1.f, 1.f};
-	//vert[2] = {1.f, -1.f};
-	//vert[3] = {1.f, 1.f}; 
-
-	//auto& style = panel.vertBuffer.bufferStyle;
-	//style.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC;
-	//style.type = GBuffer::GBufferStyle::BufferType::VERTEX;
-	//style.usage = GBuffer::GBufferStyle::Usage::DRAW;
-	//panel.vertBuffer.count = vertCount;
-	//panel.vertBuffer.data = scene->resourceBank->Push_Back(reinterpret_cast<uint8_t*>(vert), sizeof(Vect2) * vertCount);
-	//panel.vertBuffer.sizet = vertCount * sizeof(Vect2);
-	//renderer->LoadBuffer(&panel.vertBuffer);
-	//renderer->SetLayout(layout);
 	resolution.x = 1400;
 	resolution.y = 900; 
 }
@@ -91,11 +72,6 @@ void Renderer2DSystem::LoadScene(Scene* scene)
 	renderer->SetResourceBank(scene->resourceBank);
 	renderer->LoadTexture(&defaultFont.texture, &defaultFont.gBuffer);
 	this->scene = scene;
-	texts.push_back(scene->PushDef());
-	auto& panel = *scene->GetEntity(texts.back())->Emplace<TextPanel>(ComponentTypes::TEXTPANEL);
-	auto& str = *scene->GetEntity(texts.back())->Emplace<std::string>(ComponentTypes::TEXTBOX);
-	str = "hello world";
-	panel.dimension = Vect4(0, 0, (float)(32 * str.size())/resolution.x * 2, (float)32/resolution.y * 2);
 	Scan();
 }
 
@@ -194,13 +170,12 @@ void Renderer2DSystem::Update(float deltaTime)
 		{
 			auto& temp = defaultFont.glyps[e];
 			auto uv = temp.uv;
-			//auto uv = Vect4(0, 0, 1, 1);
 			auto glyphPos = Vect4(curPos, temp.pos/resolution * 2);
 			glyphPos.y = panel.dimension.y;
 			auto luft = "[" + std::to_string(goat) + "]";
 			renderer->Uniform4f(1, &glyphPos, "pos" + luft);
 			renderer->Uniform4f(1, &uv, "uvs" + luft);
-			//renderer->Uniform4f(1, &panel.dimension, "boxPositions" + luft);
+			renderer->Uniform4f(1, &panel.dimension, "boxPositions" + luft);
 			goat++; 
 			if(goat == batchSize)                                       
 			{

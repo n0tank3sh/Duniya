@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
 #include <Exception.h>
 #include <sstream>
@@ -69,11 +70,10 @@ std::string GLException::CheckError() const noexcept
 			errorName = "Invalid value";
 			break;
 		default:
-			errorName = "Unknown Error";
+			errorName = "Unknown Error\n[ERROR CODE]: " + std::to_string(errorCode);
 	};
-	original << "[ERROR CODE]: " << errorCode << std::endl
-		<< "[ERROR STRING]: " << errorName  << std::endl
-		<< "[FUNCTION NAME]: " << functionName << std::endl;
+	original << "[ERROR STRING]: " << errorName  << std::endl
+		     << "[FUNCTION NAME]: " << functionName << std::endl;
 	return original.str();
 }
 
@@ -215,6 +215,7 @@ void NativeShaderStageHandler<GLRenderer>::Load()
 		shaderHandler.clear();
 		linked = true;
 	}
+	GLDEBUGCALL(glValidateProgram(program));
 	GLDEBUGCALL(glUseProgram(program));
 	renderer->shaderProgram = program;
 }
@@ -361,7 +362,7 @@ void GLRenderer::UniformMat(const uint32_t count, const Mat* mat, std::string na
 					glUniformMatrix4x3fv(uLocation, count, GL_TRUE, answer);
 					break;
 				case 4:
-					GLDEBUGCALL(glUniformMatrix4fv(uLocation, count, GL_TRUE, answer));
+					GLDEBUGCALL(glUniformMatrix4fv(uLocation, count, GL_FALSE, answer));
 					break;
 			}
 			break;
@@ -510,6 +511,7 @@ void GLRenderer::LoadTexture(Texture* texture, GBuffer* gBuffer)
 	//};
 	//
 	GLenum format;
+	uint32_t channel = 0;
 	switch(texture->format)
 	{
 		case Texture::Format::RGBA:
@@ -544,38 +546,6 @@ ShaderStageHandler* GLRenderer::CreateShaderStage()
 	return tmp;
 }
 
-<<<<<<< HEAD
-void GLRenderer::Enable(Options option)
-{
-	switch(option)
-	{
-		case Options::BLEND:
-			glEnable(GL_BLEND);
-			break;
-		case Options::DEPTH_TEST:
-			glEnable(GL_DEPTH_TEST);
-			break;
-		case Options::FACE_CULL:
-			glEnable(GL_CULL_FACE);
-			break;
-	};
-}
-
-void GLRenderer::Disable(Options option)
-{
-	switch(option)
-	{
-		case Options::BLEND:
-			glDisable(GL_BLEND);
-			break;
-		case Options::DEPTH_TEST:
-			glDisable(GL_DEPTH_TEST);
-			break;
-		case Options::FACE_CULL:
-			glDisable(GL_CULL_FACE);
-			break;
-	};
-=======
 GLenum GLRenderer::GetOption(Options option)
 {	
 	switch(option)
@@ -597,7 +567,6 @@ void GLRenderer::Enable(Options option)
 void GLRenderer::Disable(Options option)
 {
 	glDisable(GetOption(option));
->>>>>>> 1656a13 (Removing unncessary module)
 }
 
 void GLRenderer::UseShaderStage(ShaderStageHandler* shaderStageHandler)
@@ -609,6 +578,7 @@ void GLRenderer::Draw(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
 	if(gBuffer != nullptr)
 		this->Bind(*gBuffer);
+	glBindVertexArray(pvao);
 	GLDEBUGCALL(glDrawElements(GetDrawTarget(drawPrimitive), gBuffer->count, GL_UNSIGNED_INT, (const void*) 0));
 }
 
@@ -616,6 +586,7 @@ void GLRenderer::DrawInstanced(DrawPrimitive drawPrimitive, GBuffer* gBuffer, ui
 {
 	if(gBuffer != nullptr)
 		this->Bind(*gBuffer);
+	glBindVertexArray(pvao);
 	glDrawElementsInstanced(GetDrawTarget(drawPrimitive), gBuffer->count, GL_UNSIGNED_INT, (const void*)0, numInstanced);
 }
 
@@ -623,6 +594,7 @@ void GLRenderer::DrawInstancedArrays(DrawPrimitive drawPrimitive, GBuffer* gBuff
 {
 	if(gBuffer != nullptr)
 		Bind(*gBuffer);
+	glBindVertexArray(pvao);
 	glDrawArraysInstanced(GetDrawTarget(drawPrimitive), 0, numElements, numInstanced);
 }
 
@@ -630,12 +602,14 @@ void GLRenderer::DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint3
 {
 	if(gBuffer != nullptr)
 		Bind(*gBuffer);
+	glBindVertexArray(pvao);
 	glDrawArrays(GetDrawTarget(drawPrimitive), 0, numElements);
 }
 
 void GLRenderer::DrawBuffer(DrawPrimitive drawPrimitive, GBuffer* gBuffer)
 {
 	this->Bind(*gBuffer);
+	glBindVertexArray(pvao);
 	GLDEBUGCALL(glDrawBuffer(GetDrawTarget(drawPrimitive)));
 }
 
@@ -654,17 +628,16 @@ void GLRenderer::SetLayout(const uint32_t layout)
 		GLDEBUGCALL(glVertexAttribPointer(i, tmp[i], GL_FLOAT, GL_FALSE, 
 					totalSize, (const void*)offset));
 		offset+= tmp[i] * sizeof(float);
+		GLDEBUGCALL(glEnableVertexAttribArray(i));
 	}
 }
 
 uint32_t GLRenderer::AddSpecification(VertexSpecification& vertexSpecification)
 {
-	uint32_t pvao;
 	glGenVertexArrays(1, &pvao);
 	glBindVertexArray(pvao);
 	uint32_t totalSize = 0;
 	uint32_t offset = 0;
-	totalSize *= sizeof(float);
 	vaos.emplace_back();
 	vaos.back().first = pvao;
 	for(uint32_t i = 0; i < vertexSpecification.size(); i++)
@@ -672,9 +645,8 @@ uint32_t GLRenderer::AddSpecification(VertexSpecification& vertexSpecification)
 		totalSize += vertexSpecification[i].second;
 		GLDEBUGCALL(glBindAttribLocation(shaderProgram, i, vertexSpecification[i].first.c_str()));
 		vaos.back().second.push_back(vertexSpecification[i].second);
-		GLDEBUGCALL(glEnableVertexAttribArray(i));
 	}
-	vaos.back().second.push_back(totalSize);
+	vaos.back().second.push_back(totalSize * sizeof(float));
 	return vaos.size() - 1;
 }
 

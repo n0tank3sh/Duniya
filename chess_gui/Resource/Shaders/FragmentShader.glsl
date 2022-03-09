@@ -1,10 +1,10 @@
-#version 330
+#version 330 core
 #define MAX_LIGHTS 150
 #define MAX_POINTLIGHT 75
 #define MAX_DIRLIGHT 75
 
 
-in vec4 fragPos;
+in vec3 fragPos;
 in vec3 oNormal;
 in vec2 uv;
 out vec4 FragColor;
@@ -89,8 +89,8 @@ void main()
 {
 	//FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
 	//vec3 ambientLight = materialshininess * ambient;
-	//vec4 col = texture(tex, uv);
+	vec4 col = texture(tex, uv);
 	//	col += CalcDirectionalLights(oNormal, vec3(0, 0, 0)) ;
 	//	col += CalcPointLights(oNormal, pos.xyz, vec3(0, 0, 0));
-	FragColor = vec4(0, cos(uv.y), sin(uv.x), 1);
+	FragColor = col;
 }

@@ -35,8 +35,8 @@ float Vect3::dot(const Vect3& other) const
 Vect3 Vect3::cross(const Vect3& other) const
 {
 	Vect3 game;
-	game.x = this->y * other.z - this->z * other.y;
-	game.y = this->z * other.x - this->x * other.z;
-	game.z = this->x * other.y - this->y * other.x;
+	game.x = y * other.z - z * other.y;
+	game.y = z * other.x - x * other.z;
+	game.z = x * other.y - y * other.x;
 	return game;
 }

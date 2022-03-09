@@ -31,13 +31,14 @@ struct Mat
     float& operator[](MatIndex a);
 
     Mat operator*(const Mat& other);
-    Mat operator*(const Vect2& other);
-    Mat operator*(const Vect3& other);
-    Mat operator*(const Vect4& other);
+    Vect2 operator*(const Vect2& other);
+    Vect3 operator*(const Vect3& other);
+    Vect4 operator*(const Vect4& other);
     Mat operator+(const Mat& other);
     Mat operator-(const Mat& other);
     Mat dot(const Mat& other);
 	float& Get(const uint32_t& a, const uint32_t& b);
+	const float& Get(const uint32_t& a, const uint32_t& b) const;
     
 	Mat operator*=(const Mat& other);
 	Mat operator+=(const Mat& other);

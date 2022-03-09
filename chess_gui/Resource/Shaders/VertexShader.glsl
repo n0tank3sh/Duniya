@@ -13,8 +13,8 @@ uniform vec3 roughness;
 
 void main()
 {
-  	//gl_Position = MVP * aPos;
-	gl_Position = aPos;
+  	gl_Position = MVP * aPos;
+	//gl_Position = aPos;
 	fragPos = gl_Position.xyz;
     oNormal = aNormal;
     uv = texCoord;

@@ -2,6 +2,7 @@
 #include "ECS/GraphicsComponent.h"
 #include "SDLUtiliy.h"
 #include <array>
+#include <codecvt>
 #include <cstdint>
 #include <sstream>
 #include <SDL2/SDL_image.h>
@@ -10,20 +11,118 @@
 #include <string>
 #include <fstream>
 #include <iterator>
+#include <map>
+#include <unordered_map>
 
+
+
+void AssetLoader::ObjLoader::SetFile(const std::string& fileName)
+{
+	fin.open(fileName);
+	if(!fin.is_open())
+		throw std::runtime_error("file not found");
+
+}
+
+
+void AssetLoader::ObjLoader::Interpret(std::vector<Vertex>& verticies, std::vector<uint32_t>& indicies)
+{
+	uint32_t indexSize = 0;
+	std::string line;	
+	while(!fin.eof())
+	{
+		std::string temp;
+		std::getline(fin, temp);
+		std::istringstream line(temp);
+		if(line.peek() == 'v')
+		{
+			line.ignore();
+			if(line.peek() == ' ')
+			{
+				aPos.emplace_back();
+				RepeatInsert(line, aPos.back(), 3);
+				aPos.back().coordinates[3] = 1.f;
+			}
+			else
+			{
+				if(line.peek() == 't')
+				{
+					line.ignore();
+					texCord.emplace_back();
+					RepeatInsert(line, texCord.back(), 2);	
+				}
+				else if(line.peek() == 'n')
+				{
+					line.ignore();
+					vNormal.emplace_back();
+					RepeatInsert(line, vNormal.back(), 3);
+				}
+			}
+		}
+		else if(line.peek() == 'f')
+		{
+			line.ignore();
+			std::array<int, 3> tempFace;
+			for(int i = 0; i < 3; i++)
+			{
+				tempFace.fill(0);
+				for(int j = 0; j < 3; j++)
+				{
+					line >> tempFace[j]; 
+					tempFace[j] -= 1;
+					line.ignore();
+				}			
+				auto check = repeatCheck.find(tempFace);
+				if(check == repeatCheck.end())
+				{
+					verticies.push_back({aPos[tempFace[0]], vNormal[tempFace[2]], texCord[tempFace[1]]});
+					indicies.push_back(indexSize);
+					repeatCheck.insert(std::make_pair(tempFace, indexSize));
+					indexSize++;
+				}
+				else
+					indicies.push_back(check->second);
+			}
+
+			if(!line.eof())
+			{
+				indicies.push_back(indicies[indicies.size() - 2]);
+				indicies.push_back(indicies[indicies.size() - 2]);
+				tempFace.fill(0);
+				for(int j = 0; j < 3; j++)
+				{
+					line >> tempFace[j]; 
+					tempFace[j] -= 1;
+					line.ignore();
+				}
+				auto check = repeatCheck.find(tempFace);
+				if(check == repeatCheck.end())
+				{
+					verticies.push_back({aPos[tempFace[0]], vNormal[tempFace[2]], texCord[tempFace[1]]});
+					indicies.push_back(indexSize);
+					repeatCheck.insert(std::make_pair(tempFace, indexSize));
+					indexSize++;
+				}
+				else
+					indicies.push_back(check->second);
+
+			}
+		}
+	}
+}
 AssetLoader* AssetLoader::singleton = nullptr;
 bool AssetLoader::sdl_initialised = false;
 
 AssetLoader* AssetLoader::init()
 {
-    singleton = new AssetLoader();
+	singleton = new AssetLoader();
 	singleton->scene = nullptr;
-    return singleton;
+	return singleton;
 }
 
 AssetLoader* AssetLoader::GetSingleton() 
 {
-    return singleton;
+	return singleton;
 }
 
 Scene* AssetLoader::GetScene()
@@ -33,134 +132,14 @@ Scene* AssetLoader::GetScene()
 	return scene;
 }
 
-
 void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 {
-	BREAKPOINT;
-	if(mesh == nullptr) mesh = new Mesh;
-    std::ifstream fin;
-    std::string line;
-    std::vector<Vect4> aPos;
-    std::vector<Vect3> vNormal;
-	std::vector<Vect2> texCord;
 	std::vector<Vertex> verticies;
 	std::vector<uint32_t> indicies;
-	fin.open(filePath, std::ios::in);
-	if(!fin)
-		throw std::runtime_error("Couldn't open the file: " + filePath);
-    while(std::getline(fin, line))
-    {
-		if(!line.empty())
-		{
-			if(line[0] == 'v' && line.size() > 2)
-			{
-				if(line[1] == ' ')
-				{
-					auto cord = 0;
-					auto prev = 1;
-					auto next = 1;
-					aPos.emplace_back();
-					while(next <= line.size() && line[next] == ' ') next++;
-					prev = next;
-					while(next <= line.size())
-					{
-						if(((prev != next) && ((next == line.size())) || (line[next] == ' ' && line[next - 1] != ' ')))
-						{
-							aPos.back().coordinates[cord] = std::stof(line.substr(prev, next - prev)); cord++;
-							prev = next + 1;
-							if(cord == 3) break;
-						}
-						next++;
-					}
-					if(cord != 3) 
-						throw std::runtime_error("It's not formatted correctly");
-					aPos.back().w = 1.f;
-				}
-				else if(line[1] == 't')
-				{					
-					auto cord = 0;
-					auto prev = 2;
-					auto next = 2;
-					texCord.emplace_back();
-					while(next <= line.size() && line[next] == ' ') next++;
-					prev = next;
-					while(next <= line.size())
-					{
-						if(((prev != next) && ((next == line.size())) || (line[next] == ' ' && line[next - 1] != ' ')))
-						{
-							texCord.back().coordinates[cord] = std::stof(line.substr(prev, next - prev)); 
-							cord++;
-							prev = next + 1;
-							if(cord == 2) break;
-						}
-						next++;
-					}
-					if(cord != 2) 
-						throw std::runtime_error("It's not formatted correctly");
-				}
-				else if(line[1] == 'n')
-				{					
-					auto cord = 0;
-					auto prev = 2;
-					auto next = 2;
-					vNormal.emplace_back();
-					while(next <= line.size() && line[next] == ' ') next++;
-					prev = next;
-					while(next <= line.size())
-					{
-						if(((prev != next) && ((next == line.size())) || (line[next] == ' ' && line[next - 1] != ' ')))
-						{
-							vNormal.back().coordinates[cord] = std::stof(line.substr(prev, next - prev)); 
-							cord++;
-							prev = next + 1;
-							if(cord == 3) break;
-						}
-						next++;
-					}
-					if(cord != 3) 
-						throw std::runtime_error("It's not formatted correctly");
-				}
-			}
-			else if(line[0] == 'f')
-			{
-				auto prev = 1;
-				auto next = 1;
-				while(next <= line.size() && line[next] == ' ') next++;
-				prev = next;
-				auto dif = verticies.size();
-				while(next <= line.size())
-				{
-					if(((prev != next) && (next == line.size())) || (line[next] == ' ' && line[next - 1] != ' '))
-					{
-						auto nPrev = prev;
-						std::array<int, 3> goat;
-						auto count = 0;
-						for(int i = prev; i < next; i++)
-						{
-							if(line[i] == '/')
-							{
-								goat[count] = stoi(line.substr(nPrev, i - nPrev));
-								goat[count] = stoi(line.substr(nPrev, i - nPrev)) - 1;
-								nPrev = i + 1;
-								count++;
-							}
-						}
-						verticies.push_back({aPos[goat[0]], vNormal[goat[1]], texCord[goat[2]]});
-						goat[count] = stoi(line.substr(nPrev, next - nPrev)) - 1;
-						verticies.push_back({aPos[goat[0]], vNormal[goat[2]], texCord[goat[1]]});
-						indicies.push_back(verticies.size() - 1);
-						if((verticies.size() - dif) == 3 && (next + 1) < line.size()) 
-						{
-							indicies.push_back(indicies[indicies.size() - 2]);
-							indicies.push_back(indicies[indicies.size() - 2]);
-						}
-						prev = next + 1;
-					}
-					next++;
-				}
-			}
-		}
-    }
+	ObjLoader objLoader;
+	objLoader.SetFile(filePath);
+	objLoader.Interpret(verticies, indicies);
+	
 	mesh->vertexCount = verticies.size();
 	mesh->indexCount = indicies.size();
 	auto vertexData = new uint8_t[sizeof(Vertex) * mesh->vertexCount];

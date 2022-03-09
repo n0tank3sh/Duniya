@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "ECS/CommonComponent.h"
 #include "ECS/ECS.h"
+#include "ECS/GraphicsComponent.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/OpenGL/GLRenderer.h"
 #include "Math/Mat.h"
@@ -12,6 +13,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <sys/types.h>
 
 RendererSystem* RendererSystem::singleton = nullptr;
 
@@ -23,9 +25,14 @@ RendererSystem::RendererSystem()
 	transformDefault = DefaultMatrix::generateIdentityMatrix({4, 4});
 	camera = new Scene::IComponentArray;
 	transformDefault.Get(2, 3) = 1.f;
-	camera->Insert<Camera>(ComponentTypes::CAMERA, nullptr);
+	camera->Emplace<Camera>(ComponentTypes::CAMERA);
 	auto transform = camera->Emplace<Transform>(ComponentTypes::TRANSFORM);
-	transform->pos = Vect3(.0f, .0f, 1.f);
+	transform->pos = Vect3(0.f, 0.f, 0.f);
+	auto cameraHdl = camera->Get<Camera>(ComponentTypes::CAMERA);
+	cameraHdl->lookAt.z = 1.f;
+	cameraHdl->fov = M_PI/3;
+	cameraHdl->near = 0.05;
+	cameraHdl->near = 0.65;
 	renderer = std::unique_ptr<Renderer>(new GLRenderer);
 	mainShaderStage.reset(renderer->CreateShaderStage());	
 	std::unique_ptr<NativeShaderHandlerParent> fragShader(renderer->CreateShader(ShaderType::FRAGMENT)), 
@@ -33,6 +40,8 @@ RendererSystem::RendererSystem()
 	if(AssetLoader::GetSingleton() == nullptr)
 		AssetLoader::init();
 	auto assetLoader = AssetLoader::GetSingleton();
+	resolution.x = 1400;
+	resolution.y = 900;
 
 
 	assetLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertShader->source);
@@ -113,11 +122,11 @@ void RendererSystem::LoadLights()
 void RendererSystem::SetupDefaultTexture()
 {
 	auto data = new uint8_t[4];
-	memset(data, 1, 4);
+	memset(data, 0xff, 4);
 	defaultTexture.data = GetScene()->resourceBank->Push_Back(data, 4);
 	defaultTexture.format = Texture::RGBA;
 	defaultTexture.width = 1;
-	defaultTexture.height = 1;
+		defaultTexture.height = 1;
 	renderer->LoadTexture(&defaultTexture, &defaultTextureGBuffer); 
 }
 
@@ -144,6 +153,7 @@ void RendererSystem::CreateRendererStuff(Mesh* mesh, RendererStuff* rendererStuf
 		rendererStuff  = new RendererStuff;
 	CreateGBufferMesh(mesh, &rendererStuff->iBuffer, &rendererStuff->vBuffer);
 	renderer->LoadBuffer(&rendererStuff->vBuffer);
+	renderer->SetLayout(layout);
 	renderer->LoadBuffer(&rendererStuff->iBuffer);
 }
 
@@ -184,31 +194,55 @@ void RendererSystem::LoadScene(Scene* scene)
 	SetupDefaultTexture();
 	if(!foundCamera)
 	{
-		uint32_t entity = scene->entityManager->CreateEntity();
-		scene->entities[entity] = std::unique_ptr<Scene::IComponentArray>(camera);
-		mainCamera = entity;
+		mainCamera = scene->entityManager->CreateEntity();
+		scene->entities[mainCamera].reset(camera);
 	}
 	LoadLights();
 }
 
-Mat RendererSystem::SetUpCamera(uint32_t entity)
+Mat RendererSystem::SetupCamera(uint32_t entity)
 {
 	auto scene = GetScene();
-	//auto pos = scene->GetEntity(entity)->Get<Transform>(ComponentTypes::TRANSFORM)->pos;
-	//auto camera = scene->GetEntity(entity)->Get<Camera>(ComponentTypes::CAMERA);
-	//return LookAt(pos, camera->lookAt) * SetupPerspective(*camera) ;
-	return DefaultMatrix::generateIdentityMatrix({4, 4});
+	auto transform = scene->GetEntity(entity)->Get<Transform>(ComponentTypes::TRANSFORM);
+	auto camera = scene->GetEntity(entity)->Get<Camera>(ComponentTypes::CAMERA);
+	auto perspectiveMat = SetupPerspective(*camera);
+	auto lookAt = camera->lookAt;
+	if(transform->rotation.x != 0.f)
+	{
+		lookAt = DefaultMatrix::generateRollMatrix({3, 3}, transform->rotation.x) * lookAt;
+	}
+	if(transform->rotation.y != 0.f)
+	{
+		lookAt = DefaultMatrix::generatePitchMatrix({3, 3}, transform->rotation.y) * lookAt;
+	}
+	if(transform->rotation.z != 0.f)
+	{
+		lookAt = DefaultMatrix::generateYawMatrix({3, 3}, transform->rotation.z) * lookAt;
+	}
+	//std::cout << lookAt << std::endl;
+	lookAt.normalize();
+	return LookAt(transform->pos, transform->pos + lookAt, Vect3(0, 1, 0)) * perspectiveMat;
 }
 
-Mat RendererSystem::LookAt(const Vect3& pos, const Vect3& dir)
+Mat RendererSystem::LookAt(const Vect3& eye, const Vect3& at, const Vect3& up)
 {
-	return DefaultMatrix::generateIdentityMatrix({4, 4});
+	auto zaxis = at - eye;
+	zaxis.normalize();
+	auto xaxis = (Vect3::cross(up, zaxis)).normalized();
+	auto yaxis = Vect3::cross(zaxis, xaxis);
+	yaxis.normalize();
+	Mat mat({4, 4});
+	mat = {xaxis.x, yaxis.x, zaxis.x, 0,
+					 xaxis.y, yaxis.y, zaxis.y, 0,
+					 xaxis.z, yaxis.z, zaxis.z, 0,
+					 -Vect3::dot(xaxis, eye), -Vect3::dot(yaxis, eye), -Vect3::dot(zaxis, eye), 1};
+	return mat;
 }
 
 Mat RendererSystem::SetupPerspective(Camera& camera)
 {
 	Mat mat({4, 4});
-	mat.Get(0, 0) = 1/tan(camera.fov/2) * resoltuion.x / resoltuion.y;
+	mat.Get(0, 0) = 1/tan(camera.fov/2) * resolution.x / resolution.y;
 	mat.Get(1, 1) = 1/tan(camera.fov/2);
 	mat.Get(2, 2) = camera.far/(camera.far - camera.near);
 	mat.Get(3, 2) = -(camera.far * camera.near)/(camera.far - camera.near);
@@ -244,8 +278,8 @@ void RendererSystem::LoadTransform(Scene::Entities::iterator& itr)
 		transform->scale = Vect3(.5f, .5f, .5f);
 	}
 	
-	*mat *= SetUpCamera(mainCamera);
-	//std::cout << *mat << std::endl;
+	*mat *= SetupCamera(mainCamera);
+	std::cout << *mat << std::endl;
 	renderer->UniformMat(1, mat, "MVP");
 }
 
@@ -258,7 +292,7 @@ void RendererSystem::Update(float deltaTime)
 	auto scene = GetScene();
 	renderer->Enable(Options::BLEND);
 	renderer->Enable(Options::DEPTH_TEST);
-	renderer->Enable(Options::FACE_CULL);
+	//renderer->Enable(Options::FACE_CULL);
 	for(auto itr = scene->entities.begin(); itr != scene->entities.end(); itr++)
 	{
 		if((*itr)->Get(ComponentTypes::MESH) != nullptr)
@@ -270,12 +304,14 @@ void RendererSystem::Update(float deltaTime)
 				rendererStuff = (*itr)->Get<RendererStuff>(ComponentTypes::RENDERERSTUFF);
 			}
 			renderer->Bind(rendererStuff->vBuffer);
+			auto verticies = reinterpret_cast<Vertex*>(scene->resourceBank->resources[rendererStuff->vBuffer.data].Get());
 			renderer->SetLayout(layout);
-			//renderer->Bind(rendererStuff->iBuffer);
-			//if((*itr)->Get(ComponentTypes::TEXTURE) != nullptr)
-			//	renderer->Bind(rendererStuff->texture);
-			//else
-			//	renderer->Bind(defaultTextureGBuffer);
+			if((*itr)->Get(ComponentTypes::TEXTURE) != nullptr)
+			{
+				renderer->Bind(rendererStuff->texture);
+			}
+			else
+				renderer->Bind(defaultTextureGBuffer);
 			LoadMaterial(itr);
 			LoadTransform(itr);
 			renderer->Draw(DrawPrimitive::TRIANGLES, &rendererStuff->iBuffer);
