@@ -1,3 +1,0 @@
-#!/bin/sh
-echo $PWD
-cp $PWD/out/compile_commands.json $PWD/compile_commands.json

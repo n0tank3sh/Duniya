@@ -1,5 +1,0 @@
-#!/bin/sh
-
-read changesMessage
-git add .
-git commit -m "$changesMessage"
