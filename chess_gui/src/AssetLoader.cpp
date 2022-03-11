@@ -1,6 +1,7 @@
 #include "AssetLoader.h"
 #include "ECS/GraphicsComponent.h"
 #include "SDLUtiliy.h"
+#include "SDL_pixels.h"
 #include <array>
 #include <codecvt>
 #include <cstdint>
@@ -25,10 +26,11 @@ void AssetLoader::ObjLoader::SetFile(const std::string& fileName)
 }
 
 
-void AssetLoader::ObjLoader::Interpret(std::vector<Vertex>& verticies, std::vector<uint32_t>& indicies)
+void AssetLoader::ObjLoader::Interpret(std::vector<Vertex>& verticies, std::vector<uint32_t>& indicies, DrawPrimitive& drawPrimitve)
 {
 	uint32_t indexSize = 0;
 	std::string line;	
+	drawPrimitve = DrawPrimitive::TRIANGLES;
 	while(!fin.eof())
 	{
 		std::string temp;
@@ -86,8 +88,7 @@ void AssetLoader::ObjLoader::Interpret(std::vector<Vertex>& verticies, std::vect
 
 			if(!line.eof())
 			{
-				indicies.push_back(indicies[indicies.size() - 2]);
-				indicies.push_back(indicies[indicies.size() - 2]);
+				drawPrimitve = DrawPrimitive::QUADS;
 				tempFace.fill(0);
 				for(int j = 0; j < 3; j++)
 				{
@@ -138,7 +139,7 @@ void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 	std::vector<uint32_t> indicies;
 	ObjLoader objLoader;
 	objLoader.SetFile(filePath);
-	objLoader.Interpret(verticies, indicies);
+	objLoader.Interpret(verticies, indicies, mesh->drawPrimitve);
 	
 	mesh->vertexCount = verticies.size();
 	mesh->indexCount = indicies.size();
@@ -152,41 +153,58 @@ void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 	mesh->indiciesIndex = scene->resourceBank->Push_Back(indiciesData, sizeof(uint32_t) * mesh->indexCount);
 }
 
-//void AssetLoader::LoadTextureFile(std::string hPath, Texture* texture)
-//{
-//    if(!sdl_initialised)
-//    {
-//        uint32_t flags = IMG_INIT_PNG | IMG_INIT_JPG;
-//        uint32_t tempFlag = IMG_Init(flags);
-//        if(tempFlag != flags)
-//        {
-//            std::cout << "Can't initalize on sdl image " << std::endl;
-//            std::cout << "Reason given: " << IMG_GetError() << std::endl;
-//        }
-//    }
-//    uint32_t pixelFormat = SDL_PIXELFORMAT_RGBA8888;
-//    SDL_Surface* loadedImage = IMG_Load(hPath.c_str());
-//    if(loadedImage == nullptr) 
-//    {
-//        std::cout << "Can't load the image \n " 
-//         << "Reason Given: " << IMG_GetError() << std::endl;
-//    }
-//    SDL_Surface* formattedImage;
-//    formattedImage  = SDL_ConvertSurfaceFormat(loadedImage, pixelFormat, 0);
-//    if(formattedImage == NULL)
-//        std::cout << "Can't convert to different format \n"
-//            << "Reason Given: " << IMG_GetError() << std::endl;
-//    SDL_LockSurface(formattedImage);
-//    texture->type = Texture::Type::T2D;
-//    texture->width = formattedImage->w;
-//    texture->height = formattedImage->h;
-//    texture->sizet = formattedImage->h * formattedImage->pitch;
-//
-//    texture->data = new uint8_t[texture->sizet];
-//    uint8_t* pixels  = (uint8_t*)formattedImage->pixels;
-//    std::copy(pixels, pixels + texture->sizet, texture->data);
-//    if(texture == nullptr) std::cout << "Texture is nullptr in the function " << std::endl;
-//}
+Texture::Format GetFormat(uint32_t sdlFormat)
+{
+	Texture::Format ans;
+	switch(sdlFormat)
+	{
+		case SDL_PIXELFORMAT_RGB888:
+			ans = Texture::RGB;
+			break;
+		case SDL_PIXELFORMAT_RGBA8888:
+			ans = Texture::RGBA;
+			break;
+		case SDL_PIXELFORMAT_INDEX8:
+			ans = Texture::R;
+			break;
+		default:
+			throw std::runtime_error("We don't support that image format");
+	};
+	return ans;
+}
+
+void AssetLoader::LoadTextureFile(std::string hPath, Texture* texture)
+{
+    if(!sdl_initialised)
+    {
+        uint32_t flags = IMG_INIT_PNG | IMG_INIT_JPG;
+        uint32_t tempFlag = IMG_Init(flags);
+        if(tempFlag != flags)
+        {
+            std::cout << "Can't initalize on sdl image " << std::endl;
+            std::cout << "Reason given: " << IMG_GetError() << std::endl;
+        }
+    }
+    uint32_t pixelFormat = SDL_PIXELFORMAT_RGBA8888;
+    SDL_Surface* loadedImage = IMG_Load(hPath.c_str());
+    if(loadedImage == nullptr) 
+    {
+        std::cout << "Can't load the image \n " 
+         << "Reason Given: " << IMG_GetError() << std::endl;
+    }
+    SDL_Surface* formattedImage;
+    formattedImage  = SDL_ConvertSurfaceFormat(loadedImage, pixelFormat, 0);
+    if(formattedImage == NULL)
+        std::cout << "Can't convert to different format \n"
+            << "Reason Given: " << IMG_GetError() << std::endl;
+    SDL_LockSurface(formattedImage);
+    texture->width = formattedImage->w;
+    texture->height = formattedImage->h;
+
+    texture->data =  scene->resourceBank->Push_Back(reinterpret_cast<uint8_t*>(formattedImage->pixels), texture->width * texture->height * 
+			formattedImage->pitch);
+    if(texture == nullptr) std::cout << "Texture is nullptr in the function " << std::endl;
+}
 
 void AssetLoader::LoadTextFile(std::string filePath, std::string& source)
 {

@@ -198,13 +198,14 @@ const float& Mat::Get(const uint32_t& a, const uint32_t& b) const
 }
 
 Mat DefaultMatrix::generateRollMatrix(Dimension s, float x)
-{
-	assert(s.row >= 2 && s.column >= 2);
+{	
+	assert(s.row >= 3 && s.column >= 3);
 	Mat mat = DefaultMatrix::generateIdentityMatrix(s);
-	mat[{0, 0}] = cosf(x);
-	mat[{0, 1}] = -sinf(x);
-	mat[{1, 0}] = sinf(x);
 	mat[{1, 1}] = cosf(x);
+	mat[{1, 2}] = -sinf(x);
+	mat[{2, 1}] = sinf(x);
+	mat[{2, 2}] = cosf(x);
+	std::cout << mat << std::endl;
 	return mat;
 }
 Mat DefaultMatrix::generatePitchMatrix(Dimension s, float y)
@@ -215,16 +216,18 @@ Mat DefaultMatrix::generatePitchMatrix(Dimension s, float y)
 	mat[{0, 2}] = sinf(y);
 	mat[{2, 0}] = -sinf(y);
 	mat[{2, 2}] = cosf(y);
+	std::cout << mat << std::endl;
 	return mat;
 }
 
 Mat DefaultMatrix::generateYawMatrix(Dimension s, float z)
 {
-	assert(s.row >= 3 && s.column >= 3);
+	assert(s.row >= 2 && s.column >= 2);
 	Mat mat = DefaultMatrix::generateIdentityMatrix(s);
+	mat[{0, 0}] = cosf(z);
+	mat[{0, 1}] = -sinf(z);
+	mat[{1, 0}] = sinf(z);
 	mat[{1, 1}] = cosf(z);
-	mat[{1, 2}] = -sinf(z);
-	mat[{2, 1}] = sinf(z);
-	mat[{2, 2}] = cosf(z);
+	std::cout << mat << std::endl;
 	return mat;
 }

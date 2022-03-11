@@ -17,10 +17,6 @@ struct GBinder
     virtual void UnBind() const noexcept  = 0;
 };
 
-enum class DrawPrimitive : uint32_t
-{
-	TRIANGLES, POINTS, TRIANGLES_ADJACENCIES, TRIANGLES_STRIPS
-};
 
 enum class Options
 {

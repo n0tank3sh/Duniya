@@ -387,6 +387,9 @@ GLenum GLRenderer::GetDrawTarget(DrawPrimitive drawPrimitive)
 		case DrawPrimitive::TRIANGLES_STRIPS:
 			target = GL_TRIANGLE_STRIP;
 			break;
+		case DrawPrimitive::QUADS:
+			target = GL_QUADS;
+			break;
 		default:
 			throw CException(__LINE__, __FILE__, "Primitive Not found", "Primitive is not supported by this renderer \nPrimitive no: " 
 					+ std::to_string(static_cast<uint32_t>(drawPrimitive)));

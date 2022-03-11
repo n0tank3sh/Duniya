@@ -279,7 +279,7 @@ void RendererSystem::LoadTransform(Scene::Entities::iterator& itr)
 	}
 	
 	*mat *= SetupCamera(mainCamera);
-	std::cout << *mat << std::endl;
+	//std::cout << *mat << std::endl;
 	renderer->UniformMat(1, mat, "MVP");
 }
 
@@ -314,7 +314,7 @@ void RendererSystem::Update(float deltaTime)
 				renderer->Bind(defaultTextureGBuffer);
 			LoadMaterial(itr);
 			LoadTransform(itr);
-			renderer->Draw(DrawPrimitive::TRIANGLES, &rendererStuff->iBuffer);
+			renderer->Draw((*itr)->Get<Mesh>(ComponentTypes::MESH)->drawPrimitve, &rendererStuff->iBuffer);
 		}
 
 	}

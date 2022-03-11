@@ -8,9 +8,9 @@
 
 struct Vertex
 {
-    Vect4 aPos;
-    Vect3 aNormal;
-    Vect2 texCord;
+	Vect4 aPos;
+	Vect3 aNormal;
+	Vect2 texCord;
 };
 struct Material
 {
@@ -18,14 +18,20 @@ struct Material
 	Vect3 spectacular;
 	Vect3 ambient;
 	float shininess;
+};	
+
+enum class DrawPrimitive : uint32_t
+{
+	TRIANGLES, POINTS, TRIANGLES_ADJACENCIES, TRIANGLES_STRIPS, QUADS
 };
 
 struct Mesh
 {
 	uint32_t vertexCount;
 	uint32_t indexCount;
-    uint32_t verticiesIndex;
-    uint32_t indiciesIndex;
+	uint32_t verticiesIndex;
+	uint32_t indiciesIndex;
+	DrawPrimitive drawPrimitve;
 };
 
 struct Texture

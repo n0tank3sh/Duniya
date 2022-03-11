@@ -33,7 +33,7 @@ private:
 		std::map<std::array<int, 3>, int> repeatCheck;
 	public:
 		void SetFile(const std::string& fileName);
-		void Interpret(std::vector<Vertex>& vertex, std::vector<uint32_t>& indicies);
+		void Interpret(std::vector<Vertex>& vertex, std::vector<uint32_t>& indicies, DrawPrimitive& drawPrimitve);
 	};
 public:
     static AssetLoader* init();

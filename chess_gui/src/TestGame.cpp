@@ -22,7 +22,7 @@ void TestGame::LoadScene(Scene* scene)
 	uint32_t cube = scene->Push();
 	AssetLoader::GetSingleton()->scene = scene;
 	auto mesh = scene->GetEntity(cube)->Emplace<Mesh>(ComponentTypes::MESH);
-	AssetLoader::GetSingleton()->LoadObj("Resource/Test/cube1.obj", mesh);
+	AssetLoader::GetSingleton()->LoadObj("Resource/Test/teapot.obj", mesh);
 	auto cubeTransform = scene->GetEntity(cube)->Emplace<Transform>(ComponentTypes::TRANSFORM);
 	cubeTransform->pos = Vect3();
 	cubeTransform->rotation = Vect3();
