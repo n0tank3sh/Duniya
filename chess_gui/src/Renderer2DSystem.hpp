@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
-#include <ECS/ECS.h>
-#include <Graphics/Renderer.h>
+#include <ECS/ECS.hpp>
+#include <Graphics/Renderer.hpp>
 #include <unordered_map>
-#include <TexturePacker.h>
+#include <TexturePacker.hpp>
 
 
 namespace ComponentTypes

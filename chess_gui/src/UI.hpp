@@ -1,7 +1,7 @@
-#include <ECS/ECS.h>
+#include <ECS/ECS.hpp>
 #include <array>
 #include <unordered_map>
-#include <Math/Vect2.h>
+#include <Math/Vect2.hpp>
 
 namespace ComponentTypes
 {

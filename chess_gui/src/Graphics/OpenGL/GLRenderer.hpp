@@ -1,6 +1,6 @@
 
-#include <Graphics/Renderer.h>
-#include <Exception.h>
+#include <Graphics/Renderer.hpp>
+#include <Exception.hpp>
 #include <glad/glad.h>
 #include <vector>
 

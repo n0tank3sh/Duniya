@@ -1,5 +1,5 @@
-#include "Renderer.h"
-#include "ECS/ECS.h"
+#include "Renderer.hpp"
+#include "ECS/ECS.hpp"
 #include <exception>
 #include <stdexcept>
 

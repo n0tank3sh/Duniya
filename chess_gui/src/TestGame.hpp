@@ -1,5 +1,5 @@
-#include <ECS/ECS.h>
-#include <ECS/CommonComponent.h>
+#include <ECS/ECS.hpp>
+#include <ECS/CommonComponent.hpp>
 
 
 struct TestGame : public System

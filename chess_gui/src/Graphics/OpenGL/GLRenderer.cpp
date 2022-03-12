@@ -1,15 +1,15 @@
-#include "GLRenderer.h"
-#include "ECS/GraphicsComponent.h"
-#include "Graphics/Renderer.h"
+#include "GLRenderer.hpp"
+#include "ECS/GraphicsComponent.hpp"
+#include "Graphics/Renderer.hpp"
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <Exception.h>
+#include <Exception.hpp>
 #include <sstream>
-#include <SDLUtiliy.h>
+#include <SDLUtiliy.hpp>
 
 
 #if !defined(NDEBUG) || !defined(NGLDEBUG)

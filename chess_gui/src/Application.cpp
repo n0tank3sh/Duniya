@@ -1,19 +1,19 @@
-#include "Application.h"
-#include <Graphics/Renderer.h>
-#include "ECS/ECS.h"
-#include "Exception.h"
+#include "Application.hpp"
+#include <Graphics/Renderer.hpp>
+#include "ECS/ECS.hpp"
+#include "Exception.hpp"
 #include <cstdint>
-#include <ECS/CommonComponent.h>
-#include <ECS/GraphicsComponent.h>
-#include <RendererSystem.h>
-#include "AssetLoader.h"
-#include "SDLUtiliy.h"
+#include <ECS/CommonComponent.hpp>
+#include <ECS/GraphicsComponent.hpp>
+#include <RendererSystem.hpp>
+#include "AssetLoader.hpp"
+#include "SDLUtiliy.hpp"
 #include "SDL_events.h"
-#include "TestGame.h"
+#include "TestGame.hpp"
 #include <filesystem>
 #include <iterator>
 #include <string>
-#include <Renderer2DSystem.h>
+#include <Renderer2DSystem.hpp>
 
 namespace ComponentTypes
 {

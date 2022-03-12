@@ -1,6 +1,6 @@
-#include <ECS/CommonComponent.h>
-#include <ECS/GraphicsComponent.h>
-#include <ECS/ECS.h>
+#include <ECS/CommonComponent.hpp>
+#include <ECS/GraphicsComponent.hpp>
+#include <ECS/ECS.hpp>
 #include <memory>
 
 struct ShadpeGenerator

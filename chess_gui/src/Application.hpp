@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <string>
-#include <SDLUtiliy.h>
+#include <SDLUtiliy.hpp>
 
 constexpr const char* CHESS_GUI_PATH = "CHESS_GUI_PATH";
 

@@ -1,4 +1,4 @@
-#include <ecs/ecs.h>
+#include <ECS/ECS.hpp>
 #include <SDL2/SDL.h>
 
 

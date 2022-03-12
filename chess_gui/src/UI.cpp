@@ -1,7 +1,7 @@
-#include "UI.h"
-#include "ECS/ECS.h"
-#include "Renderer2DSystem.h"
-#include "SDLUtiliy.h"
+#include "UI.hpp"
+#include "ECS/ECS.hpp"
+#include "Renderer2DSystem.hpp"
+#include "SDLUtiliy.hpp"
 #include <algorithm>
 #include <cmath>
 

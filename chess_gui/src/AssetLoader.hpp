@@ -1,13 +1,12 @@
 #pragma once
 #include <iostream>
-#include <SDL.h>
 #include <sstream>
 #include <string>
 #include <fstream>
 #include <map>
-#include <ECS/GraphicsComponent.h>
-#include <ECS/CommonComponent.h>
-#include <ECS/ECS.h>
+#include <ECS/GraphicsComponent.hpp>
+#include <ECS/CommonComponent.hpp>
+#include <ECS/ECS.hpp>
 
 
 class AssetLoader

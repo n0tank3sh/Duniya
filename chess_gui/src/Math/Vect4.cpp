@@ -1,4 +1,4 @@
-#include "Vect4.h"
+#include "Vect4.hpp"
 
 Vect4::Vect4(float x, float y, float z, float w)
     :

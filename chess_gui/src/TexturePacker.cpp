@@ -1,6 +1,6 @@
 
-#include "TexturePacker.h"
-#include "ECS/ECS.h"
+#include "TexturePacker.hpp"
+#include "ECS/ECS.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>

@@ -1,4 +1,4 @@
-#include "Vect2.h"
+#include "Vect2.hpp"
 
 
 Vect2::Vect2(float x, float y)

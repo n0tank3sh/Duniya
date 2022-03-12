@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-#include <Exception.h>
+#include <Exception.hpp>
 
 #define CHECKIS if(is == nullptr) throw CException(__LINE__, __FILE__, "SerilzerSystem", "is is null")
 #define CHECKOS if(os == nullptr) throw CException(__LINE__, __FILE__, "SerilzerSystem", "os is null")

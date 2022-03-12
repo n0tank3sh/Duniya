@@ -1,14 +1,14 @@
-#include "ECS.h"
+#include "ECS.hpp"
 #include <memory>
 #include <random>
 #include <condition_variable>
 #include <thread>
 #include <unordered_map>
 #include <fstream>
-#include <ECS/CommonComponent.h>
-#include <ECS/GraphicsComponent.h>
-#include <Exception.h>
-#include "SerializerSystem.h"
+#include <ECS/CommonComponent.hpp>
+#include <ECS/GraphicsComponent.hpp>
+#include <Exception.hpp>
+#include "SerializerSystem.hpp"
 
 
 

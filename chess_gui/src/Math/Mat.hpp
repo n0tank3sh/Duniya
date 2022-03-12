@@ -1,9 +1,9 @@
 #pragma once
 
-#include "MathUtils.h"
-#include "Vect2.h"
-#include "Vect3.h"
-#include "Vect4.h"
+#include "MathUtils.hpp"
+#include "Vect2.hpp"
+#include "Vect3.hpp"
+#include "Vect4.hpp"
 #include <initializer_list>
 #include <memory>
 

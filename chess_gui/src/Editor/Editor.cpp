@@ -1,5 +1,5 @@
-#include "Editor.h"
-#include <assimp/scene.h>
+#include "Editor.hpp"
+#include <assimp/scene.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include <iostream>

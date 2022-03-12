@@ -1,9 +1,9 @@
 #pragma once
-#include <Math/Vect2.h>
-#include <Math/Vect3.h>
-#include <Math/Vect4.h>
+#include <Math/Vect2.hpp>
+#include <Math/Vect3.hpp>
+#include <Math/Vect4.hpp>
 #include <vector>
-#include "SerializerSystem.h"
+#include "SerializerSystem.hpp"
 #include <cassert>
 
 struct Vertex

@@ -1,4 +1,4 @@
-#include "Vect3.h"
+#include "Vect3.hpp"
 Vect3::Vect3(float x, float y, float z)
     :
         x(x), y(y), z(z)

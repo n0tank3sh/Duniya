@@ -1,5 +1,5 @@
-#include "SceneConverter.h"
-#include "ECS/GraphicsComponent.h"
+#include "SceneConverter.hpp"
+#include "ECS/GraphicsComponent.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/light.h>
 #include <assimp/material.h>

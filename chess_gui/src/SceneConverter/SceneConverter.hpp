@@ -1,8 +1,8 @@
 #pragma once
+#include <ECS/ECS.hpp>
+#include <ECS/CommonComponent.hpp>
+#include <ECS/GraphicsComponent.hpp>
 #include <assimp/camera.h>
-#include <ECS/ECS.h>
-#include <ECS/CommonComponent.h>
-#include <ECS/GraphicsComponent.h>
 #include <SDL.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>

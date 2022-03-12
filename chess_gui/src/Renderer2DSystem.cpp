@@ -1,15 +1,15 @@
-#include "AssetLoader.h"
-#include "ECS/ECS.h"
-#include "Graphics/Renderer.h"
-#include "Math/Vect4.h"
-#include <Renderer2DSystem.h>
-#include <Graphics/OpenGL/GLRenderer.h>
+#include "AssetLoader.hpp"
+#include "ECS/ECS.hpp"
+#include "Graphics/Renderer.hpp"
+#include "Math/Vect4.hpp"
+#include <Renderer2DSystem.hpp>
+#include <Graphics/OpenGL/GLRenderer.hpp>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <queue>
 #include <stdexcept>
-#include <SDLUtiliy.h>
+#include <SDLUtiliy.hpp>
 
 
 

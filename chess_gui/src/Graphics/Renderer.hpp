@@ -4,9 +4,9 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <Math/Mat.h>
-#include <ECS/ECS.h>
-#include <ECS/GraphicsComponent.h>
+#include <Math/Mat.hpp>
+#include <ECS/ECS.hpp>
+#include <ECS/GraphicsComponent.hpp>
 
 using VertexSpecification = std::vector<std::pair<std::string, uint32_t>>;
 

@@ -1,61 +1,61 @@
 
 set(MATH_UTILS
-	"src/Math/Mat.h"
+	"src/Math/Mat.hpp"
     "src/Math/Mat.cpp"
-    "src/Math/Vect2.h"
+    "src/Math/Vect2.hpp"
     "src/Math/Vect2.cpp"
-    "src/Math/Vect3.h"
+    "src/Math/Vect3.hpp"
     "src/Math/Vect3.cpp"
-    "src/Math/Vect4.h"
+    "src/Math/Vect4.hpp"
     "src/Math/Vect4.cpp"
-    "src/Math/MathUtils.h"
+    "src/Math/MathUtils.hpp"
 )
 
 set(ECS_SRC
-    "src/ECS/ECS.h"
+    "src/ECS/ECS.hpp"
     "src/ECS/ECS.cpp"
-	"src/ECS/CommonComponent.h"
-    "src/ECS/GraphicsComponent.h"
-	"src/ECS/SerializerSystem.h"
+	"src/ECS/CommonComponent.hpp"
+    "src/ECS/GraphicsComponent.hpp"
+	"src/ECS/SerializerSystem.hpp"
 	"src/ECS/SerializerSystem.cpp"
-	"src/ECS/Logger.h"
+	"src/ECS/Logger.hpp"
 	"src/ECS/Logger.cpp"
 	)
 
 set(EXCEPTION_SRC
 	"src/Exception.cpp"
-    "src/Exception.h"
+    "src/Exception.hpp"
 	)
 
 
 set(TEST_GAME_SRC
-	"src/TestGame.h"
+	"src/TestGame.hpp"
 	"src/TestGame.cpp"
 	)
 set(CHESS_SRC
     "src/Main.cpp"
-    "src/Application.h"
+    "src/Application.hpp"
     "src/Application.cpp"
-    "src/AssetLoader.h"
+    "src/AssetLoader.hpp"
     "src/AssetLoader.cpp"
-	"src/RendererSystem.h"
+	"src/RendererSystem.hpp"
     "src/RendererSystem.cpp"
-    "src/Graphics/Renderer.h"
+    "src/Graphics/Renderer.hpp"
 	"src/Graphics/Renderer.cpp"
-    "src/Graphics/OpenGL/GLUtils.h"
-    "src/Graphics/OpenGL/GLRenderer.h"
+    "src/Graphics/OpenGL/GLUtils.hpp"
+    "src/Graphics/OpenGL/GLRenderer.hpp"
     "src/Graphics/OpenGL/GLRenderer.cpp"
-	"src/SDLUtiliy.h"
-	"src/Renderer2DSystem.h"
+	"src/SDLUtiliy.hpp"
+	"src/Renderer2DSystem.hpp"
 	"src/Renderer2DSystem.cpp"
-	"src/TexturePacker.h"
+	"src/TexturePacker.hpp"
 	"src/TexturePacker.cpp"
 )
 
 set(SCENECONVERTER_SRC
-	"src/SceneConverter/SceneConverter.h"
+	"src/SceneConverter/SceneConverter.hpp"
 	"src/SceneConverter/SceneConverter.cpp"
-	"src/ECS/ECS.h"
+	"src/ECS/ECS.hpp"
 	"src/ECS/ECS.cpp"
 	)
 

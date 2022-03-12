@@ -1,7 +1,7 @@
-#include "SerializerSystem.h"
-#include "GraphicsComponent.h"
-#include "CommonComponent.h"
-#include "ECS.h"
+#include "SerializerSystem.hpp"
+#include "GraphicsComponent.hpp"
+#include "CommonComponent.hpp"
+#include "ECS.hpp"
 
 SerializerSystem* SerializerSystem::singleton = nullptr;
 

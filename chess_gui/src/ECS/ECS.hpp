@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ECS/SerializerSystem.h"
-#include <Exception.h>
+#include "ECS/SerializerSystem.hpp"
+#include <Exception.hpp>
 #include <list>
 #include <queue>
 #include <memory>
@@ -13,7 +13,7 @@
 #include <memory>
 #include <cstdint>
 #include <thread>
-#include "Logger.h"
+#include "Logger.hpp"
 
 
 

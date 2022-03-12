@@ -1,9 +1,9 @@
 #pragma once
 #include <cinttypes>
-#include <ECS/ECS.h>
-#include <ECS/GraphicsComponent.h>
+#include <ECS/ECS.hpp>
+#include <ECS/GraphicsComponent.hpp>
 #include <unordered_set>
-#include "Graphics/Renderer.h"
+#include "Graphics/Renderer.hpp"
 
 template<typename T>
 struct RectComp

@@ -1,5 +1,5 @@
 
-#include "Mat.h"
+#include "Mat.hpp"
 #include <initializer_list>
 #include <cassert>
 #include <stdexcept>

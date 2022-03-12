@@ -1,13 +1,13 @@
-#include "TestGame.h"
-#include "AssetLoader.h"
-#include "ECS/CommonComponent.h"
-#include "ECS/ECS.h"
-#include "ECS/GraphicsComponent.h"
-#include "SDL_keycode.h"
-#include <SDLUtiliy.h>
-#include <Renderer2DSystem.h>
+#include "TestGame.hpp"
+#include "AssetLoader.hpp"
+#include "ECS/CommonComponent.hpp"
+#include "ECS/ECS.hpp"
+#include "ECS/GraphicsComponent.hpp"
+#include <SDLUtiliy.hpp>
+#include <Renderer2DSystem.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <SDL_keycode.h>
 
 
 void TestGame::LoadScene(Scene* scene)

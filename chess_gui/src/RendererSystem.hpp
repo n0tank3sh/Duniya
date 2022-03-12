@@ -1,7 +1,7 @@
-#include <Graphics/Renderer.h>
-#include <Application.h>
-#include <ECS/CommonComponent.h>
-#include <ECS/GraphicsComponent.h>
+#include <Graphics/Renderer.hpp>
+#include <Application.hpp>
+#include <ECS/CommonComponent.hpp>
+#include <ECS/GraphicsComponent.hpp>
 
 struct RendererStuff
 {

@@ -1,7 +1,7 @@
 #include "SDL_error.h"
 #define SDL_MAIN_HANDLED
-#include <Application.h>
-#include "Exception.h"
+#include <Application.hpp>
+#include "Exception.hpp"
 #include <SDL2/SDL.h>
 
 int main(int argc, const char* argv[])

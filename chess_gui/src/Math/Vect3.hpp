@@ -1,7 +1,7 @@
 #pragma once
 
-#include "MathUtils.h"
-#include "Vect2.h"
+#include "MathUtils.hpp"
+#include "Vect2.hpp"
 
 class Vect3
 {

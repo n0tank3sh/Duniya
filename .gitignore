@@ -2,6 +2,7 @@
 out/
 glad/
 CMakeFiles/
+putils/
 Resource/Test/
 compile_commands.json
 CMakeCache.txt

@@ -1,8 +1,8 @@
 #pragma once
-#include <Math/MathUtils.h>
-#include "CommonComponent.h"
-#include "GraphicsComponent.h"
-#include "ECS.h"
+#include <Math/MathUtils.hpp>
+#include "CommonComponent.hpp"
+#include "GraphicsComponent.hpp"
+#include "ECS.hpp"
 
 
 inline void CreatePlane()

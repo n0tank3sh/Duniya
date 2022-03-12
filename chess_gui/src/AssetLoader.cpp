@@ -1,13 +1,13 @@
-#include "AssetLoader.h"
-#include "ECS/GraphicsComponent.h"
-#include "SDLUtiliy.h"
+#include "AssetLoader.hpp"
+#include "ECS/GraphicsComponent.hpp"
+#include "SDLUtiliy.hpp"
 #include "SDL_pixels.h"
 #include <array>
 #include <codecvt>
 #include <cstdint>
 #include <sstream>
 #include <SDL2/SDL_image.h>
-#include <Exception.h>
+#include <Exception.hpp>
 #include <stdexcept>
 #include <string>
 #include <fstream>
