@@ -22,11 +22,12 @@ void TestGame::LoadScene(Scene* scene)
 	uint32_t cube = scene->Push();
 	AssetLoader::GetSingleton()->scene = scene;
 	auto mesh = scene->GetEntity(cube)->Emplace<Mesh>(ComponentTypes::MESH);
-	AssetLoader::GetSingleton()->LoadObj("Resource/Test/teapot.obj", mesh);
+	AssetLoader::GetSingleton()->LoadObj("Resource/Test/cube1.obj", mesh);
+	//mesh->drawPrimitive = DrawPrimitive::LINES;
 	auto cubeTransform = scene->GetEntity(cube)->Emplace<Transform>(ComponentTypes::TRANSFORM);
 	cubeTransform->pos = Vect3();
 	cubeTransform->rotation = Vect3();
-	cubeTransform->scale = Vect3(0.5f, 0.5f, 0.5f);
+	cubeTransform->scale = Vect3(1.f, 1.f, 1.f);
 	for(auto& entity: scene->entities)
 	{
 		if(entity->Get(ComponentTypes::CAMERA) != nullptr)
@@ -35,47 +36,56 @@ void TestGame::LoadScene(Scene* scene)
 			camera = entity->Get<Camera>(ComponentTypes::CAMERA);
 		}
 	}
+	uint32_t texPanel = scene->Push();
+	auto text = scene->GetEntity(texPanel)->Emplace<std::string>(ComponentTypes::TEXTBOX);
+	(*text) = "Hellow";
+	auto hell = scene->GetEntity(texPanel)->Emplace<TextPanel>(ComponentTypes::TEXTPANEL); 
+	hell->dimension.z = settings->NormalizeX(46);
+	hell->dimension.w = settings->NormalizeY(32);
+	messagingSystem->at(0x35).push_back(std::make_pair(0, nullptr));
 }
 
 void TestGame::Update(float deltaTime)
 {
 	auto& messages = messagingSystem->at(0x0);
+	auto acceleration = Vect3();
 	while(!messages.empty())
 	{
 		auto message = static_cast<KeyboardEvent*>(messages.front().second.get());
 		switch(message->event.keysym.sym)
 		{
 			case SDLK_w:
-				player->pos.z += .5f;
+				acceleration.z -= .5f;
 				break;
 			case SDLK_a:
-				player->pos.x -= .5f;
+				acceleration.x += .5f;
 				break;
 			case SDLK_d:
-				player->pos.x += .5f;
+				acceleration.x -= .5f;
 				break;
 			case SDLK_s:
-				player->pos.z -= .5f;
+				acceleration.z += .5f;
 				break;
 			case SDLK_q:
-				player->pos.y += .5f;
+				acceleration.y -= .5f;
 				break;
 			case SDLK_e:
-				player->pos.y -= .5f;
+				acceleration.y += .5f;
 				break;
 			case SDLK_UP:
-				player->rotation.y += .05f;
-				break;
-			case SDLK_DOWN:
-				player->rotation.y -= .05f;
-				break;
-			case SDLK_LEFT:
 				player->rotation.x -= .05f;
 				break;
+			case SDLK_DOWN:
+				player->rotation.x = .05f;
+				break;
+			case SDLK_LEFT:
+				player->rotation.y += .05f;
+				break;
 			case SDLK_RIGHT:
-				player->rotation.x += .05f;
+				player->rotation.y -= .05f;
 				break;
 		};
 		messages.pop_front();
 	}
+	player->pos += acceleration * deltaTime * 10;
 }

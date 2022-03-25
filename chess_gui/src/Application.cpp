@@ -37,7 +37,7 @@ Application::Application()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     window = SDL_CreateWindow(title.c_str(), 0, 0, width, height, windowFlag);
 	{
 		int32_t width, height;
@@ -64,6 +64,7 @@ Application::Application()
 	}
 
 	manager = new SystemManager;
+	manager->settings->resolution = Vect2(width, height);
 	manager->AddQueryMessageBlock(0x0);
 	manager->Add(RendererSystem::init(Graphics_API::OPENGL));
 	manager->Add(Renderer2DSystem::Init());

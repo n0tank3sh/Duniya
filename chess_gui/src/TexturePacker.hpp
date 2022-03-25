@@ -2,6 +2,7 @@
 #include <cinttypes>
 #include <ECS/ECS.hpp>
 #include <ECS/GraphicsComponent.hpp>
+#include <functional>
 #include <unordered_set>
 #include "Graphics/Renderer.hpp"
 
@@ -32,6 +33,7 @@ struct Glyph
 struct FontDict
 {
 	Glyph glyps[127];
+	uint32_t fontSize;
 	Texture texture;
 	GBuffer gBuffer;
 };
@@ -53,6 +55,7 @@ public:
 private:
 	template<typename T, typename K>
 	void Util(T& rects, K& guide, uint8_t* data, Heuristic heuristic = Heuristic::Col);
+	int Packer(std::function<uint8_t*(uint32_t a)>& retrieveFunction);
 public:
 	TexturePacker(uint32_t width = 0, uint32_t height = 0, Scene* scene = nullptr);
 	void SetColumnSize(uint32_t colSize = 0);
@@ -60,6 +63,6 @@ public:
 	void SetScene(Scene* scene);
 	Scene* GetScene();
 	void AddTexture(uint32_t id);
-	int32_t PackFont(std::string fontFile, FontDict& dict);
+	int32_t PackFont(std::string fontFile, FontDict& dict, uint32_t fontSize);
 	uint32_t Pack();
 };

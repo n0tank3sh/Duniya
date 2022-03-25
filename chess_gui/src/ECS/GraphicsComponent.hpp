@@ -22,7 +22,7 @@ struct Material
 
 enum class DrawPrimitive : uint32_t
 {
-	TRIANGLES, POINTS, TRIANGLES_ADJACENCIES, TRIANGLES_STRIPS, QUADS
+	TRIANGLES, POINTS, TRIANGLES_ADJACENCIES, TRIANGLES_STRIPS, QUADS, LINES
 };
 
 struct Mesh
@@ -31,7 +31,7 @@ struct Mesh
 	uint32_t indexCount;
 	uint32_t verticiesIndex;
 	uint32_t indiciesIndex;
-	DrawPrimitive drawPrimitve;
+	DrawPrimitive drawPrimitive;
 };
 
 struct Texture

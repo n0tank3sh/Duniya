@@ -22,7 +22,8 @@ enum class Options
 {
 	BLEND,
 	DEPTH_TEST,
-	FACE_CULL
+	FACE_CULL,
+	WIREFRAME_MODE
 };
 
 struct GBuffer
@@ -110,6 +111,7 @@ public:
     virtual void Clear() = 0;
     virtual void ClearColor(float r, float g, float b) = 0;
     virtual void ClearDepth(float depthLevel) = 0;
+	virtual void WireFrameMode(bool) = 0;
 	virtual NativeShaderHandlerParent* CreateShader(ShaderType type) = 0;
 	virtual ShaderStageHandler* CreateShaderStage() = 0;
 	virtual uint32_t AddSpecification(VertexSpecification& vertexSpecification) = 0;

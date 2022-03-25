@@ -205,7 +205,6 @@ Mat DefaultMatrix::generateRollMatrix(Dimension s, float x)
 	mat[{1, 2}] = -sinf(x);
 	mat[{2, 1}] = sinf(x);
 	mat[{2, 2}] = cosf(x);
-	std::cout << mat << std::endl;
 	return mat;
 }
 Mat DefaultMatrix::generatePitchMatrix(Dimension s, float y)
@@ -216,7 +215,6 @@ Mat DefaultMatrix::generatePitchMatrix(Dimension s, float y)
 	mat[{0, 2}] = sinf(y);
 	mat[{2, 0}] = -sinf(y);
 	mat[{2, 2}] = cosf(y);
-	std::cout << mat << std::endl;
 	return mat;
 }
 
@@ -228,6 +226,5 @@ Mat DefaultMatrix::generateYawMatrix(Dimension s, float z)
 	mat[{0, 1}] = -sinf(z);
 	mat[{1, 0}] = sinf(z);
 	mat[{1, 1}] = cosf(z);
-	std::cout << mat << std::endl;
 	return mat;
 }

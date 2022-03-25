@@ -27,7 +27,7 @@ RendererSystem::RendererSystem()
 	transformDefault.Get(2, 3) = 1.f;
 	camera->Emplace<Camera>(ComponentTypes::CAMERA);
 	auto transform = camera->Emplace<Transform>(ComponentTypes::TRANSFORM);
-	transform->pos = Vect3(0.f, 0.f, 0.f);
+	transform->pos = Vect3(0.f, 0.f, 2.f);
 	auto cameraHdl = camera->Get<Camera>(ComponentTypes::CAMERA);
 	cameraHdl->lookAt.z = 1.f;
 	cameraHdl->fov = M_PI/3;
@@ -37,12 +37,11 @@ RendererSystem::RendererSystem()
 	mainShaderStage.reset(renderer->CreateShaderStage());	
 	std::unique_ptr<NativeShaderHandlerParent> fragShader(renderer->CreateShader(ShaderType::FRAGMENT)), 
 		vertShader(renderer->CreateShader(ShaderType::VERTEX));
+
 	if(AssetLoader::GetSingleton() == nullptr)
 		AssetLoader::init();
 	auto assetLoader = AssetLoader::GetSingleton();
-	resolution.x = 1400;
-	resolution.y = 900;
-
+	
 
 	assetLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertShader->source);
 	assetLoader->LoadTextFile("Resource/Shaders/FragmentShader.glsl", fragShader->source);
@@ -121,30 +120,42 @@ void RendererSystem::LoadLights()
 
 void RendererSystem::SetupDefaultTexture()
 {
-	auto data = new uint8_t[4];
-	memset(data, 0xff, 4);
-	defaultTexture.data = GetScene()->resourceBank->Push_Back(data, 4);
+	constexpr auto defTextureSize = 1;
+	constexpr auto defTextureWidth = 1;
+	constexpr auto defTextureHeight = defTextureSize / defTextureWidth;
+
+	auto data = new uint8_t[4 * defTextureSize];
+	memset(data, 0xff, 4 * defTextureSize);
+	defaultTexture.data = GetScene()->resourceBank->Push_Back(data, 4 * defTextureSize);
 	defaultTexture.format = Texture::RGBA;
-	defaultTexture.width = 1;
-		defaultTexture.height = 1;
+	defaultTexture.width = defTextureWidth;
+	defaultTexture.height = defTextureHeight;
 	renderer->LoadTexture(&defaultTexture, &defaultTextureGBuffer); 
 }
 
 void RendererSystem::CreateGBufferMesh(Mesh* mesh, GBuffer* indexBuffer, GBuffer* vertexBuffer)
 {
+	if(mesh->indexCount != 0)
+	{
+		indexBuffer->bufferStyle.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC;
+		indexBuffer->bufferStyle.type = GBuffer::GBufferStyle::BufferType::INDEX;
+		indexBuffer->bufferStyle.usage = GBuffer::GBufferStyle::Usage::DRAW;
+		indexBuffer->count = mesh->indexCount;
+		indexBuffer->sizet = mesh->indexCount * sizeof(uint32_t);
+		indexBuffer->data = mesh->indiciesIndex;
+	}
+	else
+	{
+		indexBuffer->count = 0;
+		indexBuffer->sizet = 0;
+	}
+
 	vertexBuffer->bufferStyle.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC; 
 	vertexBuffer->bufferStyle.type = GBuffer::GBufferStyle::BufferType::VERTEX;
 	vertexBuffer->bufferStyle.usage = GBuffer::GBufferStyle::Usage::DRAW;
 	vertexBuffer->count = mesh->vertexCount;
 	vertexBuffer->sizet = mesh->vertexCount * sizeof(Vertex);
 	vertexBuffer->data = mesh->verticiesIndex;
-
-	indexBuffer->bufferStyle.cpuFlags = GBuffer::GBufferStyle::CPUFlags::STATIC;
-	indexBuffer->bufferStyle.type = GBuffer::GBufferStyle::BufferType::INDEX;
-	indexBuffer->bufferStyle.usage = GBuffer::GBufferStyle::Usage::DRAW;
-	indexBuffer->count = mesh->indexCount;
-	indexBuffer->sizet = mesh->indexCount * sizeof(uint32_t);
-	indexBuffer->data = mesh->indiciesIndex;
 }
 
 void RendererSystem::CreateRendererStuff(Mesh* mesh, RendererStuff* rendererStuff)
@@ -219,7 +230,6 @@ Mat RendererSystem::SetupCamera(uint32_t entity)
 	{
 		lookAt = DefaultMatrix::generateYawMatrix({3, 3}, transform->rotation.z) * lookAt;
 	}
-	//std::cout << lookAt << std::endl;
 	lookAt.normalize();
 	return LookAt(transform->pos, transform->pos + lookAt, Vect3(0, 1, 0)) * perspectiveMat;
 }
@@ -228,24 +238,24 @@ Mat RendererSystem::LookAt(const Vect3& eye, const Vect3& at, const Vect3& up)
 {
 	auto zaxis = at - eye;
 	zaxis.normalize();
-	auto xaxis = (Vect3::cross(up, zaxis)).normalized();
-	auto yaxis = Vect3::cross(zaxis, xaxis);
-	yaxis.normalize();
+	auto xaxis = (Vect3::cross(zaxis, up)).normalized();
+	auto yaxis = Vect3::cross(xaxis, zaxis).normalized();
 	Mat mat({4, 4});
-	mat = {xaxis.x, yaxis.x, zaxis.x, 0,
-					 xaxis.y, yaxis.y, zaxis.y, 0,
-					 xaxis.z, yaxis.z, zaxis.z, 0,
-					 -Vect3::dot(xaxis, eye), -Vect3::dot(yaxis, eye), -Vect3::dot(zaxis, eye), 1};
+	mat = {xaxis.x, yaxis.x, -zaxis.x, 0,
+					 xaxis.y, yaxis.y, -zaxis.y, 0,
+					 xaxis.z, yaxis.z, -zaxis.z, 0,
+					 -Vect3::dot(xaxis, eye), -Vect3::dot(yaxis, eye), Vect3::dot(zaxis, eye), 1};
 	return mat;
 }
 
 Mat RendererSystem::SetupPerspective(Camera& camera)
 {
 	Mat mat({4, 4});
-	mat.Get(0, 0) = 1/tan(camera.fov/2) * resolution.x / resolution.y;
-	mat.Get(1, 1) = 1/tan(camera.fov/2);
-	mat.Get(2, 2) = camera.far/(camera.far - camera.near);
-	mat.Get(3, 2) = -(camera.far * camera.near)/(camera.far - camera.near);
+	auto camFov = 1/tan(camera.fov/2);
+	mat.Get(0, 0) = camFov * 1 / settings->GetAspectRatio();
+	mat.Get(1, 1) = camFov;
+	mat.Get(2, 2) = -(camera.far + camera.near)/(camera.far - camera.near);
+	mat.Get(3, 2) = (2 * camera.far * camera.near)/(camera.far - camera.near);
 	mat.Get(2, 3) = 1;
 	return mat;
 }
@@ -263,60 +273,76 @@ void RendererSystem::LoadMaterial(Scene::Entities::iterator& itr)
 	renderer->Uniform1f(1, &material->shininess, "material.shininess");
 }
 
-void RendererSystem::LoadTransform(Scene::Entities::iterator& itr)
+void RendererSystem::LoadTransform(Scene::EntitiesItr& itr)
 {
-	Mat* mat = nullptr;
+	Mat mat = cameras[mainCamera];
 	Transform* transform = static_cast<Transform*>((*itr)->Get(ComponentTypes::TRANSFORM));
 	if(transform != nullptr)
 	{
-		mat = ConvertTranforToMatrix(*transform);
-	}
-	else
-	{
-		mat = &transformDefault;
 		transform = (*itr)->Emplace<Transform>(ComponentTypes::TRANSFORM);
 		transform->scale = Vect3(.5f, .5f, .5f);
 	}
-	
-	*mat *= SetupCamera(mainCamera);
-	//std::cout << *mat << std::endl;
-	renderer->UniformMat(1, mat, "MVP");
+	mat *= ConvertTranforToMatrix(*transform);
+	renderer->UniformMat(1, &mat, "MVP");
+}
+
+
+void RendererSystem::LoadMesh(Scene::EntitiesItr& itr)
+{		
+	auto mesh = (*itr)->Get<Mesh>(ComponentTypes::MESH);
+	auto dist = std::distance(scene->entities.begin(), itr);
+	if(mesh != nullptr)
+	{
+		auto rendererCheck = meshGBuffers.find(dist);
+		if(rendererCheck == meshGBuffers.end())
+		{
+			meshGBuffers.insert(std::make_pair(dist, RendererStuff()));
+			rendererCheck = meshGBuffers.find(dist);
+			CreateRendererStuff(mesh, &rendererCheck->second);
+		}
+
+		auto& rendererStuff = rendererCheck->second;
+		renderer->Bind(rendererStuff.vBuffer);
+		auto verticies = reinterpret_cast<Vertex*>(scene->resourceBank->resources[rendererStuff.vBuffer.data].Get());
+		LoadTexture(itr);
+		LoadMaterial(itr);
+		LoadTransform(itr);
+		//renderer->WireFrameMode(true);
+		if(rendererStuff.iBuffer.sizet != 0)
+			renderer->Draw((*itr)->Get<Mesh>(ComponentTypes::MESH)->drawPrimitive, &rendererStuff.iBuffer);
+		else
+			renderer->DrawArrays((*itr)->Get<Mesh>(ComponentTypes::MESH)->drawPrimitive, &rendererStuff.vBuffer, rendererStuff.vBuffer.count);
+
+	}
+}
+
+void RendererSystem::LoadTexture(Scene::EntitiesItr& itr)
+{
+	if((*itr)->Get(ComponentTypes::TEXTURE) != nullptr)
+	{
+		std::cout << "We found the texture" << std::endl;
+		renderer->Bind(textureGBuffer.find(std::distance(scene->entities.begin(), itr))->second);
+	}
+	else
+	{
+		renderer->Bind(defaultTextureGBuffer);
+	}
+
 }
 
 void RendererSystem::Update(float deltaTime)
 {
 	renderer->ClearColor(0, 0, 0);
 	renderer->Clear();
-	RendererStuff* rendererStuff;
 	mainShaderStage->Load();
 	auto scene = GetScene();
 	renderer->Enable(Options::BLEND);
 	renderer->Enable(Options::DEPTH_TEST);
-	//renderer->Enable(Options::FACE_CULL);
+	renderer->Disable(Options::FACE_CULL);
+	cameras[mainCamera] = SetupCamera(mainCamera);
 	for(auto itr = scene->entities.begin(); itr != scene->entities.end(); itr++)
 	{
-		if((*itr)->Get(ComponentTypes::MESH) != nullptr)
-		{
-			auto rendererStuff = (*itr)->Get<RendererStuff>(ComponentTypes::RENDERERSTUFF);
-			if( rendererStuff == nullptr)
-			{
-				CreateRendererStuff((*itr)->Get<Mesh>(ComponentTypes::MESH), (*itr)->Emplace<RendererStuff>(ComponentTypes::RENDERERSTUFF));
-				rendererStuff = (*itr)->Get<RendererStuff>(ComponentTypes::RENDERERSTUFF);
-			}
-			renderer->Bind(rendererStuff->vBuffer);
-			auto verticies = reinterpret_cast<Vertex*>(scene->resourceBank->resources[rendererStuff->vBuffer.data].Get());
-			renderer->SetLayout(layout);
-			if((*itr)->Get(ComponentTypes::TEXTURE) != nullptr)
-			{
-				renderer->Bind(rendererStuff->texture);
-			}
-			else
-				renderer->Bind(defaultTextureGBuffer);
-			LoadMaterial(itr);
-			LoadTransform(itr);
-			renderer->Draw((*itr)->Get<Mesh>(ComponentTypes::MESH)->drawPrimitve, &rendererStuff->iBuffer);
-		}
-
+		LoadMesh(itr);
 	}
 	animated += .01f;
 }

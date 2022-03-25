@@ -18,30 +18,29 @@ private:
 // All the classes for buffer handling
 struct GLVertexBinder : public GBinder
 {
-	GLVertexBinder()  = default;
-    GLVertexBinder(uint32_t rendererID);
+    GLVertexBinder(uint32_t pvao, uint32_t rendererID = 0);
     void Bind() const noexcept override;
     void UnBind() const noexcept override;
+	uint32_t pvao;
     uint32_t rendererID;
 };
 
 struct GLIndexBinder : public GBinder
 {
-	GLIndexBinder() = default;
-    GLIndexBinder(uint32_t rendererID);
+    GLIndexBinder(uint32_t pvao, uint32_t rendererID = 0);
     void Bind() const noexcept override;
     void UnBind() const noexcept override;
+	uint32_t pvao;
     uint32_t rendererID;
 };
 
 struct GLTextureBinder : public GBinder
 {
-	GLTextureBinder() = default;
-    GLTextureBinder(uint32_t rendererID);
-    GLTextureBinder(uint32_t rendererID, GLenum target);
+    GLTextureBinder(uint32_t pvao, uint32_t rendererID = 0, GLenum target = GL_TEXTURE_2D);
     void Bind() const noexcept override;
     void UnBind() const noexcept override;
     uint32_t rendererID;
+	uint32_t pvao;
     GLenum target;
 };
 
@@ -72,6 +71,7 @@ public:
     void UniformMat(const uint32_t count, const Mat* mat, std::string name) override;
 	void UseShaderStage(ShaderStageHandler* shaderStagerHandler) override;
 	void SetLayout(const uint32_t layout) override;
+	void WireFrameMode(bool) override;
 	uint32_t AddSpecification(VertexSpecification& vertexSpecification) override;
 	NativeShaderHandlerParent* CreateShader(ShaderType type) override;
 	ShaderStageHandler * CreateShaderStage() override;

@@ -2,12 +2,12 @@
 #include <Application.hpp>
 #include <ECS/CommonComponent.hpp>
 #include <ECS/GraphicsComponent.hpp>
+#include <unordered_map>
 
 struct RendererStuff
 {
 	GBuffer iBuffer;
 	GBuffer vBuffer;
-	GBuffer texture;
 };
 
 class RendererSystem : public System
@@ -22,8 +22,14 @@ public:
     void LoadScene(Scene* scene) override;
     void Update(float deltaTime) override;
 private:
+	std::unordered_map<uint32_t, RendererStuff> meshGBuffers;
+	std::unordered_map<uint32_t, GBuffer> textureGBuffer;
+	std::unordered_map<uint32_t, Mat> cameras;
+private:
 	Mat SetupCamera(uint32_t entity);
-	void LoadMaterial(Scene::Entities::iterator& itr);
+	void LoadMaterial(Scene::EntitiesItr& itr);
+	void LoadMesh(Scene::EntitiesItr& itr);
+	void LoadTexture(Scene::EntitiesItr& itr);
 	void LoadLights();
 	void LoadLightColor(const LightColor& color, std::string name);
 	void LoadTransform(Scene::Entities::iterator& itr);

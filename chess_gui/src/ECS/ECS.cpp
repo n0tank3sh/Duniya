@@ -145,6 +145,7 @@ SystemManager::SystemManager()
 {
 	logger = new Logger;
 	queryMessages.reset(new QueryMessages);
+	settings.reset(new Setting); 
 }
 
 void SystemManager::AddQueryMessageBlock(uint32_t messageID)
@@ -155,6 +156,7 @@ void SystemManager::Add(System* system)
 {
 	system->messagingSystem = queryMessages.get();
 	system->logger = logger;
+	system->settings = settings.get();
 	AddQueryMessageBlock(system->messageID);
 	systems.push_back(system);
 }
@@ -175,6 +177,28 @@ void SystemManager::update(float deltaTime)
 	}
 	logger->Paste();
 }
+
+
+float Setting::NormalizeX(const float& x) const
+{
+	return lerp(0.f, 1.f, x/resolution.x) * 2;
+}
+
+float Setting::NormalizeY(const float& y) const
+{
+	return lerp(0.f, 1.f, y/resolution.y) * 2;
+}
+
+Vect2 Setting::Normalize(const Vect2& point) const
+{
+	return Vect2(NormalizeX(point.x), NormalizeY(point.y));
+}
+
+float Setting::GetAspectRatio() const
+{
+	return resolution.x / resolution.y;
+}
+
 
 ThreadPool::ThreadPool(SystemManager* systemManager)
 {

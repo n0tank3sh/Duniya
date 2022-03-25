@@ -3,6 +3,7 @@
 #include "SDLUtiliy.hpp"
 #include "SDL_pixels.h"
 #include <array>
+#include <assimp/scene.h>
 #include <codecvt>
 #include <cstdint>
 #include <sstream>
@@ -14,8 +15,7 @@
 #include <iterator>
 #include <map>
 #include <unordered_map>
-
-
+#include <OBJ_Loader.h>
 
 void AssetLoader::ObjLoader::SetFile(const std::string& fileName)
 {
@@ -26,11 +26,11 @@ void AssetLoader::ObjLoader::SetFile(const std::string& fileName)
 }
 
 
-void AssetLoader::ObjLoader::Interpret(std::vector<Vertex>& verticies, std::vector<uint32_t>& indicies, DrawPrimitive& drawPrimitve)
+void AssetLoader::ObjLoader::Interpret(std::vector<Vertex>& verticies, std::vector<uint32_t>& indicies, DrawPrimitive& drawPrimitive)
 {
 	uint32_t indexSize = 0;
 	std::string line;	
-	drawPrimitve = DrawPrimitive::TRIANGLES;
+	drawPrimitive = DrawPrimitive::TRIANGLES;
 	while(!fin.eof())
 	{
 		std::string temp;
@@ -88,7 +88,8 @@ void AssetLoader::ObjLoader::Interpret(std::vector<Vertex>& verticies, std::vect
 
 			if(!line.eof())
 			{
-				drawPrimitve = DrawPrimitive::QUADS;
+				indicies.push_back(indicies[indicies.size() - 2]);
+				indicies.push_back(indicies[indicies.size() - 2]);
 				tempFace.fill(0);
 				for(int j = 0; j < 3; j++)
 				{
@@ -139,18 +140,23 @@ void AssetLoader::LoadObj(std::string filePath, Mesh* mesh)
 	std::vector<uint32_t> indicies;
 	ObjLoader objLoader;
 	objLoader.SetFile(filePath);
-	objLoader.Interpret(verticies, indicies, mesh->drawPrimitve);
+	objLoader.Interpret(verticies, indicies, mesh->drawPrimitive);
 	
 	mesh->vertexCount = verticies.size();
-	mesh->indexCount = indicies.size();
-	auto vertexData = new uint8_t[sizeof(Vertex) * mesh->vertexCount];
-	auto indiciesData = new uint8_t[sizeof(uint32_t) * mesh->indexCount];
-	std::copy(verticies.begin(), verticies.end(), reinterpret_cast<Vertex*>(vertexData));
-	std::copy(indicies.begin(), indicies.end(), reinterpret_cast<uint32_t*>(indiciesData));
-	mesh->vertexCount = verticies.size();
-	mesh->indexCount = indicies.size();
-	mesh->verticiesIndex = scene->resourceBank->Push_Back(vertexData, sizeof(Vertex) * mesh->vertexCount);
-	mesh->indiciesIndex = scene->resourceBank->Push_Back(indiciesData, sizeof(uint32_t) * mesh->indexCount);
+	auto vertexData = new Vertex[mesh->vertexCount];
+	if(indicies.size() == verticies.size())
+	{
+		mesh->indexCount = 0;
+	}
+	else
+	{
+		mesh->indexCount = indicies.size();
+		auto indiciesData = new uint32_t[mesh->indexCount];
+		std::copy(indicies.begin(), indicies.end(), indiciesData);
+		mesh->indiciesIndex = scene->resourceBank->Push_Back(reinterpret_cast<uint8_t*>(indiciesData), sizeof(uint32_t) * mesh->indexCount);
+	}
+	std::copy(verticies.begin(), verticies.end(), vertexData);
+	mesh->verticiesIndex = scene->resourceBank->Push_Back(reinterpret_cast<uint8_t*>(vertexData), sizeof(Vertex) * mesh->vertexCount);
 }
 
 Texture::Format GetFormat(uint32_t sdlFormat)

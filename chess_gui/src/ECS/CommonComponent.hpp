@@ -43,16 +43,27 @@ struct Camera
 	Vect3 lookAt;
 };
 
-inline Mat* ConvertTranforToMatrix(Transform& transform)
+inline Mat GetRotationMatrix(Vect3 rotation)
 {
-    float trans[] = 
-    {
+	Mat mat = DefaultMatrix::generateIdentityMatrix({4, 4});
+	if(rotation.x != 0)
+		mat *= DefaultMatrix::generateRollMatrix({4, 4}, rotation.x);
+	if(rotation.y != 0)
+		mat *= DefaultMatrix::generatePitchMatrix({4, 4}, rotation.y);
+	if(rotation.z != 0)
+		mat *= DefaultMatrix::generateYawMatrix({4, 4}, rotation.z);
+	return mat;
+}
+
+inline Mat ConvertTranforToMatrix(Transform& transform)
+{
+    Mat mat({4, 4});
+	mat = {
         transform.scale.x, .0f, .0f, transform.pos.x,
         .0f, transform.scale.y, .0f, transform.pos.y,
         .0f, .0f, transform.scale.z,  transform.pos.z,
         .0f, .0f, .0f, 1.0f
     };
-    Mat* mat = new Mat({4, 4}, trans);
-	*mat *= DefaultMatrix::generateRollMatrix({4, 4}, transform.rotation.x) * DefaultMatrix::generatePitchMatrix({4, 4}, transform.rotation.y) * DefaultMatrix::generateYawMatrix({4, 4}, transform.rotation.z);
-    return mat;
+	mat *= GetRotationMatrix(transform.rotation);
+	return mat;
 }

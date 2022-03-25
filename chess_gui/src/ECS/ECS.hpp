@@ -12,6 +12,7 @@
 #include <string>
 #include <memory>
 #include <cstdint>
+#include <Math/Vect2.hpp>
 #include <thread>
 #include "Logger.hpp"
 
@@ -53,41 +54,41 @@ struct TypeNotFoundException : public CException
 
 class ComponentPtr
 {
-public:
-    struct BaseImpl
-    {
-        virtual void* Create() { return nullptr;}
-        virtual void* GetPointer() { std::cout << "Creating a base pointer " << std::endl; return nullptr;}
-        virtual void CheckingToSeeBase(){std::cout << "If base \n";}
-        virtual BaseImpl* Clone() { return new BaseImpl(*this);} 
-        virtual ~BaseImpl() {} 
-    };
-    template<typename T>
-    struct Impl : public BaseImpl
-    {
-        T* data;
-        Impl();
-        Impl(const Impl& imp);
-		Impl(T* data);
+	public:
+		struct BaseImpl
+		{
+			virtual void* Create() { return nullptr;}
+			virtual void* GetPointer() { std::cout << "Creating a base pointer " << std::endl; return nullptr;}
+			virtual void CheckingToSeeBase(){std::cout << "If base \n";}
+			virtual BaseImpl* Clone() { return new BaseImpl(*this);} 
+			virtual ~BaseImpl() {} 
+		};
+		template<typename T>
+			struct Impl : public BaseImpl
+		{
+			T* data;
+			Impl();
+			Impl(const Impl& imp);
+			Impl(T* data);
 
-		~Impl();
+			~Impl();
 
-        void CheckingToSeeBase() override;         
-		BaseImpl* Clone() override;
-        void* Create() override;
-        void* GetPointer() override;
-    };
-    BaseImpl* base;
-public:
-	uint32_t entity;
+			void CheckingToSeeBase() override;         
+			BaseImpl* Clone() override;
+			void* Create() override;
+			void* GetPointer() override;
+		};
+		BaseImpl* base;
+	public:
+		uint32_t entity;
 
-    ComponentPtr();
-    ComponentPtr(BaseImpl* baseImpl);
-    ComponentPtr(const ComponentPtr& comptr);    
+		ComponentPtr();
+		ComponentPtr(BaseImpl* baseImpl);
+		ComponentPtr(const ComponentPtr& comptr);    
 
-	~ComponentPtr();
+		~ComponentPtr();
 
-	void* emplace(BaseImpl* baseImpl);
+		void* emplace(BaseImpl* baseImpl);
 
 };
 
@@ -96,25 +97,25 @@ class ResourceBank
 	public:
 		class ResourcePtr
 		{
-		private:
-			uint8_t* data;
-			size_t size;
-		public:
-			ResourcePtr();
-			ResourcePtr(size_t size);
-			ResourcePtr(uint8_t* data, size_t size);			
-			ResourcePtr(const ResourcePtr& ptr);
-			ResourcePtr(ResourcePtr&& ptr) noexcept;
+			private:
+				uint8_t* data;
+				size_t size;
+			public:
+				ResourcePtr();
+				ResourcePtr(size_t size);
+				ResourcePtr(uint8_t* data, size_t size);			
+				ResourcePtr(const ResourcePtr& ptr);
+				ResourcePtr(ResourcePtr&& ptr) noexcept;
 
-			~ResourcePtr() noexcept;
+				~ResourcePtr() noexcept;
 
-			ResourcePtr& operator=(const ResourcePtr& ptr);
-			ResourcePtr& operator=(ResourcePtr&& ptr);
+				ResourcePtr& operator=(const ResourcePtr& ptr);
+				ResourcePtr& operator=(ResourcePtr&& ptr);
 
-			uint8_t* Get();
-			size_t GetSize();
+				uint8_t* Get();
+				size_t GetSize();
 		}; 
-//		std::vector<std::unique_ptr<char>> resouces;
+		//		std::vector<std::unique_ptr<char>> resouces;
 		std::vector<ResourcePtr> resources;
 		ResourceBank() = default;
 		ResourceBank(ResourceBank&) = default;
@@ -128,69 +129,70 @@ class ResourceBank
 
 class Scene
 {
-public:
-    class EntityManager
-    {
-        Scene* owner;
-    public:
-        EntityManager(Scene* scene);
-        uint32_t CreateEntity();
-        void DestroyEntity(uint32_t entity);
-    };
-
-    class IComponentArray
-    {
-        //std::unordered_map<std::type_index, ComponentPtr> components;
-		std::vector<ComponentType> componentTypes;
-		friend SerializerSystem;
 	public:
-		std::unordered_map<ComponentType, ComponentPtr> components;
+		class EntityManager
+		{
+			Scene* owner;
+			public:
+			EntityManager(Scene* scene);
+			uint32_t CreateEntity();
+			void DestroyEntity(uint32_t entity);
+		};
+
+		class IComponentArray
+		{
+			//std::unordered_map<std::type_index, ComponentPtr> components;
+			std::vector<ComponentType> componentTypes;
+			friend SerializerSystem;
+			public:
+			std::unordered_map<ComponentType, ComponentPtr> components;
+			public:
+			IComponentArray() = default;
+			IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, 
+					std::unordered_map<std::type_index, ComponentType>& componentTypeMap, uint32_t entity);
+
+			void* Get(uint32_t componentType);
+			template<typename T>
+				T* Get(uint32_t componentType);
+			template<typename T>
+				void Insert(uint32_t componentType, T* data);
+			template<typename T> 
+				T* Emplace(uint32_t componentType);
+			void* Insert(ComponentType component, ComponentPtr::BaseImpl* base);
+		};    
+		struct IComponentArrayIterator
+		{
+		};
+
+		struct ComponentManager
+		{
+			Scene* scene;
+			ComponentManager(Scene* scene);
+			std::unordered_map<std::type_index, ComponentPtr> componentTypes;
+			IComponentArray* CreateComponentArray(uint32_t entity);
+		};
+		using Entities  = std::vector<std::unique_ptr<IComponentArray>>;
+		using EntitiesItr = Entities::iterator;
 	public:
-        IComponentArray() = default;
-        IComponentArray(std::unordered_map<std::type_index, ComponentPtr>& componentTypes, 
-				std::unordered_map<std::type_index, ComponentType>& componentTypeMap, uint32_t entity);
+		ComponentTypeMap componentTypeMap;
+		Entities entities;
+		EntityManager* entityManager;
+		ComponentManager* componentManager;
+	public:
+		Scene();
+		uint32_t Push();
+		uint32_t PushDef();
+		void Merge(Scene* scene);
+		IComponentArray* GetEntity(uint32_t entity);
+		ResourceBank* resourceBank;
 
-        void* Get(uint32_t componentType);
-		template<typename T>
-		T* Get(uint32_t componentType);
-		template<typename T>
-		void Insert(uint32_t componentType, T* data);
-		template<typename T> 
-		T* Emplace(uint32_t componentType);
-		void* Insert(ComponentType component, ComponentPtr::BaseImpl* base);
-    };    
-	struct IComponentArrayIterator
-	{
-	};
+		template <typename T>
+			void RegisterComponent();    
+		template <typename T>
+			void UnRegisterComponent();
 
-    struct ComponentManager
-    {
-		Scene* scene;
-		ComponentManager(Scene* scene);
-        std::unordered_map<std::type_index, ComponentPtr> componentTypes;
-        IComponentArray* CreateComponentArray(uint32_t entity);
-    };
-	using Entities  = std::vector<std::unique_ptr<IComponentArray>>;
-public:
-	ComponentTypeMap componentTypeMap;
-    Entities entities;
-    EntityManager* entityManager;
-    ComponentManager* componentManager;
-public:
-    Scene();
-    uint32_t Push();
-	uint32_t PushDef();
-	void Merge(Scene* scene);
-    IComponentArray* GetEntity(uint32_t entity);
-	ResourceBank* resourceBank;
-
-    template <typename T>
-    void RegisterComponent();    
-	template <typename T>
-    void UnRegisterComponent();
-
-	void LoadScene(std::string filePath);
-    void SaveScene(std::string filePath);
+		void LoadScene(std::string filePath);
+		void SaveScene(std::string filePath);
 };
 
 struct Children
@@ -205,15 +207,26 @@ struct Message
 };
 using QueryMessages= std::unordered_map<uint32_t, std::deque<std::pair<uint32_t, std::unique_ptr<Message>>>>;
 
+class Setting
+{
+	public:
+		Vect2 resolution;
+		float NormalizeX(const float& x) const;
+		float NormalizeY(const float& y) const;
+		Vect2 Normalize(const Vect2& point) const;
+		float GetAspectRatio() const;
+};
 struct System
 {
+
 	uint32_t messageID;
 	Logger* logger;
-    virtual void LoadScene(Scene* scene) = 0;
-    virtual void Update(float deltaTime) = 0;
+	virtual void LoadScene(Scene* scene) = 0;
+	virtual void Update(float deltaTime) = 0;
 	template<typename T> 
-	static System* Create();
+		static System* Create();
 	QueryMessages* messagingSystem;
+	Setting* settings;
 	bool isSingelton;
 };
 
@@ -227,80 +240,81 @@ struct SystemManager
 	void update(float deltaTime);
 	void AddQueryMessageBlock(uint32_t messageID);
 	std::unique_ptr<QueryMessages> queryMessages;
+	std::unique_ptr<Setting> settings;
 };
 
 struct ThreadPool
 {
-private:
-	std::vector<std::thread> threads;
-	SystemManager* systemManager;
-	Scene* scene;
-public:
-	ThreadPool(SystemManager* systemManager);
-	void LoadScene(Scene* scene);
-	void Run();
-	~ThreadPool();
+	private:
+		std::vector<std::thread> threads;
+		SystemManager* systemManager;
+		Scene* scene;
+	public:
+		ThreadPool(SystemManager* systemManager);
+		void LoadScene(Scene* scene);
+		void Run();
+		~ThreadPool();
 };
 
 
 // Impl definition for avoiding link error stupid c++
-template<typename T>
+	template<typename T>
 ComponentPtr::Impl<T>::Impl()
 	:
-	data(nullptr)
+		data(nullptr)
 {}
 
-template<typename T>
+	template<typename T>
 ComponentPtr::Impl<T>::Impl(const Impl& imp)
 	:
-	data(nullptr)
+		data(nullptr)
 {}
 
-template<typename T>
+	template<typename T>
 ComponentPtr::Impl<T>::Impl(T* data)
 	:
-	data(data)
+		data(data)
 {}
 
-template<typename T>
+	template<typename T>
 void ComponentPtr::Impl<T>::CheckingToSeeBase()  
 {
 	std::cout << "If derived \n";
 }
 
-template<typename T>
+	template<typename T>
 ComponentPtr::BaseImpl* ComponentPtr::Impl<T>::Clone() 
 {
-    return static_cast<BaseImpl*>(new Impl<T>(*this));
+	return static_cast<BaseImpl*>(new Impl<T>(*this));
 }
 
-template<typename T>
+	template<typename T>
 void* ComponentPtr::Impl<T>::Create() 
 {
-    data = new T();
+	data = new T();
 	return data;
 }
 
-template<typename T>
+	template<typename T>
 void* ComponentPtr::Impl<T>::GetPointer() 
 {
 	if(data == nullptr) std::cout << "Data is NULL " << std::endl;
-    return data;
+	return data;
 }
 
-template<typename T>
+	template<typename T>
 ComponentPtr::Impl<T>::~Impl()
 {
-    if(data != nullptr) delete data;
+	if(data != nullptr) delete data;
 }
 
-template<typename T>
+	template<typename T>
 void Scene::IComponentArray::Insert(uint32_t componentType, T* data)
 {
 	components[componentType].emplace(new ComponentPtr::Impl<T>(data));
 }
 
-template<typename T>
+	template<typename T>
 T* Scene::IComponentArray::Get(uint32_t componentType)
 {
 	if(components.find(componentType) != components.end())
@@ -308,7 +322,7 @@ T* Scene::IComponentArray::Get(uint32_t componentType)
 	return nullptr;
 }
 
-template<typename T>
+	template<typename T>
 T* Scene::IComponentArray::Emplace(uint32_t componentType)
 {
 	auto compImpl = new ComponentPtr::Impl<T>();
@@ -317,20 +331,20 @@ T* Scene::IComponentArray::Emplace(uint32_t componentType)
 }
 
 
-template <typename T>
+	template <typename T>
 void Scene::RegisterComponent()
 {
-    componentManager->componentTypes.insert(std::make_pair
-            	(std::type_index(typeid(T)), 
-            	 ComponentPtr(new ComponentPtr::Impl<T>())
-            	)
-            );
+	componentManager->componentTypes.insert(std::make_pair
+			(std::type_index(typeid(T)), 
+			 ComponentPtr(new ComponentPtr::Impl<T>())
+			)
+			);
 }
 
-template <typename T>
+	template <typename T>
 void Scene::UnRegisterComponent()
 {
-    componentManager->componentTypes.erase(std::type_index(typeid(T)));
+	componentManager->componentTypes.erase(std::type_index(typeid(T)));
 }
 
 

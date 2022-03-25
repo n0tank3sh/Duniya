@@ -41,8 +41,6 @@ Renderer2DSystem::Renderer2DSystem()
 	fontShaderStageHandler->shaderHandler.push_back(std::move(fontFragShader));
 	fontShaderStageHandler->Load();
 	shaderStageHandler->Load();
-	resolution.x = 1400;
-	resolution.y = 900; 
 }
 
 Renderer2DSystem* Renderer2DSystem::Init()
@@ -65,7 +63,7 @@ void Renderer2DSystem::LoadScene(Scene* scene)
 	{
 		throw std::runtime_error("Font File doesn't exist");
 	}
-	if(texturePacker.PackFont(fontFile, defaultFont))
+	if(texturePacker.PackFont(fontFile, defaultFont, 32))
 	{
 		throw std::runtime_error("Couldn't pack font");
 	}
@@ -89,6 +87,10 @@ void Renderer2DSystem::Scan()
 		if(componentList->Get(ComponentTypes::PANEL) != nullptr)
 		{
 			panels.push_back(i);
+		}
+		if(componentList->Get(ComponentTypes::TEXTPANEL) != nullptr)
+		{
+			texts.push_back(i);
 		}
 	}
 }
@@ -118,16 +120,9 @@ void Renderer2DSystem::ProcessMessages()
 	}
 }
 
-void Renderer2DSystem::Update(float deltaTime)
-{
-	ProcessMessages();
-	shaderStageHandler->Load();
-	renderer->Enable(Options::BLEND);
-	renderer->Disable(Options::DEPTH_TEST);
-	renderer->Disable(Options::FACE_CULL);
-	
-	//renderer->ClearColor(0.f, 0.f, 0.f);
-	//renderer->Clear();
+
+void Renderer2DSystem::LoadPanels()
+{	
 	uint32_t goat = 0;
 	for(auto i = 0; i < panels.size(); i++)
 	{
@@ -154,7 +149,11 @@ void Renderer2DSystem::Update(float deltaTime)
 	}
 	if(goat != 0)
 		renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, goat);
-	goat = 0;
+}
+
+void Renderer2DSystem::LoadFontGlyph()
+{	
+	uint32_t goat = 0;
 	fontShaderStageHandler->Load();
 	uint32_t batchSize = 10;
 	renderer->Bind(defaultFont.gBuffer);
@@ -170,8 +169,8 @@ void Renderer2DSystem::Update(float deltaTime)
 		{
 			auto& temp = defaultFont.glyps[e];
 			auto uv = temp.uv;
-			auto glyphPos = Vect4(curPos, temp.pos/resolution * 2);
-			glyphPos.y = panel.dimension.y;
+			auto glyphPos = Vect4(curPos, settings->Normalize(temp.pos));
+			glyphPos.y -= settings->NormalizeY(defaultFont.fontSize);
 			auto luft = "[" + std::to_string(goat) + "]";
 			renderer->Uniform4f(1, &glyphPos, "pos" + luft);
 			renderer->Uniform4f(1, &uv, "uvs" + luft);
@@ -183,10 +182,10 @@ void Renderer2DSystem::Update(float deltaTime)
 				goat = 0;
 			}
 			advanceY = std::max(temp.advance.y, advanceY); 
-			curPos.x += lerp(0.f, 2.f, (float)temp.advance.x / resolution.x);
+			curPos.x += settings->NormalizeX(temp.advance.x); 			
 			if(curPos.x > panelPos.x + panelPos.z)
 			{
-				curPos.y -= lerp(0.f, 2.f, (float)advanceY / resolution.y);
+				curPos.y -= settings->NormalizeY(temp.advance.y); 			
 			}
 			if(curPos.y < panelPos.y)
 				break;
@@ -196,4 +195,19 @@ void Renderer2DSystem::Update(float deltaTime)
 	{
 		renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, goat);
 	}
+}
+
+void Renderer2DSystem::Update(float deltaTime)
+{
+	ProcessMessages();
+	shaderStageHandler->Load();
+	renderer->Enable(Options::BLEND);
+	renderer->Disable(Options::DEPTH_TEST);
+	renderer->Disable(Options::FACE_CULL);
+	
+	//renderer->ClearColor(0.f, 0.f, 0.f);
+	//renderer->Clear();
+	LoadPanels();
+	LoadFontGlyph();
+
 }

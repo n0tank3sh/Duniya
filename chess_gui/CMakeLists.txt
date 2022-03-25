@@ -114,6 +114,7 @@ target_link_libraries(
     glad
 	${OPENGL_LIBRARIES}
 	${FREETYPE_LIBRARIES}
+	#	${ASSIMP_LIBRARIES}
     ${CMAKE_DL_LIBS}
 )
 

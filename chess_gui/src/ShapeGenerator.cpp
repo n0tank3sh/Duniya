@@ -22,6 +22,7 @@ Mesh ShadpeGenerator::GenerateCube()
 		verticies[i].aPos.x = lerp(-1.f, 1.f, verticies[i].aPos.x);
 		verticies[i].aPos.z = lerp(-1.f, 1.f, verticies[i].aPos.z); 
 	}
+	indicies = {};
 	return mesh;
 }
 

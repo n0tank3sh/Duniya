@@ -41,7 +41,7 @@ struct Button
 
 struct Font
 {
-	uint32_t width, height, data;
+	uint32_t width, height, data, fontSize;
 	Vect2 umap[128][4];
 };
 
@@ -71,11 +71,12 @@ private:
 	std::vector<uint32_t> texts;
 	std::unique_ptr<ShaderStageHandler> shaderStageHandler;
 	std::unique_ptr<ShaderStageHandler> fontShaderStageHandler;
-	Vect2 resolution;
 	Scene* scene;
 	std::vector<uint32_t> panels;
 	uint32_t layout;
 	void LoadFontFile(std::string fontFile);
+	void LoadPanels();
+	void LoadFontGlyph();
 	void ProcessMessages();
 	void Scan();
 	void Add(uint32_t);

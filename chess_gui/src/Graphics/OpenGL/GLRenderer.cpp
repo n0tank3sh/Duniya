@@ -1,6 +1,7 @@
 #include "GLRenderer.hpp"
 #include "ECS/GraphicsComponent.hpp"
 #include "Graphics/Renderer.hpp"
+#include "SDL_gamecontroller.h"
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <memory>
@@ -78,57 +79,58 @@ std::string GLException::CheckError() const noexcept
 }
 
 
-
-
-GLIndexBinder::GLIndexBinder(uint32_t rendererID)
-{
-	this->rendererID = rendererID;
-}
+GLIndexBinder::GLIndexBinder(uint32_t pvao, uint32_t rendererID)
+	:
+	pvao(pvao), rendererID(rendererID)
+{}
 
 void GLIndexBinder::Bind() const noexcept 
 {
+	glBindVertexArray(pvao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID);
 }
 
 void GLIndexBinder::UnBind() const noexcept
 {
+	glBindVertexArray(pvao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-GLVertexBinder::GLVertexBinder(uint32_t rendererID)
-{
-	this->rendererID = rendererID;
-}
+GLVertexBinder::GLVertexBinder(uint32_t pvao, uint32_t rendererID)
+	:
+	pvao(pvao), rendererID(rendererID)
+{}
+
+
 
 void GLVertexBinder::Bind() const noexcept
 {
+	glBindVertexArray(pvao);
 	glBindBuffer(GL_ARRAY_BUFFER, rendererID);
 }
 
 void GLVertexBinder::UnBind() const noexcept
 {
+	glBindVertexArray(pvao);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-GLTextureBinder::GLTextureBinder(uint32_t rendererID)
-{
-	this->rendererID = rendererID;
-}
+GLTextureBinder::GLTextureBinder(uint32_t pvao, uint32_t rendererID, GLenum target)
+	:
+	pvao(pvao), rendererID(rendererID), target(target)
+{}
 
-GLTextureBinder::GLTextureBinder(uint32_t rendererID, GLenum target)
-{
-	this->rendererID = rendererID;
-	this->target = target;
-}
 
 void GLTextureBinder::Bind() const noexcept
 {
+	glBindVertexArray(pvao);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(target, rendererID);
 }
 
 void GLTextureBinder::UnBind() const noexcept
 {
+	glBindVertexArray(pvao);
 	glBindTexture(target, 0);
 }
 
@@ -234,13 +236,13 @@ NativeShaderStageHandler<GLRenderer>::~NativeShaderStageHandler()
 GLRenderer::GLRenderer()
 {
 	LoadGladGL();
-	//glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glGenVertexArrays(1, &pvao);
+	glBindVertexArray(pvao);
+	glCullFace(GL_BACK);
+	glDepthMask(GL_TRUE);
 	glActiveTexture(GL_TEXTURE0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
-	GLDEBUGCALL(glGenVertexArrays(1, &pvao));
-	glBindVertexArray(pvao);
 } 
 
 bool GLRenderer::gladLoaded = false;
@@ -370,6 +372,16 @@ void GLRenderer::UniformMat(const uint32_t count, const Mat* mat, std::string na
 	}
 }
 
+void GLRenderer::WireFrameMode(bool swit)
+{
+	if(swit)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
+	else
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+}
+
 GLenum GLRenderer::GetDrawTarget(DrawPrimitive drawPrimitive)
 {
 	GLenum target;
@@ -390,6 +402,9 @@ GLenum GLRenderer::GetDrawTarget(DrawPrimitive drawPrimitive)
 		case DrawPrimitive::QUADS:
 			target = GL_QUADS;
 			break;
+		case DrawPrimitive::LINES:
+			target = GL_LINES;
+			break;
 		default:
 			throw CException(__LINE__, __FILE__, "Primitive Not found", "Primitive is not supported by this renderer \nPrimitive no: " 
 					+ std::to_string(static_cast<uint32_t>(drawPrimitive)));
@@ -409,7 +424,6 @@ void GLRenderer::ClearDepth(float depthLevel)
 
 void GLRenderer::FinalizeVertexSpecification()
 {
-
 }
 
 
@@ -470,16 +484,17 @@ void GLRenderer::LoadBuffer(GBuffer* gBuffer)
 	{
 		case GBuffer::GBufferStyle::BufferType::VERTEX:
 			bufferType = GL_ARRAY_BUFFER;
-			binders.push_back(std::unique_ptr<GBinder>(new GLVertexBinder(rendererID)));
+			binders.push_back(std::unique_ptr<GBinder>(new GLVertexBinder(pvao, rendererID)));
 			break;        
 		case GBuffer::GBufferStyle::BufferType::INDEX:
 			bufferType = GL_ELEMENT_ARRAY_BUFFER;
-			binders.push_back(std::unique_ptr<GBinder>(new GLIndexBinder(rendererID)));
+			binders.push_back(std::unique_ptr<GBinder>(new GLIndexBinder(pvao, rendererID)));
 			break;
 	};
 	gBuffer->bindNo = binders.size() - 1;
 
 	GLDEBUGCALL(this->Bind(*gBuffer));
+	std::cout << gBuffer->sizet << std::endl;
 	GLDEBUGCALL(glBufferData(bufferType, gBuffer->sizet, resourceBank->resources[gBuffer->data].Get(), flags));
 }
 
@@ -530,16 +545,16 @@ void GLRenderer::LoadTexture(Texture* texture, GBuffer* gBuffer)
 	glBindTexture(GL_TEXTURE_2D, rendererID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	GLDEBUGCALL(glTexImage2D(GL_TEXTURE_2D, 0, format, texture->width, texture->height,
 				0, format, GL_UNSIGNED_BYTE, resourceBank->resources[texture->data].Get()));
 
-	binders.emplace_back(new GLTextureBinder(rendererID, GL_TEXTURE_2D));
+	binders.emplace_back(new GLTextureBinder(pvao, rendererID, GL_TEXTURE_2D));
 
 	gBuffer->bindNo = binders.size() - 1;
 	Bind(*gBuffer);
-	//GLDEBUGCALL(glGenerateMipmap(GL_TEXTURE_2D));
+	GLDEBUGCALL(glGenerateMipmap(GL_TEXTURE_2D));
 }
 
 ShaderStageHandler* GLRenderer::CreateShaderStage()
@@ -559,6 +574,9 @@ GLenum GLRenderer::GetOption(Options option)
 			return GL_DEPTH_TEST;
 		case Options::FACE_CULL:
 			return GL_CULL_FACE;
+		case Options::WIREFRAME_MODE:
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINES);
+			return 0;
 	};
 }
 
@@ -603,9 +621,9 @@ void GLRenderer::DrawInstancedArrays(DrawPrimitive drawPrimitive, GBuffer* gBuff
 
 void GLRenderer::DrawArrays(DrawPrimitive drawPrimitive, GBuffer* gBuffer, uint32_t numElements)
 {
+	glBindVertexArray(pvao);
 	if(gBuffer != nullptr)
 		Bind(*gBuffer);
-	glBindVertexArray(pvao);
 	glDrawArrays(GetDrawTarget(drawPrimitive), 0, numElements);
 }
 
@@ -625,24 +643,23 @@ void GLRenderer::SetLayout(const uint32_t layout)
 {
 	glBindVertexArray(vaos[layout].first);
 	auto& tmp = vaos[layout].second;
-	uint32_t offset = 0, totalSize = tmp.back();
+	uint32_t offset = 0;
 	for(uint32_t i = 0; i < tmp.size() - 1; i++)
 	{
 		GLDEBUGCALL(glVertexAttribPointer(i, tmp[i], GL_FLOAT, GL_FALSE, 
-					totalSize, (const void*)offset));
-		offset+= tmp[i] * sizeof(float);
+					tmp.back(), (const void*)offset));
+		std::cout << tmp[i] << " " << offset << std::endl;
 		GLDEBUGCALL(glEnableVertexAttribArray(i));
+		offset += tmp[i] * sizeof(float);
 	}
 }
 
 uint32_t GLRenderer::AddSpecification(VertexSpecification& vertexSpecification)
 {
-	glGenVertexArrays(1, &pvao);
 	glBindVertexArray(pvao);
-	uint32_t totalSize = 0;
-	uint32_t offset = 0;
 	vaos.emplace_back();
 	vaos.back().first = pvao;
+	uint32_t totalSize = 0;
 	for(uint32_t i = 0; i < vertexSpecification.size(); i++)
 	{
 		totalSize += vertexSpecification[i].second;

@@ -89,8 +89,8 @@ void main()
 {
 	//FragColor = texture(image, vec2(otexCoord.x, otexCoord.y));
 	//vec3 ambientLight = materialshininess * ambient;
-	vec4 col = texture(tex, uv);
-	//	col += CalcDirectionalLights(oNormal, vec3(0, 0, 0)) ;
-	//	col += CalcPointLights(oNormal, pos.xyz, vec3(0, 0, 0));
+	vec4 col =  texture(tex, uv);
+	//col += CalcDirectionalLights(oNormal, vec3(0, 0, 0)) ;
+	//col += CalcPointLights(oNormal, fragPos.xyz, vec3(0, 0, 0));
 	FragColor = col;
 }

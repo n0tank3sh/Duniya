@@ -128,7 +128,7 @@ uint32_t TexturePacker::Pack()
 	return 0;
 }
 
-int32_t TexturePacker::PackFont(std::string fontFile, FontDict& dict)
+int32_t TexturePacker::PackFont(std::string fontFile, FontDict& dict, uint32_t fontSize)
 {
 	//std::priority_queue<std::array<int32_t, 3>, std::vector<std::array<int32_t, 3>>, RectComp<std::array<int32_t, 3>>> rects;
 	auto scene = GetScene();
@@ -154,7 +154,8 @@ int32_t TexturePacker::PackFont(std::string fontFile, FontDict& dict)
 	}
 	if(face == nullptr)
 		std::runtime_error("face is null");
-	FT_Set_Pixel_Sizes(face, 32,0);
+	FT_Set_Pixel_Sizes(face, fontSize, 0);
+	dict.fontSize = 32;
 	auto glyph = face->glyph;
 	uint8_t* buffers[127];
 	{
