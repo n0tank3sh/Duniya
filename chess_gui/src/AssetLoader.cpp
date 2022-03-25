@@ -15,7 +15,6 @@
 #include <iterator>
 #include <map>
 #include <unordered_map>
-#include <OBJ_Loader.h>
 
 void AssetLoader::ObjLoader::SetFile(const std::string& fileName)
 {
