@@ -1,6 +1,5 @@
 .cache/
 out/
-glad/
 CMakeFiles/
 putils/
 Resource/Test/
