@@ -18,46 +18,15 @@
 RendererSystem* RendererSystem::singleton = nullptr;
 
 RendererSystem::RendererSystem()
-	:
-		transformDefault({4, 4})
 {
 	animated = .0f;
-	transformDefault = DefaultMatrix::generateIdentityMatrix({4, 4});
-	camera = new Scene::IComponentArray;
-	transformDefault.Get(2, 3) = 1.f;
-	camera->Emplace<Camera>(ComponentTypes::CAMERA);
-	auto transform = camera->Emplace<Transform>(ComponentTypes::TRANSFORM);
-	transform->pos = Vect3(0.f, 0.f, 2.f);
-	auto cameraHdl = camera->Get<Camera>(ComponentTypes::CAMERA);
-	cameraHdl->lookAt.z = 1.f;
-	cameraHdl->fov = M_PI/3;
-	cameraHdl->near = 0.05;
-	cameraHdl->near = 0.65;
 	renderer = std::unique_ptr<Renderer>(new GLRenderer);
-	mainShaderStage.reset(renderer->CreateShaderStage());	
-	std::unique_ptr<NativeShaderHandlerParent> fragShader(renderer->CreateShader(ShaderType::FRAGMENT)), 
-		vertShader(renderer->CreateShader(ShaderType::VERTEX));
-
-	if(AssetLoader::GetSingleton() == nullptr)
-		AssetLoader::init();
-	auto assetLoader = AssetLoader::GetSingleton();
-	
-
-	assetLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertShader->source);
-	assetLoader->LoadTextFile("Resource/Shaders/FragmentShader.glsl", fragShader->source);
-
-	mainShaderStage->shaderHandler.push_back(std::move(vertShader));
-	mainShaderStage->shaderHandler.push_back(std::move(fragShader));
+	SetupMainShader();
 	VertexSpecification specification  = { {"aPos", 4}, {"aNormal", 3}, {"texCoord", 2}};
-
-	defaultMaterial.ambient = Vect3() + 1.f;
-	defaultMaterial.diffuse = Vect3() +  1.f;
-	defaultMaterial.shininess = 0.0f;
-	defaultMaterial.spectacular = Vect3() + 1.f;
-
 	mainShaderStage->Load();
 	layout = renderer->AddSpecification(specification);
-
+	SetupDefaultMaterial();
+	SetupDefaultCamera();
 }
 
 RendererSystem* RendererSystem::init(Graphics_API graphicsAPI)
@@ -96,7 +65,7 @@ void RendererSystem::LoadLights()
 		if(scene->entities[i]->Get(ComponentTypes::POINTLIGHT) != nullptr)
 		{
 			auto pointLight = reinterpret_cast<PointLight*>(scene->entities[i]->Get(ComponentTypes::POINTLIGHT));
-			std::string pointLightName("pointLight[");
+			std::string pointLightName("pointLights[");
 			pointLightName += std::to_string(numPointLights) + "]";
 			renderer->Uniform3f(1, &pointLight->pos, pointLightName + ".pos");
 			LoadLightColor(pointLight->lightColor, pointLightName + ".lightColor");
@@ -107,15 +76,24 @@ void RendererSystem::LoadLights()
 		}
 		if(scene->entities[i]->Get(ComponentTypes::DIRLIGHT) != nullptr)
 		{
-			auto dirLight = reinterpret_cast<DirectionalLight*>(scene->entities[i]->Get(ComponentTypes::DIRLIGHT));
-			std::string dirLightName("dirLight[");
+			auto dirLight = scene->entities[i]->Get<DirectionalLight>(ComponentTypes::DIRLIGHT);
+			std::string dirLightName("dirLights[");
 			dirLightName += std::to_string(numDirLights) + "]";
-			renderer->Uniform3f(1, &dirLight->dir, dirLightName + ".dir");
+			renderer->Uniform3f(1, &dirLight->dir, dirLightName + ".direction");
+			LoadLightColor(dirLight->lightColor, dirLightName + ".lightColor");
 			numDirLights++;
 		}
 	}
 	renderer->Uniform1u(1, &numPointLights, "numPointLights");
 	renderer->Uniform1u(1, &numDirLights, "numDirLights");
+}
+
+void RendererSystem::SetupDefaultMaterial()
+{
+	defaultMaterial.color.ambient = Vect3() + 1.f;
+	defaultMaterial.color.diffuse = Vect3() +  1.f;
+	defaultMaterial.color.specular = Vect3() + 1.f;
+	defaultMaterial.shininess = 3.0f;
 }
 
 void RendererSystem::SetupDefaultTexture()
@@ -125,12 +103,45 @@ void RendererSystem::SetupDefaultTexture()
 	constexpr auto defTextureHeight = defTextureSize / defTextureWidth;
 
 	auto data = new uint8_t[4 * defTextureSize];
-	memset(data, 0xff, 4 * defTextureSize);
+	memset(data, 0xff/2, 4 * defTextureSize);
+	for(int i = 0; i < defTextureSize; i++)
+	{
+		data[i * 4 + 3] = 0xff;
+	}
 	defaultTexture.data = GetScene()->resourceBank->Push_Back(data, 4 * defTextureSize);
 	defaultTexture.format = Texture::RGBA;
 	defaultTexture.width = defTextureWidth;
 	defaultTexture.height = defTextureHeight;
 	renderer->LoadTexture(&defaultTexture, &defaultTextureGBuffer); 
+}
+
+void RendererSystem::SetupMainShader()
+{
+	mainShaderStage.reset(renderer->CreateShaderStage());	
+	std::unique_ptr<NativeShaderHandlerParent> fragShader(renderer->CreateShader(ShaderType::FRAGMENT)), 
+		vertShader(renderer->CreateShader(ShaderType::VERTEX));
+
+	auto assetLoader = AssetLoader::init();
+	
+
+	assetLoader->LoadTextFile("Resource/Shaders/VertexShader.glsl", vertShader->source);
+	assetLoader->LoadTextFile("Resource/Shaders/FragmentShader.glsl", fragShader->source);
+
+	mainShaderStage->shaderHandler.push_back(std::move(vertShader));
+	mainShaderStage->shaderHandler.push_back(std::move(fragShader));
+}
+
+void RendererSystem::SetupDefaultCamera()
+{
+	camera = new Scene::IComponentArray;
+	camera->Emplace<Camera>(ComponentTypes::CAMERA);
+	auto transform = camera->Emplace<Transform>(ComponentTypes::TRANSFORM);
+	transform->pos = Vect3(0.f, 0.f, 2.f);
+	auto cameraHdl = camera->Get<Camera>(ComponentTypes::CAMERA);
+	cameraHdl->lookAt.z = 1.f;
+	cameraHdl->fov = M_PI/3;
+	cameraHdl->near = 0.05;
+	cameraHdl->near = 0.65;
 }
 
 void RendererSystem::CreateGBufferMesh(Mesh* mesh, GBuffer* indexBuffer, GBuffer* vertexBuffer)
@@ -174,6 +185,7 @@ void RendererSystem::LoadScene(Scene* scene)
 	renderer->SetResourceBank(scene->resourceBank);
 	mainShaderStage->Load();
 	this->scene = scene;
+	SetupDefaultTexture();
 	Mesh* mesh;
 	Texture* texture;
 	bool foundCamera = false;
@@ -202,13 +214,11 @@ void RendererSystem::LoadScene(Scene* scene)
 			lights.push_back(itr);
 
 	}
-	SetupDefaultTexture();
 	if(!foundCamera)
 	{
 		mainCamera = scene->entityManager->CreateEntity();
 		scene->entities[mainCamera].reset(camera);
 	}
-	LoadLights();
 }
 
 Mat RendererSystem::SetupCamera(uint32_t entity)
@@ -231,7 +241,9 @@ Mat RendererSystem::SetupCamera(uint32_t entity)
 		lookAt = DefaultMatrix::generateYawMatrix({3, 3}, transform->rotation.z) * lookAt;
 	}
 	lookAt.normalize();
-	return LookAt(transform->pos, transform->pos + lookAt, Vect3(0, 1, 0)) * perspectiveMat;
+	auto tmp = transform->pos + lookAt;
+	renderer->Uniform3f(1, &transform->pos, "viewPos");
+	return LookAt(transform->pos, tmp, Vect3(0, 1, 0)) * perspectiveMat;
 }
 
 Mat RendererSystem::LookAt(const Vect3& eye, const Vect3& at, const Vect3& up)
@@ -267,9 +279,7 @@ void RendererSystem::LoadMaterial(Scene::Entities::iterator& itr)
 	{				
 		material = &defaultMaterial;
 	}
-	renderer->Uniform3f(1, &material->diffuse, "material.diffuse");
-	renderer->Uniform3f(1, &material->spectacular, "material.spectacular");
-	renderer->Uniform3f(1, &material->ambient, "material.ambient");
+	LoadLightColor(material->color, "material");
 	renderer->Uniform1f(1, &material->shininess, "material.shininess");
 }
 
@@ -320,7 +330,6 @@ void RendererSystem::LoadTexture(Scene::EntitiesItr& itr)
 {
 	if((*itr)->Get(ComponentTypes::TEXTURE) != nullptr)
 	{
-		std::cout << "We found the texture" << std::endl;
 		renderer->Bind(textureGBuffer.find(std::distance(scene->entities.begin(), itr))->second);
 	}
 	else
@@ -328,6 +337,38 @@ void RendererSystem::LoadTexture(Scene::EntitiesItr& itr)
 		renderer->Bind(defaultTextureGBuffer);
 	}
 
+}
+
+void RendererSystem::ScanLights()
+{			
+	lights.clear();
+	for(auto itr = scene->entities.begin(); itr != scene->entities.end(); itr++)
+	{
+		if((*itr)->Get(ComponentTypes::DIRLIGHT) != nullptr || (*itr)->Get(ComponentTypes::POINTLIGHT) != nullptr)
+		{
+			lights.push_back(std::distance(scene->entities.begin(), itr));
+		}
+	}
+}
+
+void RendererSystem::ProcessMessages()
+{
+	auto messagesItr = messagingSystem->find(messageID);
+	if(messagesItr != messagingSystem->end())
+	{
+		auto& messages = messagesItr->second;
+		while(!messages.empty())
+		{
+			auto& message = messages.front();
+			switch(message.first)
+			{
+				case 0:	
+					ScanLights();
+					break;
+			}
+			messages.pop_front();
+		}
+	}
 }
 
 void RendererSystem::Update(float deltaTime)
@@ -338,8 +379,10 @@ void RendererSystem::Update(float deltaTime)
 	auto scene = GetScene();
 	renderer->Enable(Options::BLEND);
 	renderer->Enable(Options::DEPTH_TEST);
-	renderer->Disable(Options::FACE_CULL);
+	renderer->Enable(Options::FACE_CULL);
 	cameras[mainCamera] = SetupCamera(mainCamera);
+	ProcessMessages();
+	LoadLights();
 	for(auto itr = scene->entities.begin(); itr != scene->entities.end(); itr++)
 	{
 		LoadMesh(itr);

@@ -12,6 +12,7 @@
 
 void TestGame::LoadScene(Scene* scene)
 {
+	this->scene = scene;
 	//uint32_t entity = scene->PushDef();
 	//auto panel = scene->GetEntity(entity)->Emplace<Panel>(ComponentTypes::PANEL);
 	//panel->dimension = Vect4(0.5, 0.5, 0.5, 0.5);
@@ -36,19 +37,32 @@ void TestGame::LoadScene(Scene* scene)
 			camera = entity->Get<Camera>(ComponentTypes::CAMERA);
 		}
 	}
-	uint32_t texPanel = scene->Push();
-	auto text = scene->GetEntity(texPanel)->Emplace<std::string>(ComponentTypes::TEXTBOX);
-	(*text) = "Hellow";
-	auto hell = scene->GetEntity(texPanel)->Emplace<TextPanel>(ComponentTypes::TEXTPANEL); 
-	hell->dimension.z = settings->NormalizeX(46);
+	textPanel = scene->Push();
+	auto text = scene->GetEntity(textPanel)->Emplace<Text>(ComponentTypes::TEXTBOX);
+	text->str = "Hellow";
+	text->color = Vect3(1.f, 1.f, 0.f);
+	text->scale = 16;
+	auto hell = scene->GetEntity(textPanel)->Emplace<TextPanel>(ComponentTypes::TEXTPANEL); 
+	hell->dimension.x = -1.f;
+	hell->dimension.y = 1.f;
+	hell->dimension.z = settings->NormalizeX(200);
 	hell->dimension.w = settings->NormalizeY(32);
+	hell->dimension.y -= hell->dimension.w;
+	auto dirLightEntity = scene->Push();
+	auto dirLight = scene->GetEntity(dirLightEntity)->Emplace<DirectionalLight>(ComponentTypes::DIRLIGHT); 
+	dirLight->dir= Vect3(1.f, 0.f, 0.f);
+	//dirLight->constant = 1.f;
+	dirLight->lightColor.ambient = Vect3(.3f, .3f, 0.3f);
+	dirLight->lightColor.diffuse = Vect3(0.1, .5f, 0.3f);
+	dirLight->lightColor.specular = Vect3(0.1, 1.f, 0.3f);
 	messagingSystem->at(0x35).push_back(std::make_pair(0, nullptr));
+	(*messagingSystem)[0x15].push_back(std::make_pair(0, nullptr));
 }
 
 void TestGame::Update(float deltaTime)
 {
 	auto& messages = messagingSystem->at(0x0);
-	auto acceleration = Vect3();
+	auto acceleration = Vect4();
 	while(!messages.empty())
 	{
 		auto message = static_cast<KeyboardEvent*>(messages.front().second.get());
@@ -72,20 +86,28 @@ void TestGame::Update(float deltaTime)
 			case SDLK_e:
 				acceleration.y += .5f;
 				break;
-			case SDLK_UP:
-				player->rotation.x -= .05f;
-				break;
-			case SDLK_DOWN:
-				player->rotation.x = .05f;
-				break;
-			case SDLK_LEFT:
-				player->rotation.y += .05f;
-				break;
-			case SDLK_RIGHT:
-				player->rotation.y -= .05f;
-				break;
 		};
 		messages.pop_front();
 	}
-	player->pos += acceleration * deltaTime * 10;
+	auto mouseMessages = messagingSystem->find(0x1); 
+	if(mouseMessages != messagingSystem->end())
+	{
+		for(auto& message : mouseMessages->second)
+		{
+			switch(message.first)
+			{
+				case EVENTS::MOUSEMOTION_EVENT:
+					auto mouseMotionEvent = reinterpret_cast<MouseMotionEvent*>(message.second.get());
+					auto ny = (settings->NormalizeX(mouseMotionEvent->event.xrel));
+					auto nx = (settings->NormalizeY(mouseMotionEvent->event.yrel));
+					player->rotation.y += ny * deltaTime * 10;
+					player->rotation.x += nx * deltaTime * 10;
+					break;
+			};
+		}
+	}
+	auto text = scene->GetEntity(textPanel)->Get<std::string>(ComponentTypes::TEXTBOX);
+	(*text) = "fps: " + std::to_string(settings->fps) + "\nHello";
+	acceleration = GetRotationMatrix(player->rotation) * acceleration * deltaTime * 10;
+	player->pos += Vect3(acceleration.x, acceleration.y, acceleration.z);
 }

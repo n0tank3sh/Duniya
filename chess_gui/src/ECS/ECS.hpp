@@ -210,6 +210,7 @@ using QueryMessages= std::unordered_map<uint32_t, std::deque<std::pair<uint32_t,
 class Setting
 {
 	public:
+		float fps;
 		Vect2 resolution;
 		float NormalizeX(const float& x) const;
 		float NormalizeY(const float& y) const;

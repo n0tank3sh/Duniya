@@ -34,6 +34,13 @@ struct Sprite
 	uint32_t data;
 };
 
+struct Text
+{
+	std::string str;
+	uint32_t scale;
+	Vect3 color;
+};
+
 struct Button
 {
 	uint32_t id;

@@ -13,4 +13,6 @@ struct TestGame : public System
 	void Update(float deltaTime) override;
 	Transform* player;
 	Camera* camera;
+	Scene* scene;
+	uint32_t textPanel;
 };

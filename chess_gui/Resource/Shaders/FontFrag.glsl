@@ -3,6 +3,8 @@
 in vec2 uv;
 in vec2 curPos;
 in vec4 boxPos;
+
+uniform vec3 color;
 uniform sampler2D tex;
 
 out vec4 oColor;
@@ -13,7 +15,7 @@ void main()
 	if(curPos.x >= boxPos.x && curPos.x <= (boxPos.z + boxPos.x)
 			&& curPos.y >= boxPos.y && curPos.y <= (boxPos.w + boxPos.y)
 	  )
-		oColor = vec4(0, 1, 0, texture(tex, ch).r);
+		oColor = vec4(color, texture(tex, ch).r);
 	else
 		oColor = vec4(0);
 }

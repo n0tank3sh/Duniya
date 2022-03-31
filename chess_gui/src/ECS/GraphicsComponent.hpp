@@ -5,6 +5,7 @@
 #include <vector>
 #include "SerializerSystem.hpp"
 #include <cassert>
+#include "CommonComponent.hpp"
 
 struct Vertex
 {
@@ -14,9 +15,7 @@ struct Vertex
 };
 struct Material
 {
-	Vect3 diffuse;
-	Vect3 spectacular;
-	Vect3 ambient;
+	LightColor color;
 	float shininess;
 };	
 

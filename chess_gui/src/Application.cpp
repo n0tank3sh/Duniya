@@ -9,6 +9,8 @@
 #include "AssetLoader.hpp"
 #include "SDLUtiliy.hpp"
 #include "SDL_events.h"
+#include "SDL_mouse.h"
+#include "SDL_stdinc.h"
 #include "TestGame.hpp"
 #include <filesystem>
 #include <iterator>
@@ -63,6 +65,8 @@ Application::Application()
 		i = itr + i; 
 	}
 
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+
 	manager = new SystemManager;
 	manager->settings->resolution = Vect2(width, height);
 	manager->AddQueryMessageBlock(0x0);
@@ -83,6 +87,12 @@ uint32_t Application::run()
 		KeyboardEvent* keyboardEvent;
 		MouseButtonEvent* mouseButtonEvent;
 		MouseMotionEvent* mouseMotionEvent;
+		for(int i = 0x0; i <= 0x1; i++)
+		{
+			auto check = manager->queryMessages->find(i);
+			if(check != manager->queryMessages->end())
+				check->second.clear();
+		}
 		while(SDL_PollEvent(&event))
 		{
 			switch(event.type)
@@ -107,6 +117,7 @@ uint32_t Application::run()
 				break;
 			}
 		}
+		manager->settings->fps = 1000 / ((currentTime - lastTime));
 		manager->update(1/(currentTime - lastTime));
 		SDL_GL_SwapWindow(window);
 		lastTime = currentTime;

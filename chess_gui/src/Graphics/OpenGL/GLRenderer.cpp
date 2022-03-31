@@ -238,7 +238,7 @@ GLRenderer::GLRenderer()
 	LoadGladGL();
 	glGenVertexArrays(1, &pvao);
 	glBindVertexArray(pvao);
-	glCullFace(GL_BACK);
+	glCullFace(GL_FRONT);
 	glDepthMask(GL_TRUE);
 	glActiveTexture(GL_TEXTURE0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

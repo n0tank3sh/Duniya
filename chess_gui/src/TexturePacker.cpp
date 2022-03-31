@@ -91,6 +91,73 @@ Scene* TexturePacker::GetScene()
 //	}
 //}
 
+
+template <typename T, typename U>
+uint8_t* PacKToBuffer(std::priority_queue<std::pair<T, T>, U>& rects, std::vector<Vect4>& uvs, 
+		std::function<uint8_t*(const U&)>& retrieveFunction, std::function<uint64_t(const U&)>& toUV,
+		const uint64_t& width, const uint64_t& height, uint8_t channel)
+{
+	auto atlasPtr = new uint8_t[width * height * channel];
+	std::vector<std::vector<bool>> guide(width, std::vector<bool>(height, false));
+	while(!rects.empty())
+	{
+		auto k = rects.top();
+		rects.pop();
+		auto glympBitmap = retrieveFunction(k.second);
+		auto chWidth = k.first.first;
+		auto chHeight = k.first.second;
+		int start = -1;
+		int32_t alignment = -1;
+		int32_t margin = 3;
+		auto mWidth = chWidth + 2 * margin;
+		auto mHeight = chHeight + 2 * margin;
+		for(int i = 0; i < height - mHeight; i++)
+		{
+			for(int j = 0; j < width - mWidth; j++)
+			{
+				start = i;
+				alignment = j;
+				int a = 0;
+				int b = 0;
+				for(; a < mHeight; a++)
+				{
+					b = 0;
+					for(; b < mWidth; b++)
+					{
+						if(guide[i + a][b + j])
+						{
+							start = -1;
+							alignment = -1;
+							break;
+						}
+					}
+					if(guide[i + a][b + j]) break;
+				}
+				if(a == mHeight && b == mWidth)
+				{
+					i = height;
+					j = width;
+				}
+			} 
+		}
+		//if((end - j) < chHeight) break;
+		if(start == -1 || alignment == -1)
+			return nullptr;
+		start += margin;
+		alignment += margin;
+		for(int i = 0; i < chHeight; i++)
+		{
+			auto already = chWidth * i;
+			auto alreadyData = width * (start + i);
+			std::copy(glympBitmap + already, glympBitmap + already + chWidth, atlasPtr + alreadyData  + alignment);
+			for(int a = 0; a < chWidth; a++)
+				guide[start + i][alignment + a] = true;
+		}
+		auto high = (float)chHeight/(float)height;
+		uvs[toUV(k.second)] = Vect4((float)alignment/(float)width, (float)start/(float)height + high, 
+				(float)chWidth/(float)width, -high); 
+	}
+}
 uint32_t TexturePacker::Pack()
 {
 	auto data = (uint8_t*)std::malloc(height * width);
@@ -229,6 +296,8 @@ int32_t TexturePacker::PackFont(std::string fontFile, FontDict& dict, uint32_t f
 		dict.glyps[ch].uv = Vect4((float)alignment/(float)width, (float)start/(float)height + high, 
 				(float)chWidth/(float)width, -high); 
 		
+		dict.glyps[ch].bearings.x = (float)glyph->metrics.horiBearingX/64;
+		dict.glyps[ch].bearings.y = (float)glyph->metrics.horiBearingY/64;
 		dict.glyps[ch].pos = Vect2(chWidth, chHeight);
 		dict.glyps[ch].advance.x = (float)glyph->advance.x / 64.f;
 		dict.glyps[ch].advance.y = (float)glyph->advance.y / 64.f;

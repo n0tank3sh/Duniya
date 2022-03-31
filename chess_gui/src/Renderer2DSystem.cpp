@@ -2,6 +2,7 @@
 #include "ECS/ECS.hpp"
 #include "Graphics/Renderer.hpp"
 #include "Math/Vect4.hpp"
+#include "TexturePacker.hpp"
 #include <Renderer2DSystem.hpp>
 #include <Graphics/OpenGL/GLRenderer.hpp>
 #include <exception>
@@ -160,32 +161,38 @@ void Renderer2DSystem::LoadFontGlyph()
 	//Vect4 uv(0.f, 0.f, 1.f, 1.f);
 	for(int i = 0; i < texts.size(); i++)
 	{
-		auto& text = *scene->GetEntity(texts[i])->Get<std::string>(ComponentTypes::TEXTBOX);
+		auto& text = *scene->GetEntity(texts[i])->Get<Text>(ComponentTypes::TEXTBOX);
 		auto& panel = *scene->GetEntity(texts[i])->Get<TextPanel>(ComponentTypes::TEXTPANEL);
 		auto curPos = Vect2(panel.dimension.x, panel.dimension.y + panel.dimension.w);
 		auto& panelPos = panel.dimension;
 		auto advanceY = 0.f;
-		for(auto e: text)
+		auto scale = ((float)text.scale)/defaultFont.fontSize;
+		for(auto i = 0; i < text.str.size(); i++)
 		{
+			auto e = text.str[i];
 			auto& temp = defaultFont.glyps[e];
 			auto uv = temp.uv;
-			auto glyphPos = Vect4(curPos, settings->Normalize(temp.pos));
-			glyphPos.y -= settings->NormalizeY(defaultFont.fontSize);
+
+			auto glyphPos = Vect4(curPos, settings->Normalize(temp.pos) * scale);
+
+			glyphPos.y -= settings->NormalizeY(defaultFont.fontSize) * scale ;
 			auto luft = "[" + std::to_string(goat) + "]";
 			renderer->Uniform4f(1, &glyphPos, "pos" + luft);
 			renderer->Uniform4f(1, &uv, "uvs" + luft);
 			renderer->Uniform4f(1, &panel.dimension, "boxPositions" + luft);
+			renderer->Uniform3f(1, &text.color, "color");
 			goat++; 
 			if(goat == batchSize)                                       
 			{
 				renderer->DrawInstancedArrays(DrawPrimitive::TRIANGLES_STRIPS, nullptr, 4, goat);
 				goat = 0;
 			}
-			advanceY = std::max(temp.advance.y, advanceY); 
-			curPos.x += settings->NormalizeX(temp.advance.x); 			
-			if(curPos.x > panelPos.x + panelPos.z)
+			curPos.x += settings->NormalizeX(temp.advance.x) * scale; 			
+			if((curPos.x > panelPos.x + panelPos.z) || (i < (text.str.size() - 1) && text.str[i + 1] == '\n'))
 			{
-				curPos.y -= settings->NormalizeY(temp.advance.y); 			
+				curPos.y -= settings->NormalizeY(defaultFont.fontSize) * scale; 			
+				curPos.x = panel.dimension.x;
+				i+= 1;
 			}
 			if(curPos.y < panelPos.y)
 				break;

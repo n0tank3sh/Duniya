@@ -12,6 +12,10 @@ struct RendererStuff
 
 class RendererSystem : public System
 {
+	enum class MessageID : uint32_t
+	{
+		SCANLIGTHS = 0
+	};
 private:
     RendererSystem();
 public:
@@ -26,7 +30,9 @@ private:
 	std::unordered_map<uint32_t, GBuffer> textureGBuffer;
 	std::unordered_map<uint32_t, Mat> cameras;
 private:
-	Mat SetupCamera(uint32_t entity);
+
+	void ProcessMessages();
+	
 	void LoadMaterial(Scene::EntitiesItr& itr);
 	void LoadMesh(Scene::EntitiesItr& itr);
 	void LoadTexture(Scene::EntitiesItr& itr);
@@ -35,18 +41,27 @@ private:
 	void LoadTransform(Scene::Entities::iterator& itr);
 	void LoadBuffer(GBuffer* buffer);
 	void CreateRendererStuff(Mesh* mesh, RendererStuff* rendererStuff);
+
+	void SetupDefaultMaterial();
 	void SetupDefaultTexture();
+	void SetupMainShader();
+	void SetupDefaultCamera();
+
+	void ScanLights();
+
 	Mat LookAt(const Vect3& pos, const Vect3& dir, const Vect3& up);
 	Mat SetupPerspective(Camera& camera);
+	Mat SetupCamera(uint32_t entity);
+
 	Scene* GetScene();
 private:
+	const uint32_t messageID = 0x15;
     std::unique_ptr<Renderer> renderer;
     Scene* scene;
     static RendererSystem* singleton;
 	float animated;
 	Vect2 resolution;
 // Default Values
-	Mat transformDefault;
 	uint32_t mainCamera;
 	Texture defaultTexture;
 	GBuffer defaultTextureGBuffer;

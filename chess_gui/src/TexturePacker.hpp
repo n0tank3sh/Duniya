@@ -3,6 +3,8 @@
 #include <ECS/ECS.hpp>
 #include <ECS/GraphicsComponent.hpp>
 #include <functional>
+#include <queue>
+#include <unordered_map>
 #include <unordered_set>
 #include "Graphics/Renderer.hpp"
 
@@ -27,6 +29,7 @@ struct Glyph
 {
 	Vect4 uv;
 	Vect2 pos;
+	Vect2 bearings;
 	Vect2 advance;
 };
 
@@ -46,7 +49,13 @@ private:
 	Logger* logger;
 	std::priority_queue<std::array<uint32_t, 3>, std::vector<std::array<uint32_t, 3>>, RectComp<std::array<uint32_t, 3>>> rects;
 	std::unordered_map<uint32_t, std::vector<uint32_t>> datas;
-
+	template<typename T, typename U>
+	struct Packager
+	{
+		std::priority_queue<std::pair<std::pair<T, T>, U>> rects;
+		std::function<uint8_t*(const U&)> retrieveFunction;
+		std::unordered_map<U, Vect4> uvMap;
+	};
 public:
 	enum class Heuristic
 	{
@@ -55,7 +64,7 @@ public:
 private:
 	template<typename T, typename K>
 	void Util(T& rects, K& guide, uint8_t* data, Heuristic heuristic = Heuristic::Col);
-	int Packer(std::function<uint8_t*(uint32_t a)>& retrieveFunction);
+	int Packer(std::function<uint8_t*(uint32_t)>& retrieveFunction);
 public:
 	TexturePacker(uint32_t width = 0, uint32_t height = 0, Scene* scene = nullptr);
 	void SetColumnSize(uint32_t colSize = 0);
