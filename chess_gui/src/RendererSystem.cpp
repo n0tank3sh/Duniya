@@ -90,7 +90,7 @@ void RendererSystem::LoadLights()
 
 void RendererSystem::SetupDefaultMaterial()
 {
-	defaultMaterial.color.ambient = Vect3() + 1.f;
+	defaultMaterial.color.ambient = Vect3() +  1.f;
 	defaultMaterial.color.diffuse = Vect3() +  1.f;
 	defaultMaterial.color.specular = Vect3() + 1.f;
 	defaultMaterial.shininess = 3.0f;

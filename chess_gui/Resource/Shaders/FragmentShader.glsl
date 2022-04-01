@@ -86,7 +86,7 @@ vec3 CalcPointLights(vec3 normal, vec3 fragPos, vec3 viewDir)
 		float dist = length(pointLights[i].pos - fragPos);
 		float attentuation = 1.0/(pointLights[i].constant + pointLights[i].linear * dist + pointLights[i].quadratic * dist * dist);
 
-		totalLightImpact *= (ambient + specular + diffuse) * attentuation;
+		totalLightImpact *= (ambient + specular);// + diffuse) * attentuation;
 
 	}
 	return totalLightImpact;

@@ -158,7 +158,6 @@ void Renderer2DSystem::LoadFontGlyph()
 	fontShaderStageHandler->Load();
 	uint32_t batchSize = 10;
 	renderer->Bind(defaultFont.gBuffer);
-	//Vect4 uv(0.f, 0.f, 1.f, 1.f);
 	for(int i = 0; i < texts.size(); i++)
 	{
 		auto& text = *scene->GetEntity(texts[i])->Get<Text>(ComponentTypes::TEXTBOX);
@@ -212,8 +211,6 @@ void Renderer2DSystem::Update(float deltaTime)
 	renderer->Disable(Options::DEPTH_TEST);
 	renderer->Disable(Options::FACE_CULL);
 	
-	//renderer->ClearColor(0.f, 0.f, 0.f);
-	//renderer->Clear();
 	LoadPanels();
 	LoadFontGlyph();
 

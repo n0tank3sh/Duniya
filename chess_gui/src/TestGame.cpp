@@ -52,7 +52,7 @@ void TestGame::LoadScene(Scene* scene)
 	auto dirLight = scene->GetEntity(dirLightEntity)->Emplace<DirectionalLight>(ComponentTypes::DIRLIGHT); 
 	dirLight->dir= Vect3(1.f, 0.f, 0.f);
 	//dirLight->constant = 1.f;
-	dirLight->lightColor.ambient = Vect3(.3f, .3f, 0.3f);
+	dirLight->lightColor.ambient = Vect3(1.f, .3f, 0.3f);
 	dirLight->lightColor.diffuse = Vect3(0.1, .5f, 0.3f);
 	dirLight->lightColor.specular = Vect3(0.1, 1.f, 0.3f);
 	messagingSystem->at(0x35).push_back(std::make_pair(0, nullptr));
