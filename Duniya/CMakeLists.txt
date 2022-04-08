@@ -32,7 +32,7 @@ set(TEST_GAME_SRC
 	"src/TestGame.hpp"
 	"src/TestGame.cpp"
 	)
-set(CHESS_SRC
+set(DUNIYA_SRC
     "src/Main.cpp"
     "src/Application.hpp"
     "src/Application.cpp"
@@ -62,23 +62,17 @@ set(SCENECONVERTER_SRC
 
 include_directories(${SDL2_INCLUDE_DIRS})
 add_executable(
-    chess_gui
-    ${CHESS_SRC}
+	Duniya
+	${DUNIYA_SRC}
 	${TEST_GAME_SRC}
 	${MATH_UTILS}
 	${ECS_SRC}
 	${EXCEPTION_SRC}
 )
-#add_executable(
-#	sceneconverter
-#	${SCENECONVERTER_SRC}
-#	${MATH_UTILS}
-#	${ECS_SRC}
-#	${EXCEPTION_SRC}
-#)
+
 
 target_include_directories(
-    chess_gui
+	Duniya
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 #target_include_directories(
@@ -87,40 +81,28 @@ target_include_directories(
 #)
 
 set(RESOURCE_TEST_FILE "Resource/Test/model/Earth 2K.obj")
-set(TEST_FILE "justChecking.dick")
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resource/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resource/)
 
 add_custom_target( resources
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Resource ${CMAKE_CURRENT_BINARY_DIR}/Resource
 )
-#add_custom_target( checking_chess_gui
-#	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/sceneconverter ${RESOURCE_TEST_FILE} ${TEST_FILE}
-#)
-#add_dependencies(chess_gui resources checking_chess_gui)
-#add_dependencies(checking_chess_gui resources sceneconverter)
 
-add_dependencies(chess_gui resources)
+add_dependencies(Duniya resources)
 
 target_include_directories(
-	chess_gui PUBLIC
+	Duniya PUBLIC
 	${FREETYPE_INCLUDE_DIRS}
 )
 
 target_link_libraries(
-    chess_gui
+	Duniya
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
     glad
 	${OPENGL_LIBRARIES}
 	${FREETYPE_LIBRARIES}
-	#	${ASSIMP_LIBRARIES}
     ${CMAKE_DL_LIBS}
 )
 
-
-#target_link_libraries(
-#	sceneconverter
-#	${ASSIMP_LIBRARIES}
-#)
 

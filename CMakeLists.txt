@@ -13,5 +13,5 @@ find_package(OpenGL REQUIRED)
 find_package(assimp REQUIRED)
 find_package(Freetype REQUIRED)
 
-add_subdirectory(chess_gui)
+add_subdirectory(Duniya)
 add_subdirectory(glad)
