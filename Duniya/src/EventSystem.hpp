@@ -1,30 +1,21 @@
 #pragma once
 #include <cstdint>
-struct Event
-{
-    enum class EventType
-    {
-        KEYBOARD, MOUSE,
+struct Event {
+    enum class EventType {
+	KEYBOARD,
+	MOUSE,
     };
     EventType type;
 };
 
-struct KeyBoardEvent : public Event
-{
+struct KeyBoardEvent : public Event {
     KeyBoardEvent();
     bool specialKey;
-    enum class SpecialKey
-    {
-        SHIFT, CTRL, ALT, CAPSLOCK, SPACE
-    };
+    enum class SpecialKey { SHIFT, CTRL, ALT, CAPSLOCK, SPACE };
     int8_t key;
 };
 
-struct MouseEvent : public Event
-{
+struct MouseEvent : public Event {
     MouseEvent();
-    enum class MouseButton
-    {
-        LMOUSEBUTTON, RMOUSEBUTTON, MIDMOUSEBUTTON
-    };
+    enum class MouseButton { LMOUSEBUTTON, RMOUSEBUTTON, MIDMOUSEBUTTON };
 };

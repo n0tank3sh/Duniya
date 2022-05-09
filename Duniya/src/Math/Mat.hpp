@@ -1,32 +1,30 @@
 #pragma once
 
+#include <initializer_list>
+#include <memory>
+
 #include "MathUtils.hpp"
 #include "Vect2.hpp"
 #include "Vect3.hpp"
 #include "Vect4.hpp"
-#include <initializer_list>
-#include <memory>
 
-struct Dimension
-{
+struct Dimension {
     uint32_t row;
     uint32_t column;
 };
 
-struct MatIndex
-{
+struct MatIndex {
     uint32_t x, y;
 };
 
-struct Mat
-{
+struct Mat {
     Mat(Dimension dimension = {1, 1});
-	Mat(Dimension dimension, const std::initializer_list<float> l);
+    Mat(Dimension dimension, const std::initializer_list<float> l);
     Mat(Dimension dimension, float* otherBuffer);
 
     Mat(const Mat& other);
     Mat& operator=(const Mat& other);
-	Mat& operator=(const std::initializer_list<float> l);
+    Mat& operator=(const std::initializer_list<float> l);
 
     float& operator[](MatIndex a);
 
@@ -37,12 +35,12 @@ struct Mat
     Mat operator+(const Mat& other);
     Mat operator-(const Mat& other);
     Mat dot(const Mat& other);
-	float& Get(const uint32_t& a, const uint32_t& b);
-	const float& Get(const uint32_t& a, const uint32_t& b) const;
-    
-	Mat operator*=(const Mat& other);
-	Mat operator+=(const Mat& other);
-	Mat operator-=(const Mat& other);
+    float& Get(const uint32_t& a, const uint32_t& b);
+    const float& Get(const uint32_t& a, const uint32_t& b) const;
+
+    Mat operator*=(const Mat& other);
+    Mat operator+=(const Mat& other);
+    Mat operator-=(const Mat& other);
     // return the determinants of the Matrix
     float Deter();
     // Invering Matrix
@@ -50,34 +48,29 @@ struct Mat
     std::unique_ptr<float[]> buffer;
     Dimension dimension;
     uint32_t sizet;
-	friend std::istream& operator>>(std::istream& input, Mat& mat)
-	{
-		for(uint32_t i = 0; i < mat.sizet; i++)
-		{
-			input >> mat.buffer.get()[i];
-		}
-		return input;
+    friend std::istream& operator>>(std::istream& input, Mat& mat) {
+	for (uint32_t i = 0; i < mat.sizet; i++) {
+	    input >> mat.buffer.get()[i];
 	}
-	friend std::ostream& operator<<(std::ostream& output, const Mat& mat)
-	{
-		for(uint32_t a = 0; a < mat.dimension.column; a++)
-		{
-			for(uint32_t b = 0; b < mat.dimension.row; b++)
-			{
-				output << mat.buffer.get()[a * mat.dimension.row + b] << " ";
-			}
-			output << std::endl;
-		}
-		return output;
+	return input;
+    }
+    friend std::ostream& operator<<(std::ostream& output, const Mat& mat) {
+	for (uint32_t a = 0; a < mat.dimension.column; a++) {
+	    for (uint32_t b = 0; b < mat.dimension.row; b++) {
+		output << mat.buffer.get()[a * mat.dimension.row + b] << " ";
+	    }
+	    output << std::endl;
 	}
-private:
+	return output;
+    }
+
+   private:
     void GausianElimination();
 };
 
-namespace DefaultMatrix
-{
-	Mat generateIdentityMatrix(Dimension s);
-	Mat generatePitchMatrix(Dimension s, float y);
-	Mat generateYawMatrix(Dimension s, float z);
-	Mat generateRollMatrix(Dimension s, float x);
-};
+namespace DefaultMatrix {
+Mat generateIdentityMatrix(Dimension s);
+Mat generatePitchMatrix(Dimension s, float y);
+Mat generateYawMatrix(Dimension s, float z);
+Mat generateRollMatrix(Dimension s, float x);
+};  // namespace DefaultMatrix
