@@ -32,6 +32,12 @@ set(TEST_GAME_SRC
 	"src/TestGame.hpp"
 	"src/TestGame.cpp"
 	)
+
+set(PHYSICS_SRC
+	"src/PhysicsSystem.hpp"
+	"src/PhysicsSystem.cpp"
+	)
+
 set(DUNIYA_SRC
     "src/Main.cpp"
     "src/Application.hpp"
@@ -66,6 +72,7 @@ add_executable(
 	${DUNIYA_SRC}
 	${TEST_GAME_SRC}
 	${MATH_UTILS}
+	${PHYSICS_SRC}
 	${ECS_SRC}
 	${EXCEPTION_SRC}
 )
